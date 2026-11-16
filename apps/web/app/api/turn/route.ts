@@ -4,14 +4,28 @@
 //
 // Hops: speech-to-text (skipped for a `text` field) -> brain stream -> sentence split -> one TTS per
 // sentence, all in parallel -> emitted strictly in order. Files, recent turns and changes load in
-// parallel with speech-to-text. The note and the turn row are written after `done`.
+// parallel with speech-to-text. The turn row is written right after `done`; the outcome note (B8) and the song
+// event are decided in `after()`, once the response has closed, so they never slow a turn.
+import { after } from "next/server";
+import {
+  groupChanges,
+  isReported,
+  loadChangeRows,
+  loadReported,
+  newSince,
+  routineOnly,
+  seenBy,
+  vkey,
+  type ChangeRow,
+  type Reported,
+} from "@/lib/agents/changes";
+import { postTurnOutcomes, type TurnOutcomeInput } from "@/lib/agents/turn-notes";
 import { brainStream } from "@/lib/brain";
 import { clockParts, demoNow } from "@/lib/clock";
 import { CHILD_ID, config } from "@/lib/config";
 import { stt, tts } from "@/lib/eleven";
-import { getAllLatest, getChangesSince } from "@/lib/files";
+import { getAllLatest } from "@/lib/files";
 import { parseMarkers, stripMarkers } from "@/lib/markers";
-import { post } from "@/lib/messages";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { FILE_NAMES, type BoardState, type Cue, type FileName, type NaniEvent, type Note, type Turn, type TurnEvent } from "@/lib/types";
 import { checkClip, cleanSpeech } from "@/lib/voice/speech";
@@ -30,6 +44,8 @@ const TTS_LANGUAGE: string | undefined = undefined;
 // Child speech is Hindi + English. Auto-detect heard "Aam!" as "Arm" and "Haan!" as "Huh";
 // "hi" got आम and हाँ, kept "Lion" and "Thank you" in English, and was ~80 ms faster.
 const STT_LANGUAGE = "hi";
+const UNUSED_MAX = 3; // earlier parent changes still listed as "not used yet"
+const UNUSED_TURNS = 5; // ... for at most this many talk turns after they arrived
 
 interface Chunk {
   i: number;
@@ -59,6 +75,14 @@ export async function POST(req: Request) {
   };
   const timings: Timings = { form: since() };
 
+  // The outcome note and song event run after the response closes (B8). runTurn hands over what they need.
+  let settle: (v: TurnOutcomeInput | null) => void = () => {};
+  const outcome = new Promise<TurnOutcomeInput | null>((r) => (settle = r));
+  after(async () => {
+    const o = await outcome;
+    if (o) await postTurnOutcomes(o);
+  });
+
   // One abort for everything downstream: the client leaving (barge-in) stops brain and TTS spend.
   const ac = new AbortController();
   const onClientAbort = () => ac.abort();
@@ -77,7 +101,10 @@ export async function POST(req: Request) {
         }
       };
       runTurn(input, timings, since, emit, ac)
-        .catch((e) => console.error(`[turn] crashed: ${msg(e)}`))
+        .then(settle, (e) => {
+          console.error(`[turn] crashed: ${msg(e)}`);
+          settle(null);
+        })
         .finally(() => {
           req.signal.removeEventListener("abort", onClientAbort);
           if (!closed) {
@@ -118,7 +145,7 @@ async function runTurn(
   since: () => number,
   emit: (ev: TurnEvent) => void,
   ac: AbortController,
-): Promise<void> {
+): Promise<TurnOutcomeInput | null> {
   const ctxP = loadContext(CHILD_ID);
   ctxP.catch(() => {}); // handled below; avoid an unhandled rejection on the early exits
 
@@ -143,7 +170,7 @@ async function runTurn(
       const r = await stt(input.audio, { filename: name, languageCode: STT_LANGUAGE, signal: ac.signal });
       childText = /[\p{L}\p{N}]/u.test(r.text) ? r.text : "";
     } catch (e) {
-      if (ac.signal.aborted) return;
+      if (ac.signal.aborted) return null;
       console.warn(`[turn] stt failed: ${msg(e)}`);
     }
     timings.stt = Math.round(performance.now() - t);
@@ -151,7 +178,8 @@ async function runTurn(
   emit({ t: "heard", text: childText });
   if (!childText) {
     emit({ t: "fallback", id: "not_heard" });
-    return finish({ fallback: "not_heard", audioBytes: input.audio instanceof Blob ? input.audio.size : 0 });
+    finish({ fallback: "not_heard", audioBytes: input.audio instanceof Blob ? input.audio.size : 0 });
+    return null;
   }
 
   // ---- 2. Prompt (files read fresh every turn) ----
@@ -161,13 +189,22 @@ async function runTurn(
   } catch (e) {
     console.error(`[turn] context failed: ${msg(e)}`);
     emit({ t: "fallback", id: "slow_brain" });
-    return finish({ fallback: "slow_brain", error: msg(e) });
+    finish({ fallback: "slow_brain", error: msg(e) });
+    return null;
   }
   timings.ctx = since();
+  // The child is answering this event if he has not talked since it happened.
+  const ev = input.lastEvent;
+  const lastEventFresh = !!ev && (!ctx.lastTalk || Date.parse(ctx.lastTalk.created_at) < Date.parse(ev.at));
   const messages = buildTurnPrompt({
-    ...ctx,
+    files: ctx.files,
+    recentTurns: ctx.recentTurns,
+    changes: ctx.changes,
+    unused: ctx.unused,
     board: input.board,
-    lastEvent: input.lastEvent,
+    lastEvent: ev,
+    lastEventFresh,
+    clockOffsetMs: input.clockOffsetMs,
     clock: clockParts(demoNow(input.clockOffsetMs)),
     childText,
   });
@@ -312,22 +349,26 @@ async function runTurn(
   await producer;
   if (ac.signal.aborted) {
     console.log(`[turn] aborted by client at ${since()} ms after ${sent.length} sentences ${JSON.stringify({ ...timings, heard: childText })}`);
-    return;
+    return null;
   }
 
   const spoken = sent.map((s) => s.speech).filter(Boolean).join(" ");
   if (!spoken && !voiceFailed) emit({ t: "fallback", id: "slow_brain" });
 
   const sentenceLog = chunks.map((c) => ({ i: c.i, cutAt: c.cutAt, ttsMs: c.ttsMs, kb: c.bytes ? +(c.bytes / 1024).toFixed(1) : 0, text: c.speech }));
-  finish({ heard: childText, reply, brainError, voiceFailed, sentences: sentenceLog });
+  const newChanges = ctx.changes.flatMap((g) => g.versions);
+  finish({ heard: childText, reply, brainError, voiceFailed, newChanges, unused: ctx.unused.length, sentences: sentenceLog });
 
-  // ---- 5. Note (B8, at most one) and the turn row. Only for turns Nani actually spoke, so a
-  // parent's change is not "used up" by a misheard press. ----
-  if (!spoken) return;
-  const note = sent.flatMap((s) => s.notes)[0];
+  // ---- 5. The turn row (before the stream closes: the next turn's "changes since" diff reads it). Only
+  // for turns Nani actually spoke, so a parent's change is not "used up" by a misheard press. The note
+  // is decided in after() (route POST). ----
+  if (!spoken) return null;
   const fileVersions = Object.fromEntries(FILE_NAMES.map((n) => [n, ctx.files[n].version])) as Record<FileName, number>;
-  const results = await Promise.allSettled([
-    supabaseAdmin()
+  const cues = sent.flatMap((s) => s.cues);
+  const notes = sent.flatMap((s) => s.notes);
+  let turnId: number | null = null;
+  try {
+    const { data, error } = await supabaseAdmin()
       .from("turns")
       .insert({
         child_id: CHILD_ID,
@@ -335,45 +376,48 @@ async function runTurn(
         kind: "talk",
         child_text: childText,
         nani_text: spoken,
-        cues: sent.flatMap((s) => s.cues),
+        cues,
         file_versions: fileVersions,
         timings,
         meta: {
           reply,
-          notes: sent.flatMap((s) => s.notes),
+          notes,
           invalid: sent.flatMap((s) => s.invalid),
           board: input.board,
           lastEvent: input.lastEvent,
+          newChanges,
           ...(voiceFailed ? { voiceFailed } : {}),
           ...(brainError ? { brainError } : {}),
         },
       })
-      .then(({ error }) => {
-        if (error) throw new Error(error.message);
-      }),
-    note ? post(CHILD_ID, note.bot, "bot", note.text, { kind: "note" }) : Promise.resolve(null),
-  ]);
-  for (const r of results) if (r.status === "rejected") console.error(`[turn] save failed: ${msg(r.reason)}`);
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    turnId = (data as { id: number }).id;
+  } catch (e) {
+    console.error(`[turn] save failed: ${msg(e)}`);
+  }
+  return {
+    child: CHILD_ID,
+    turnId,
+    childText,
+    reply,
+    cues,
+    naniNotes: notes,
+    lastEvent: ev,
+    lastEventFresh,
+    clockOffsetMs: input.clockOffsetMs,
+    fileVersions,
+  };
 }
 
-// ---------- Context: files, last 8 turns, changes since the child's last turn ----------
+// ---------- Context: files, last 8 turns, changes since the child's last talk turn (B7) ----------
+// All four reads run in parallel (and in parallel with speech-to-text). "Since the last turn" is by version:
+// a file version is new if it is newer than the one the previous talk turn used (turns.file_versions), so a
+// change that lands during a turn is still new for the next one.
 
 async function loadContext(child: string) {
-  const sb = supabaseAdmin();
-  const lastTalk = sb
-    .from("turns")
-    .select("created_at")
-    .eq("child_id", child)
-    .eq("kind", "talk")
-    .not("nani_text", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle()
-    .then(({ data, error }) => {
-      if (error) throw new Error(`turns.lastTalk: ${error.message}`);
-      return getChangesSince(child, (data?.created_at as string | undefined) ?? new Date(0).toISOString());
-    });
-  const recent = sb
+  const recent = supabaseAdmin()
     .from("turns")
     .select("*")
     .eq("child_id", child)
@@ -384,8 +428,31 @@ async function loadContext(child: string) {
       if (error) throw new Error(`turns.recent: ${error.message}`);
       return (data as Turn[]).reverse();
     });
-  const [files, recentTurns, changes] = await Promise.all([getAllLatest(child), recent, lastTalk]);
-  return { files, recentTurns, changes };
+  // The change lists are extras: if they fail, the turn still runs on the latest files.
+  const [files, recentTurns, rows, reported] = await Promise.all([
+    getAllLatest(child),
+    recent,
+    soft(loadChangeRows(child), [] as ChangeRow[], "changes"),
+    soft(loadReported(child), { versions: new Set(), events: new Set(), lastMomentAt: null } as Reported, "reported"),
+  ]);
+  // Job turns carry no nani_text, so the last talk turn is among the last 8 spoken ones.
+  const lastTalk = recentTurns.findLast((t) => t.kind === "talk") ?? null;
+
+  const seen = seenBy(rows, Object.fromEntries(FILE_NAMES.map((n) => [n, files[n].version])));
+  const fresh = newSince(seen, lastTalk?.file_versions ?? null);
+  const freshKeys = new Set(fresh.map((r) => vkey(r.name, r.version)));
+  const talksSince = (at: string) => recentTurns.filter((t) => t.kind === "talk" && Date.parse(t.created_at) > Date.parse(at)).length;
+  const unused = groupChanges(seen.filter((r) => !freshKeys.has(vkey(r.name, r.version))))
+    .filter((g) => !routineOnly(g) && !isReported(g, reported) && talksSince(g.at) < UNUSED_TURNS)
+    .slice(-UNUSED_MAX);
+  return { files, recentTurns, lastTalk, changes: groupChanges(fresh), unused };
+}
+
+function soft<T>(p: PromiseLike<T>, empty: T, what: string): Promise<T> {
+  return Promise.resolve(p).catch((e) => {
+    console.warn(`[turn] ${what} failed: ${msg(e)}`);
+    return empty;
+  });
 }
 
 // ---------- helpers ----------
