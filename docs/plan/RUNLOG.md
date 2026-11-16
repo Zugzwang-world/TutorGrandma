@@ -26,3 +26,4 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 03:31 | 2:20 | polish | wall animations #11 | 7% weekly | launched topic fillers (Sonnet high); chat feel building; self-test run 3 running |
 | 03:31 | 2:23 | polish | wall animations #11 | 7% weekly | launched topic fillers (Sonnet high); chat feel building; self-test run 3 running |
 | 03:38 | 2:31 | polish | topic fillers #12 (14 new lines, picks today's topic) | 7% weekly | prod /toy OK (reaction 1 ms, first say 1.76 s); chat feel building; run 3 running |
+| 03:43 | 2:35 | 3 | run 3: 15/51 slow_brain even single-request → Kimi k2.6 stalls ~10%/request; K3 unusable (always thinks); now cancel-and-retry at 2.5 s | 7% weekly | run 4 running; chat feel building |
