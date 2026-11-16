@@ -22,3 +22,4 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 02:47 | 1:33 | 2 end | G3★ #9 live sync + outcome notes; call marker rule in turn prompt | 6% weekly | wave 3: full self-test on production |
 | 03:03 | 1:58 | 3 | self-test run 1 + fixes (hedged brain, roar, mic wake, Memory 18→3 s); ★ B11 1–5 ✓ on production | 6% weekly | advisor before calling ★ done |
 | 03:12 | 2:07 | 3 | advisor fixes: noise not-heard, call needs yes, lastEvent once; B11 #1 via real toy, toy→wall, 19:00 double job ✓ | 6% weekly | full self-test run 2 |
+| 03:24 | 2:20 | 3 | self-test run 2: 10/10 chat, 99% speech, but 13/51 slow_brain → reverted parallel brain requests (Kimi throttles bursts), timeout 7 s | 7% weekly | run 3 (voice, real pacing) running; polish: chat feel (Opus high), wall (Sonnet high) launched |
