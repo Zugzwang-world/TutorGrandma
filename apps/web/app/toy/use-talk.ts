@@ -28,7 +28,12 @@ export function useTalk(core: ToyCore, opts: { onCall?: (who: "mumma" | "papa") 
       sendWall,
       mic: () => micRef.current,
       sessionId: () => sessionIdRef.current,
-      lastEvent: () => lastEventRef.current,
+      lastEvent: () => {
+        // Sent once: the turn right after a reminder knows about it; later turns don't.
+        const e = lastEventRef.current;
+        lastEventRef.current = null;
+        return e;
+      },
       clockOffsetMs: () => clockOffsetRef.current,
       showTimings: () => showTimingsRef.current,
       onStats: setStats,
