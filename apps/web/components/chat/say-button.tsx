@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const cache = new Map<string, string>(); // text -> url, for this visit
 let current: HTMLAudioElement | null = null; // one Nani line at a time
+const SILENT = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
 
 type State = "idle" | "loading" | "playing" | "failed";
 
@@ -34,6 +35,12 @@ export function SayButton({ text }: { text: string }) {
     }
     if (state === "loading") return;
     setState("loading");
+    // iPhone Safari only plays audio started inside the tap: create and unlock the element now, set the real src after the fetch.
+    current?.pause();
+    const a = new Audio(SILENT);
+    a.play().catch(() => {});
+    audio.current = a;
+    current = a;
     try {
       let url = cache.get(text);
       if (!url) {
@@ -48,10 +55,8 @@ export function SayButton({ text }: { text: string }) {
         url = j.url;
         cache.set(text, url);
       }
-      current?.pause();
-      const a = new Audio(url);
-      audio.current = a;
-      current = a;
+      a.pause();
+      a.src = url;
       a.onended = () => setState("idle");
       a.onpause = () => setState((s) => (s === "playing" ? "idle" : s));
       a.onerror = fail;
