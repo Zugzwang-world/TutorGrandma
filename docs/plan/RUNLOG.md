@@ -24,3 +24,4 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 03:12 | 2:07 | 3 | advisor fixes: noise not-heard, call needs yes, lastEvent once; B11 #1 via real toy, toy→wall, 19:00 double job ✓ | 6% weekly | full self-test run 2 |
 | 03:24 | 2:20 | 3 | self-test run 2: 10/10 chat, 99% speech, but 13/51 slow_brain → reverted parallel brain requests (Kimi throttles bursts), timeout 7 s | 7% weekly | run 3 (voice, real pacing) running; polish: chat feel (Opus high), wall (Sonnet high) launched |
 | 03:31 | 2:20 | polish | wall animations #11 | 7% weekly | launched topic fillers (Sonnet high); chat feel building; self-test run 3 running |
+| 03:31 | 2:23 | polish | wall animations #11 | 7% weekly | launched topic fillers (Sonnet high); chat feel building; self-test run 3 running |
