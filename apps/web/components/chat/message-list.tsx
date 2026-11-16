@@ -255,7 +255,7 @@ function MessageRow({
   const bot = botOf(row.sender);
   if (!bot && row.sender_kind === "system") {
     return (
-      <div className={`my-3 flex justify-center ${row.fresh ? "tg-enter" : ""}`}>
+      <div className={`mt-3 flex justify-center ${row.fresh ? "tg-enter" : ""}`}>
         <span className="max-w-[85%] rounded-full bg-line/60 px-3 py-1 text-center text-[13px] text-muted">{row.text}</span>
       </div>
     );
@@ -430,7 +430,7 @@ export function MessageList({
       {items.map((it) => {
         if (it.t === "day")
           return (
-            <div key={it.key} className="my-3 flex justify-center">
+            <div key={it.key} className="mt-3 flex justify-center">
               <span className="rounded-full border border-line/70 bg-cream/95 px-3 py-0.5 text-[12px] font-bold text-muted shadow-[0_1px_2px_rgba(43,33,24,0.05)]">
                 {it.label}
               </span>
