@@ -2,6 +2,7 @@
 // the wait with pre-made clips, then play Nani's sentences in order and drive the wall with their cues.
 // No React here; use-talk.ts wraps it.
 import type { BoardState, Cue, FallbackId, NaniEvent, TurnEvent } from "@/lib/types";
+import { stopTime } from "@/lib/voice/pauses";
 import type { Clip, NaniPlayer } from "@/lib/voice/player";
 import { WaitPicker, areaOfCue, isLongWait, type Today } from "./fillers";
 import type { EyeState, WallPayload } from "./use-toy-core";
@@ -11,6 +12,7 @@ const FILLER_AT_MS = 1200; // no voice yet: one learning filler
 const LONG_WAIT_AT_MS = 4000; // song snippet or the chashma line
 const SLOW_BRAIN_AT_MS = 8000; // give up: slow_brain line, abort the request
 const SHORT_CLIP_S = 0.7; // a long-wait clip with less than this left finishes anyway
+const FILLER_MIN_PLAYED_S = 1.0; // a learning filler stops early only at a sentence end at least this far in
 const SFX_GAIN = 0.6;
 
 export interface TalkStats {
@@ -19,6 +21,8 @@ export interface TalkStats {
   reactionMs?: number; // release -> reaction clip started
   firstSayMs?: number; // release -> first `say` line arrived
   firstVoiceMs?: number; // release -> Nani's first sentence started playing
+  filler?: string; // the learning filler (layer 2) that played this turn, if any
+  fillerCutMs?: number; // ms of that filler skipped by stopping at its next pause once Nani's voice was ready
   server?: { stt: number; brainFirst: number; voiceFirst: number; total: number };
   fallback?: FallbackId;
 }
@@ -77,7 +81,9 @@ export class TalkLoop {
   /** What the wall shows now; sent with every turn. */
   readonly board: BoardState = { spell: null, showing: null };
 
-  constructor(private d: TalkDeps) {}
+  constructor(private d: TalkDeps) {
+    this.picker.setCanCut((id) => d.player.cutPoints(id).some((p) => p.start >= FILLER_MIN_PLAYED_S));
+  }
 
   /** Today's letter and theme (planner.md), so waiting fillers match what Nani is teaching. */
   setToday(t: Today | null): void {
@@ -261,14 +267,16 @@ export class TalkLoop {
     const go = () => {
       if (t.over || t.voiceStarted) return;
       t.fx = this.d.player.playId(id);
+      if (t.fx && !isLongWait(id)) t.stats.filler = id;
     };
     if (t.fx?.playing()) void t.fx.ended.then(go);
     else go();
   }
 
   /**
-   * Nani's first sentence arrived. A reaction or learning filler finishes (cutting "Tab tak teen baar
-   * taali baj—" sounds broken); the long wait (song snippet, chashma line) fades. Then play the queue.
+   * Nani's first sentence arrived. A reaction finishes. A learning filler stops at its next sentence end
+   * ("Tab tak teen baar taali bajao! | Ek, do, teen!"), in the pause, never mid-word or mid-count; with
+   * no sentence end ahead it finishes. The long wait (song snippet, chashma line) fades. Then play the queue.
    */
   private async startVoice(t: Turn): Promise<void> {
     if (t.voiceStarted || t.over) return;
@@ -277,8 +285,15 @@ export class TalkLoop {
     this.d.sendWall("thinking", { on: false });
     const fx = t.fx;
     if (fx?.playing()) {
-      if (!isLongWait(fx.id) || fx.remaining() <= SHORT_CLIP_S) await fx.ended;
-      else await fx.fade(250);
+      if (isLongWait(fx.id) && fx.remaining() > SHORT_CLIP_S) await fx.fade(250);
+      else {
+        const at = fx.id === t.stats.filler ? stopTime(this.d.player.cutPoints(fx.id), fx.position(), fx.duration, FILLER_MIN_PLAYED_S) : null;
+        if (at === null) await fx.ended;
+        else {
+          t.stats.fillerCutMs = Math.round((fx.duration - at) * 1000);
+          await fx.stopAt(at);
+        }
+      }
     }
     if (t.over) return;
     t.speaking = true;
@@ -359,6 +374,7 @@ export class TalkLoop {
     if (t.over) return;
     t.over = true;
     this.clearTimers(t);
+    console.log(`[toy] turn ${t.n} end`, { ...t.stats, aborted: t.ac.signal.aborted });
     this.d.sendWall("thinking", { on: false });
     this.d.sendWall("speaking", { on: false });
     if (this.turn === t) this.turn = null;

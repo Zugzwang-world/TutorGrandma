@@ -1,7 +1,8 @@
 // Waiting moments (PLAN.md C5): which pre-made clip to play while Nani thinks. Pure picking logic.
 //   Layer 1: a reaction at release, never the same twice in a row.
 //   Layer 2: a learning filler at 1.2 s, at most one every two turns, never the same twice.
-//            Preference: today's letter and theme (planner.md "## Today"), then the area of the last cue.
+//            Preference: today's letter and theme (planner.md "## Today"), then the area of the last cue;
+//            within that, a filler that can stop at a sentence end once Nani's reply is ready (pauses.ts).
 //   Layer 3: at 4 s, the song snippet or the chashma line (alternating).
 import { audioById, audioByKind } from "@/lib/audio";
 import { CHILD_ID } from "@/lib/config";
@@ -111,9 +112,15 @@ export class WaitPicker {
   private lastFillerTurn = -99;
   private longIndex = 0;
   private today: Today | null = null;
+  private canCut: (id: string) => boolean = () => false;
 
   setToday(t: Today | null): void {
     this.today = t;
+  }
+
+  /** Which fillers can stop early at a sentence end (the player knows, once clips are decoded). */
+  setCanCut(f: (id: string) => boolean): void {
+    this.canCut = f;
   }
 
   /** Does this filler belong to today's letter or theme? */
@@ -146,7 +153,8 @@ export class WaitPicker {
     const today = fresh.filter((e) => this.isToday(e));
     const inArea = area ? fresh.filter((e) => e.area === area) : [];
     const both = today.filter((e) => inArea.includes(e));
-    const e = pick(both) ?? pick(today) ?? pick(inArea) ?? pick(fresh);
+    const pickCut = (xs: AudioEntry[]) => pick(xs.filter((x) => this.canCut(x.id))) ?? pick(xs);
+    const e = pickCut(both) ?? pickCut(today) ?? pickCut(inArea) ?? pickCut(fresh);
     if (e) {
       this.usedFillers.add(e.id);
       this.lastFiller = e.id;

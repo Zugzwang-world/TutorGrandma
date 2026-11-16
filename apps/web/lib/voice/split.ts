@@ -2,8 +2,10 @@
 //
 // Rules:
 // - A chunk ends after `. ! ? … ।` (a run of them, plus closing quotes) when whitespace or a marker follows.
-// - The FIRST chunk of a reply also ends at the first comma once 3 or more words precede it,
-//   so the first clip is short and starts sooner. Later chunks keep their commas (better prosody,
+// - The FIRST chunk of a reply also ends at the first comma (or dash, colon, semicolon) once 3 or more
+//   words precede it, so the first clip is short and starts sooner ("Haan beta, main AI Nani hoon — …"
+//   waited ~600 ms for a later comma and voiced a 54 KB first clip). Keep the 3-word floor: tiny
+//   first clips garble ("Do aur do," came back "Do or do?"). Later chunks keep their commas (better prosody,
 //   and they are voiced in parallel while the first one plays).
 // - Never split inside an open marker ("[[show 🥭" still streaming).
 // - Display markers that arrive after a sentence ("Mango! [[show 🥭 Mango]]") belong to that
@@ -12,6 +14,7 @@ import { parseMarker, stripMarkers } from "../markers";
 
 const END = /[.!?…।]/;
 const CLOSERS = /["'”’)\]]/;
+const FIRST_BREAK = /[,—–;:]/; // where the first chunk may end early
 
 export function wordCount(text: string): number {
   const s = stripMarkers(text).trim();
@@ -51,7 +54,7 @@ export class SentenceSplitter {
         i = k;
         continue;
       }
-      if (first && ch === "," && i + 1 < b.length && /\s/.test(b[i + 1]) && wordCount(b.slice(0, i)) >= 3) {
+      if (first && FIRST_BREAK.test(ch) && i + 1 < b.length && /\s/.test(b[i + 1]) && wordCount(b.slice(0, i)) >= 3) {
         return this.cut(i + 1);
       }
       i++;
