@@ -36,3 +36,8 @@ One line each: date · decision · why.
 - 2026-11-17 · persona.md: [[call mumma]]/[[call papa]] starts the call at once, so Nani offers in words first and uses the marker only after Aarav says yes · the call needs a clear yes (C11); seed.json updated, reset applies it.
 - 2026-11-17 · No parallel 'backup' brain requests: Kimi throttles bursts (4 parallel → one waited 9 s, and the next sequential requests stalled 7–11 s); self-test stalls rose 3 → 13 of 51 with them. Single request, first-token timeout 7 s. The self-test now waits for Nani's audio before the next line, like a real child.
 - 2026-11-17 · Kimi stalls are handled by cancel-and-retry: no first token by 2.5 s (turn) or 4 s (sorter) → cancel and send ONE fresh request; never two in flight · k2.6 stalls ~10% of requests for 7–10 s; K3 models can't turn thinking off (no answer within 150 tokens), so they are out.
+- 2026-11-17 · G4 (routine clock) and P1 (presenter) ran as one task; G5 and the wall, filler and other polish used Sonnet at high effort · usage pacing.
+- 2026-11-17 · Speech-to-text tags audio events: a roar reaches Nani as a sound, while room noise, music or silence stays "not heard" · a child's roar was getting "Nani didn't hear you".
+- 2026-11-17 · A call cue is dropped unless Aarav's words contain a yes · a call starts at once and must never surprise anyone.
+- 2026-11-17 · Learning fillers stop at their next sentence end once Nani's answer is ready · saves about 1.2 s on filler turns without cutting a word.
+- 2026-11-17 · Memory answers start in parallel with the sorter and fall back to the sorter's reply after 7 s · "What did he learn today?" went from 18 s to 3–5 s.

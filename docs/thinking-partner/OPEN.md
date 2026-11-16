@@ -13,6 +13,11 @@
 7. Relay host: Vercel or the founder's laptop.
 8. Latency log per hop, from the first talking loop.
 9. Splitting into the two chats, software and hardware.
-- Kimi latency varies: the sorter's first reply took 2.6 s in one production run and 13 s in another; N1 saw a 6 s Kimi stall about once in 25 turns. Watch it in the self-test; it is the slowest hop.
-- Credits at 03:15 IST: ElevenLabs 12,325 of 100,215 characters used (resets 17 Nov 21:01 UTC); Kimi 14.33 USD. Fine for the demo; recheck before buildathon day.
-- Kimi k2.6 stall rate varies across the night (0 to 4 of 10 sequential turns). The loop retries up to 3 times and fillers cover the wait, but on stage a stall means a 4–7 s pause or the slow_brain line. Before the demo: run the self-test once that morning; consider moving to Claude Haiku earlier if Anthropic credit is fixed.
+
+## From the overnight beta (17 Nov), for the founder
+- **Kimi stalls:** k2.6 stalls on 10–15% of turns (7–10 s). Retries and fillers soften it, but on stage about 1 turn in 7 can end with "Chalo, ek naya khel". Fix Anthropic credit and switch to Claude Haiku 5.5 early? It is one value in content/demo.config.json.
+- **Real devices:** please try a phone's mic on `/` (voice note) and `/toy`, an iPhone for ▶ and the toy's audio, and the projector's browser on `/home-base?demo=1`.
+- **Nani's voice:** "Dulari Didi" from the ElevenLabs library is a stand-in for grandma's cloned voice. Is the clone coming before the demo?
+- **"Nani" pronunciation:** speech-to-text heard ननी in three pre-made lines (`not_heard`, `offline`, `filler_wait_chashma`). Worth a listen.
+- **Credits:** ElevenLabs about 17% of 100k characters used (resets 17 Nov 21:01 UTC); Kimi about 14.3 USD. Recheck before buildathon day.
+
