@@ -5,7 +5,7 @@
 // It ends on the End button, the parent's End, or CALL_IDLE_MS with no clip either way.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { callApi, ClipRecorder, sendClip } from "@/lib/call/client";
-import { CALL_IDLE_MS, sentAtOf, whoLabel, type CallWho } from "@/lib/call/shared";
+import { asWho, CALL_IDLE_MS, sentAtOf, whoLabel, type CallWho } from "@/lib/call/shared";
 import { config } from "@/lib/config";
 import type { Clip } from "@/lib/voice/player";
 import type { ToyCore } from "./use-toy-core";
@@ -115,6 +115,18 @@ export function useCall(core: ToyCore): CallControls {
   useEffect(() => {
     const offCall = onToy("call", (p) => {
       const c = ref.current;
+      if (!c && p.state === "ringing") {
+        // A call started somewhere else (presenter, POST /api/call start): the toy rings and takes it.
+        const who = asWho(p.who);
+        player.stopAll();
+        setCall({ callId: p.callId, who, state: "ringing", recording: false, sending: false, hearing: false, clips: 0 });
+        setMode("call");
+        setEyes("calling");
+        lastEventRef.current = { kind: "call", text: `Calling ${whoLabel(who)}`, at: new Date().toISOString() };
+        player.playId(`line_call_${who}`);
+        armIdle();
+        return;
+      }
       if (!c || p.callId !== c.callId) return;
       if (p.state === "open" && c.state !== "open") {
         patch({ state: "open" });
@@ -156,7 +168,7 @@ export function useCall(core: ToyCore): CallControls {
       offCall();
       offClip();
     };
-  }, [armIdle, finishLocal, onToy, patch, player, setEyes]);
+  }, [armIdle, finishLocal, lastEventRef, onToy, patch, player, setCall, setEyes, setMode]);
 
   const release = useCallback(() => {
     const c = ref.current;
