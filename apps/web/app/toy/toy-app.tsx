@@ -7,6 +7,8 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { NaniFace } from "./face";
 import s from "./toy.module.css";
 import { AUDIO } from "@/lib/audio";
+import { CallBar, callLabel } from "./call-bar";
+import { useCall } from "./use-call";
 import { useRoutine } from "./use-routine";
 import { useTalk } from "./use-talk";
 import { useToyCore, type EyeState } from "./use-toy-core";
@@ -24,11 +26,14 @@ const noSubscribe = () => () => {};
 
 export function ToyApp() {
   const core = useToyCore();
-  const { talk: loop, stats: st } = useTalk(core);
+  const call = useCall(core);
+  // N2: a [[call mumma]] cue starts the call once Nani has finished that reply.
+  const { talk: loop, stats: st } = useTalk(core, { onCall: (who) => call.start(who, true) });
 
   // G4: routine jobs (reminders, calls, brief, song) fire on the demo clock through the toy's speaker.
   useRoutine({
-    enabled: core.awake,
+    enabled: core.awake && core.mode === "talk",
+    onCall: (who) => call.start(who, false), // the routine has already played line_call_<who>
     play: async (url) => {
       const pre = AUDIO.find((a) => a.file === url);
       const clip = pre ? core.player.playId(pre.id) : await core.player.load(url).then((b) => (b ? core.player.play(b, "routine") : null));
@@ -50,10 +55,12 @@ export function ToyApp() {
     if (!core.awake) return;
     setDown(true);
     if (core.mode === "talk") loop.press();
+    else call.press();
   };
   const release = () => {
     setDown(false);
     if (core.mode === "talk") loop.release();
+    else call.release();
   };
   const pressRef = useRef(press);
   const releaseRef = useRef(release);
@@ -103,7 +110,7 @@ export function ToyApp() {
   return (
     <main className="fixed inset-0 flex select-none flex-col items-center justify-between bg-cream px-4 pb-6 pt-8 text-ink">
       <p className="rounded-full bg-paper/80 px-5 py-2 text-lg font-semibold text-muted shadow-sm" aria-live="polite">
-        {LABEL[core.eyes]}
+        {call.call ? callLabel(call.call) : LABEL[core.eyes]}
       </p>
 
       <NaniFace eyes={core.eyes} />
@@ -114,7 +121,7 @@ export function ToyApp() {
             className="flex w-full gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!core.awake) return;
+              if (!core.awake || core.mode !== "talk") return;
               loop.say(draft);
               setDraft("");
             }}
@@ -153,7 +160,11 @@ export function ToyApp() {
             </g>
           </svg>
         </button>
-        <p className="text-sm text-muted">Hold the paw to talk, or hold the space bar</p>
+        {call.call ? (
+          <CallBar call={call.call} onEnd={() => call.end("tap")} />
+        ) : (
+          <p className="text-sm text-muted">Hold the paw to talk, or hold the space bar</p>
+        )}
         <p className="min-h-5 text-center text-xs text-muted/80">
           {st.heard !== undefined && <span>heard “{st.heard}”  ·  </span>}
           {timing}

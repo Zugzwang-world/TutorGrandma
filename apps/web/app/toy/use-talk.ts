@@ -11,7 +11,11 @@ export interface Talk {
   stop: () => void;
 }
 
-export function useTalk(core: ToyCore) {
+export function useTalk(core: ToyCore, opts: { onCall?: (who: "mumma" | "papa") => void } = {}) {
+  const onCallRef = useRef(opts.onCall);
+  useEffect(() => {
+    onCallRef.current = opts.onCall;
+  });
   const [stats, setStats] = useState<TalkStats>({ turn: 0 });
   const [recording, setRecording] = useState(false);
   const loopRef = useRef<TalkLoop | null>(null);
@@ -29,6 +33,7 @@ export function useTalk(core: ToyCore) {
       showTimings: () => showTimingsRef.current,
       onStats: setStats,
       onRecording: setRecording,
+      onCall: (who) => onCallRef.current?.(who),
     });
     loopRef.current = loop;
     return () => {
