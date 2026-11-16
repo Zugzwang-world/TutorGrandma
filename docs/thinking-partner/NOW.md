@@ -1,19 +1,19 @@
-# Now · 2026-11-16
+# Now · 2026-11-17, 02:15 IST
 
-**Step 1, setup: done. Next: planning in a new thinking-partner chat.**
+**The overnight beta (docs/plan/PLAN.md) is running. Started 01:08 IST, hard stop 09:08. Live progress: docs/plan/RUNLOG.md.**
 
-## Step 1 results
-- Research lives in docs/thinking-partner/RESEARCH.md. It replaces the R1 to R4 reports, which are not kept.
-- Repo: https://github.com/Zugzwang-world/TutorGrandma, main only. Squash merge, branches deleted on merge.
-- Web: https://tutor-grandma.vercel.app (`/`, and `/home-base`, which shows "Grandma is on her way"). Vercel project tutor-grandma, team hrizzup. main deploys to production, PRs get previews. Last production build is green.
-- Supabase: org Tutor Grandma (Free plan), project tutor-grandma in Mumbai, ref kojmjmxnpaiuhswavarm. No tables yet. The repo is linked.
-- Live brain: kimi-k2.6, thinking off, through `brain` in content/demo.config.json until 22 November; then Claude Haiku 5.5. It was the fastest of four Kimi models measured: 690 ms to first word, against 1.1 to 2.1 s for the others.
-- Keys in .env.local and Vercel (all three environments): Kimi, ElevenLabs, Anthropic, Supabase URL, publishable key and secret key.
-- Preflight: Kimi works, balance 14.77 USD. ElevenLabs works, Creator tier, 1,238 of 100,215 characters used. Supabase read works. Anthropic is skipped until the switch, and its credit is still low.
-- Workflow proof (T9):
-  - (a) S README fix: Coordinator, Opus 5.5.
-  - (b) M /home-base line: builder, Opus 5.5, in [PR #1](https://github.com/Zugzwang-world/TutorGrandma/pull/1), merged and checked live.
-  - (c) Next.js lookup: scout, Haiku 5.5. 16.4.6 is the latest stable, so we're current.
+## Live on https://tutor-grandma.vercel.app
+- `/`: the parents' group chat with Nani's five agents. Text and voice notes, live updates, "what changed" sheet. ✓
+- `/api/chat`: the sorter. Each agent edits its own file and replies casually. ✓ (first reply 2.6–13 s; Kimi varies)
+- `/toy`: the toy stand-in. Hold the paw (or space) to talk; reactions, fillers, Nani's voice, barge-in. Routine reminders play here. ✓
+- `/home-base`: the projector wall, with every marker cue, thinking, stickers and a timings corner. `?demo=1` cycles the cues. ✓
+- `/presenter` (hidden): reset, clock jumps, fire the next job, evening brief, timings toggle, the turns table. ✓
+- Evening brief and Memory's answers. ✓
+- 50 pre-made sounds and the song "Ek Do Teen, Count With Me". ✓
+
+## Running now
+- G3 ★: live sync and outcome reports (Nani follows parent changes at once and reports back).
+- N2: walkie-talkie call between the toy and a parent's phone.
 
 ## Next
-Planning in a new thinking-partner chat. The agenda is in OPEN.md.
+Wave 3: self-test on production (voice and chat scripts), fixes, then the report in this file.
