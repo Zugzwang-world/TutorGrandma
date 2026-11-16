@@ -25,7 +25,10 @@ export async function answerMemoryQuestion(question: string, sender: string): Pr
   const demo = await getDemoState(CHILD_ID);
   const [brain, turns, notes] = await Promise.all([getLatest(CHILD_ID, "brain"), dayTurns(CHILD_ID), dayNotes(CHILD_ID)]);
   const now = clockParts(demoNow(demo.clock_offset_ms));
+  const hindi = /[\u0900-\u097F]|\b(kya|hai|hain|ne|ko|aaj|kaise|kaisa|mein|se|ki|ka|nahi|haan|kuch|bata|batao|usne|kitna)\b/i.test(question);
+  const lang = hindi ? "the same mix of Hindi and English the parent used" : "English only (no Hindi sentences; a Hindi word he said may be quoted)";
   const user = `Today is ${now.dayLabel}. ${sender} asks: ${question}
+Reply in ${lang}, at most 30 words.
 
 TODAY'S TURNS WITH ${child.toUpperCase()}
 ${turnsText(turns)}
