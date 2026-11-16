@@ -19,6 +19,55 @@ const BOT_ALIASES: Record<string, BotKey> = {
 };
 const toBot = (v: unknown) => (typeof v === "string" ? (BOT_ALIASES[v.trim().toLowerCase()] ?? v) : v);
 
+/** Drops a stock opener ("Done! ", "Got it, ", "Noted. ") so replies lead with the substance; keeps a reply that is only that. */
+const STOCK_OPENER = /^(?:done|got it|noted|okay|ok|sure)\s*[!.,:–—-]+\s*/i;
+function freshOpener(reply: string): string {
+  const rest = reply.replace(STOCK_OPENER, "");
+  if (rest === reply || !/[\p{L}\p{N}]/u.test(rest)) return reply;
+  return rest.charAt(0).toUpperCase() + rest.slice(1);
+}
+
+const MAX_WORDS = 30; // the prompt asks for 25; past 30 the reply keeps only its first whole sentences
+const words = (s: string) => s.split(/\s+/).filter(Boolean).length;
+
+/** Sentences, never split inside "quoted" or 'quoted' words; a trailing emoji stays with its sentence. */
+function sentences(text: string): string[] {
+  const ch = Array.from(text); // code points, so an emoji is one item
+  const isLetter = (c: string | undefined) => !!c && /\p{L}/u.test(c);
+  const isEmoji = (c: string | undefined) => !!c && /[\p{Extended_Pictographic}️‍]/u.test(c);
+  const out: string[] = [];
+  let start = 0;
+  let dq = false; // inside "…" or “…”
+  let sq = false; // inside '…' (an apostrophe inside a word is not a quote)
+  for (let i = 0; i < ch.length; i++) {
+    const c = ch[i];
+    if (c === '"' || c === "“" || c === "”") dq = c === "“" ? true : c === "”" ? false : !dq;
+    else if (c === "'" && !sq && !isLetter(ch[i - 1]) && isLetter(ch[i + 1])) sq = true;
+    else if (c === "'" && sq && !isLetter(ch[i + 1])) sq = false;
+    const end = /[.!?]/.test(c) || (isEmoji(c) && /\s/.test(ch[i + 1] ?? ""));
+    if (dq || sq || !end) continue;
+    let j = i + 1;
+    while (j < ch.length && (/\s/.test(ch[j]) || isEmoji(ch[j]))) j++;
+    if (j === i + 1 || j >= ch.length || !/[\p{Lu}\p{N}"“']/u.test(ch[j])) continue; // mid-sentence, or the end
+    out.push(ch.slice(start, j).join("").trim());
+    start = j;
+  }
+  out.push(ch.slice(start).join("").trim());
+  return out.filter(Boolean);
+}
+
+/** One tidy chat line: no stock opener, and a runaway reply cut back to its first whole sentences. */
+export function tidyReply(reply: string): string {
+  const text = freshOpener(reply);
+  if (words(text) <= MAX_WORDS) return text;
+  const kept: string[] = [];
+  for (const s of sentences(text)) {
+    if (kept.length && words([...kept, s].join(" ")) > MAX_WORDS) break;
+    kept.push(s);
+  }
+  return kept.join(" ");
+}
+
 const ActionSchema = z.object({
   bot: z.preprocess(toBot, z.enum(["nani", "routine", "rules", "lessons", "memory"])),
   kind: z.string().catch("chat"),
@@ -32,7 +81,7 @@ const ActionSchema = z.object({
     })
     .nullable()
     .catch(null),
-  reply: z.string().trim().min(1),
+  reply: z.string().trim().min(1).transform(tidyReply),
 });
 
 export type SorterAction = z.infer<typeof ActionSchema>;

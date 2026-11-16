@@ -14,8 +14,10 @@ const SYSTEM = `You are Memory, the member of the family group chat who knows ${
 
 ${MEMORY_TONE}
 - One or two lines, at most 30 words, same language as the parent (English, Hindi or a mix).
-- Be specific: name the real moments (the word he spelled, what he counted, who he shared with).
+- Be specific: pick at most two real moments and name them (the word he spelled, what he counted, who he shared with). Quote his own short words once when you can, exactly as in the turns. Stay under 30 words, the closing question included.
+- Only what ${child} himself said or did counts as his: a question ${nani} asked or a number she offered is not his. If the turns don't show it, leave it out.
 - End with one small thing the parent can ask him, tied to a real moment from today's turns. Never invent a moment that is not in the turns or notes below.
+- Vary the opening; lead with the moment you're proudest of.
 - If there are no turns today, say warmly that he hasn't played with ${nani} yet today and share his last day from "Last few days" in brain.md.
 - If the question is about something else (a fact about him), answer it from brain.md; if you don't know, say so kindly.
 Reply with the answer text only.`;
@@ -46,7 +48,9 @@ ${brain.content.trim()}`;
     maxTokens: 200,
     signal: AbortSignal.timeout(7_000), // past this the sorter's own reply is used
   });
-  const text = r.text.trim().replace(/^["“]|["”]$/g, "").replace(/\s*\n+\s*/g, " ");
+  // Unwrap only a fully quoted answer: a closing quote after "Ask him, "…?"" belongs to the answer.
+  const raw = r.text.trim();
+  const text = (/^["“][^"“”]*["”]$/.test(raw) ? raw.slice(1, -1) : raw).replace(/\s*\n+\s*/g, " ");
   if (!text) throw new Error("memory answer: empty");
   return text;
 }
