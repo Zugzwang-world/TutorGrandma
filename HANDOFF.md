@@ -1,16 +1,12 @@
 # Handoff · overnight beta · 2026-11-17, 03:15 IST
 
 ## State
-The overnight beta (docs/plan/PLAN.md) is running: T0 01:08 IST; features stop 07:38; report at 08:38; hard stop 09:08.
-- Waves 0, 1 and 2 are merged and live: chat, sorter and agents, toy, wall, sounds, routine clock, presenter, brief, live sync, calls.
-- ★ B11 checks 1 to 5 pass on production (docs/plan/STAR-CHECKS.md).
-- Self-test results are in docs/plan/SELFTEST.md; run 2 is in progress.
-- Next: A10 polish with 2–3 builders, then a final self-test and the A11 report.
+The overnight beta is done and live. Waves 0–3 and the whole A10 polish list are merged; the ★ B11 checks pass on production (docs/plan/STAR-CHECKS.md); the final self-test is in docs/plan/SELFTEST.md; the report is in docs/thinking-partner/NOW.md. Production was reset to the seed at the end.
 
-**Resume:** re-read docs/plan/RUN.md, RUNLOG.md and this file. Run `gh pr list`. Read usage with the `mcp__ccd_session_mgmt__get_usage` tool (live mode; thresholds in RUN.md A6).
+**Resume:** re-read docs/thinking-partner/NOW.md (report), OPEN.md (questions for the founder) and docs/plan/RUNLOG.md. Usage: `mcp__ccd_session_mgmt__get_usage`.
 
 ## Branches and PRs
-None open at 03:15. Builders open PRs from their own worktrees. Merge them one at a time: squash, delete the branch, pull, run /api/reset, check production.
+None open. All 15 PRs are merged; branches are deleted.
 
 ## Running
 - Production: https://tutor-grandma.vercel.app: `/` (parents' chat), `/toy` (`?type` adds a text box), `/home-base` (`?demo=1` cycles the cues), `/presenter` (hidden).
@@ -20,9 +16,9 @@ None open at 03:15. Builders open PRs from their own worktrees. Merge them one a
 - Contracts: docs/plan/CONTRACTS.md. Toy contract for hardware: docs/toy-contract.md.
 
 ## Next actions, in order
-1. Read self-test run 2 (scripts/selftest/out/run2.log, docs/plan/SELFTEST.md). Fix ★ failures first.
-2. A10 polish in order: chat feel → agent replies → topic fillers → wall animations → talking-loop speed. Stop new features at 07:38.
-3. Final full self-test, then the A11 report: docs/thinking-partner/NOW.md, DECISIONS.md, OPEN.md and this file.
+1. Founder: the questions in OPEN.md ("From the overnight beta"): Kimi stalls → Claude Haiku switch, real-device checks, the voice clone.
+2. Before any demo: `python3 -I scripts/selftest/selftest.py all`, then `curl -X POST https://tutor-grandma.vercel.app/api/reset`.
+3. Next build steps: real-device fixes, the voice clone, then the hardware track against docs/toy-contract.md.
 
 ## Gotchas
 - The Coordinator commits in `.claude/worktrees/overnight-beta-execution-10a681` and runs `git push origin HEAD:main`. After every merge: `git pull --ff-only origin main` there AND `git -C /Users/hrishikesh/Tutor-Grandma pull --ff-only`.

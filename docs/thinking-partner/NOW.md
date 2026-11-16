@@ -32,7 +32,7 @@
 
 ## Speech check
 - Final run: 164/165 sentences pass (99%); 47/51 child lines heard correctly.
-- Worst: single letters spoken alone ("M", "S" heard as "N", "Yes"), "Bye Nani" heard as "Bhai Nani", one "Chaar!" garbled.
+- Worst: single letters spoken alone ("M" heard as "N"; now fixed in the spelling game), "Bye Nani" heard as "Bhai Nani", one "Chaar!" garbled.
 - Hindi in Roman letters sounds the same as Devanagari in Nani's voice (0.81 vs 0.80), so persona.md keeps Roman.
 
 ## Usage
@@ -42,6 +42,6 @@
 ## Known issues and next steps
 1. **Kimi k2.6 stalls** on 10–15% of turns for 7–10 s, worse in some periods. The loop cancels and retries one at a time (up to 3 tries) and fillers cover the wait, but about 1 turn in 7 can still end with the "Chalo, ek naya khel" line. K3 models can't turn thinking off. Best fix: move the brain to Claude Haiku 5.5 once Anthropic credit is fixed (one switch in demo.config.json).
 2. Test on real devices: phone mic, iPhone Safari, the projector browser.
-3. Single-letter answers ("M") are often misheard; consider passing the board's tiles as speech-to-text key terms.
+3. Single-letter answers: while a spelling is on the wall, a one-letter answer now snaps to the board's tiles ("M" heard as "N" → M; checked 3/3 voices). Outside the spelling game, single letters can still be misheard.
 4. A "once at 19:00" job with no date repeats daily; a clock jump only catches jobs from the last 30 minutes.
 5. Agent replies sometimes add a small extra ("shells and stones").

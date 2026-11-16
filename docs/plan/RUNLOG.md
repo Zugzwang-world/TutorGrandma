@@ -32,3 +32,4 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 04:27 | 3:19 | polish | agent replies #14 (own voices, no stock openers) | 7% weekly | prod chat self-test 10/10 routing, replies varied; speed polish building |
 | 04:44 | 3:36 | polish done | speed #15 (filler cut at phrase end, earlier first chunk) + reviewer fix; cue-only reply fix | 7% weekly | A10 list complete; final full self-test run 5 running |
 | 05:08 | 4:02 | report | final self-test run 5 (7/51 slow_brain, chat 10/10, speech 99%); scared/robot prompt rules | 8% weekly | A11 report drafted (NOW, OPEN, DECISIONS); no new builders (8% threshold) |
+| 05:12 | 4:04 | end | letter snap for the spelling game (M heard as N → M, 3/3 voices); report, HANDOFF, OPEN final; production reset to seed | 8% weekly | stop: everything merged and checked; no new work below the 6.5 h mark because the A10 list is done and usage is at the 8% threshold |
