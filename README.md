@@ -5,7 +5,7 @@ A plush toy for Indian children aged 5 to 8. The child squeezes its paw and talk
 Buildathon prototype.
 
 - `apps/web`: Next.js parent website and the `/home-base` projector page
-- `apps/relay`: toy relay (host decided in the product session)
+- `apps/relay`: audio relay (host decided in the product session)
 - `firmware`: ESP32-S3 firmware, an ElatoAI fork (arrives later)
 - `agent/templates`: the five agent files
 - `content/demo.config.json`: all demo content
