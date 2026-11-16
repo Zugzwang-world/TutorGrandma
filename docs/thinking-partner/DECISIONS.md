@@ -29,3 +29,4 @@ One line each: date · decision · why.
 - 2026-11-17 · Added a demo_state table (clock offset, wall timings switch) and a meta column on turns · a freshly loaded /toy needs the presenter clock, and job fires need a key.
 - 2026-11-17 · Shared layer adds brain.ts, eleven.ts, broadcast.ts, clock.ts, demo-state.ts, seed.ts beyond the plan's list · stops five builders writing five Kimi and ElevenLabs clients.
 - 2026-11-17 · Seed lives in content/seed.json; the chat broadcast channel is chat:aarav (event "working") · one source for the seed and /api/reset.
+- 2026-11-17 · Vercel functions run in bom1 (Mumbai) via apps/web/vercel.json · Supabase is in ap-south-1 and the demo is in India; iad1 added about 200 ms per database hop.
