@@ -70,7 +70,7 @@ JSON array of `AudioEntry { id, file, kind, area?, text?, duration }`. `file` is
 - kinds: `reaction`, `filler`, `fallback`, `line`, `sfx`, `sting`, `song`, `snippet`.
 - ids (fixed):
   - reactions: `reaction_ooh`, `reaction_achha`, `reaction_hmm`, `reaction_haanji`, `reaction_oho`, `reaction_achha_achha`
-  - fillers: `filler_<area>_<n>` with area `numbers`, `animals`, `letters`, `body`, `colours`, `shapes`, `manners`, `feelings`, `review` (n from 1); the long wait line is `filler_wait_chashma` (area `wait`)
+  - fillers: `filler_<area>_<n>` with area `numbers`, `animals`, `letters`, `fruits`, `body`, `colours`, `shapes`, `manners`, `feelings`, `review` (n from 1); the long wait line is `filler_wait_chashma` (area `wait`)
   - fallbacks (id = the TurnEvent fallback id): `not_heard`, `voice_failed`, `slow_brain`, `offline`
   - lines: `line_call_mumma`, `line_call_papa`, `line_good_night`
   - animal sounds (kind `sfx`, area `animals`): `animal_lion`, `animal_cow`, `animal_cat`, `animal_dog`, `animal_elephant`, `animal_monkey`, `animal_duck`, `animal_sheep`, `animal_horse`, `animal_rooster`. `[[sound lion]]` plays `animal_lion`.
