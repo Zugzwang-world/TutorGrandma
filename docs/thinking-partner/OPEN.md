@@ -13,3 +13,4 @@
 7. Relay host: Vercel or the founder's laptop.
 8. Latency log per hop, from the first talking loop.
 9. Splitting into the two chats, software and hardware.
+- Kimi latency varies: the sorter's first reply took 2.6 s in one production run and 13 s in another; N1 saw a 6 s Kimi stall about once in 25 turns. Watch it in the self-test; it is the slowest hop.
