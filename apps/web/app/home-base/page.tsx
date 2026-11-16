@@ -1,8 +1,15 @@
+import type { Metadata, Viewport } from "next";
+import Wall from "@/components/wall/Wall";
+
+export const metadata: Metadata = {
+  title: "Home base · Tutor Grandma",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b0b12",
+};
+
+// The projector wall (C4). Everything live happens in the client component.
 export default function HomeBase() {
-  return (
-    <main className="fixed inset-0 flex flex-col items-center justify-center gap-6 bg-black text-white">
-      <p className="text-5xl font-semibold">Home base ready</p>
-      <p className="text-4xl">Grandma is on her way</p>
-    </main>
-  );
+  return <Wall />;
 }
