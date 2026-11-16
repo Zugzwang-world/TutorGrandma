@@ -20,7 +20,7 @@ import {
   type Reported,
 } from "@/lib/agents/changes";
 import { postTurnOutcomes, type TurnOutcomeInput } from "@/lib/agents/turn-notes";
-import { brainStreamHedged } from "@/lib/brain";
+import { brainStream } from "@/lib/brain";
 import { clockParts, demoNow } from "@/lib/clock";
 import { CHILD_ID, config } from "@/lib/config";
 import { stt, tts } from "@/lib/eleven";
@@ -35,13 +35,12 @@ import { buildTurnPrompt } from "./prompt";
 export const maxDuration = 60;
 
 const BRAIN_MAX_TOKENS = 150;
-const FIRST_TOKEN_TIMEOUT_MS = 6000; // no brain token by then: slow_brain
+const FIRST_TOKEN_TIMEOUT_MS = 7000; // no brain token by then: slow_brain (the toy's own fallback is at 8 s)
 const SOUND_ONLY = "(Aarav made a sound, not words: maybe a roar, a laugh or an animal noise)";
 // Speech-to-text tags for room noise, music, breath or silence: these presses stay "not heard", not a roar.
 const NOISE_TAG = /लगातार|शोर|संगीत|सन्नाटा|खामोशी|चुप्पी|साँस|सांस|हवा|noise|music|static|silence|background|hum|beep|click|wind|breath|typing/i;
 // Aarav agreeing to a call: "Haan", "yes", "ok", "chalo", "Mumma ko sunao/dikhao", "call karo".
 const SAID_YES = /\b(haan|ha|haanji|han|yes|yeah|ok|okay|chalo|theek)\b|हाँ|हां|हा\b|ठीक|चलो|(mumma|mummy|papa|मम्मा|मम्मी|पापा)\s*(ko|को)\s*(sunao|dikhao|bulao|सुनाओ|दिखाओ|बुलाओ)|call\s*(karo|kar)|कॉल/i;
-const BRAIN_HEDGE_MS = 2200; // no first token by then: fire a second identical request, first one wins
 const BRAIN_IDLE_MS = 3000; // no new token for this long after the first: end the reply
 const TTS_TIMEOUT_MS = 5000; // one sentence of voice; past this it counts as voice_failed
 // Hinglish TTS language. Tested "hi" vs none on 4 Hinglish lines (transcribed back): identical words,
@@ -278,7 +277,7 @@ async function runTurn(
       }, BRAIN_IDLE_MS);
     };
     try {
-      for await (const d of brainStreamHedged({ messages, maxTokens: BRAIN_MAX_TOKENS, signal: brainAc.signal, hedgeMs: BRAIN_HEDGE_MS })) {
+      for await (const d of brainStream({ messages, maxTokens: BRAIN_MAX_TOKENS, signal: brainAc.signal })) {
         if (timings.brainFirst === undefined) {
           timings.brainFirst = since();
           clearTimeout(timer);

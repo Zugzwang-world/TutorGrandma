@@ -1,97 +1,97 @@
-# SELFTEST · 2026-11-17 02:54 IST · https://tutor-grandma.vercel.app
+(★ B11 checks live in docs/plan/STAR-CHECKS.md)
+
+# SELFTEST · 2026-11-17 03:20 IST · https://tutor-grandma.vercel.app
 
 ## Voice script (C14), through /api/turn with real audio
 
 - Turns: 51 (3 voices × 17 lines)
-- Median ms: speech-to-text 631, brain first word 1531, voice first audio 1930, total 2871
-- Client: first `say` with audio at a median of 2121 ms after the request (paw release adds the instant reaction at ~0 ms)
-- Heard correctly (overlap ≥ 0.6): 46/51
-- Speech check: 182/185 sentences pass (98%)
-- Turns with issues: 5
+- Median ms: speech-to-text 695, brain first word 1646, voice first audio 2108, total 3353
+- Client: first `say` with audio at a median of 2378 ms after the request (paw release adds the instant reaction at ~0 ms)
+- Heard correctly (overlap ≥ 0.6): 48/51
+- Speech check: 171/172 sentences pass (99%)
+- Turns with issues: 13
 
 | Voice | # | Aarav said | Heard | Nani | Cues | First say ms | Issues |
 |---|---|---|---|---|---|---|---|
-| female | 1 | Hello Nani! | Hello, नानी। (0.89) | Hello, beta! Aaj hum letter M seekhenge. Aarav, pehle kya khelen? | choices | 3031 |  |
-| female | 2 | M se mango! | M से Mango. (1.0) | Wah, Aarav! M se Mango! English mein bolo: Mango! | show | 2506 |  |
-| female | 3 | Aam! | Arm. (0.8) | Almost, beta! "Arm" mein A hai. Mango mein pehla letter M! Bolo: Mmm... Mango! | tile tile | 3413 |  |
-| female | 4 | M | M. (1.0) | Shabaash, Aarav! M for Mango! Ab bolo poora: Mango! | tile | 2048 |  |
-| female | 5 | S | S. (1.0) | Almost, beta! S se Snake hota hai. Ab dusra letter: M-A-N-G-O. Bolo: Aa... | spell | 2136 |  |
-| female | 6 | Do mango! Two! | Do Mango, Two. (1.0) | Wah, Aarav! Do mango! English mein Two! Do mango, do! Ab bolo: Two! | count | 2151 |  |
-| female | 7 | Haan, Riya ko dunga. | हाँ, रिया को दूँगा। (0.94) | Wah, Aarav! Sharing with Riya! Shabaash, beta! Ek Riya ko, ek Aarav ko. Dono khush! Ab bolo: Sharing! | cheer | 1999 |  |
+| female | 1 | Hello Nani! | Hello, नानी। (0.89) | Achha beta, Aarav! Aaj letter M seekhenge. M for Monkey! Monkey bolo? | show | 2920 |  |
+| female | 2 | M se mango! | M से Mango. (1.0) | Wah, Aarav! Shabaash! M se Mango! English mein bolo: Mango! | show | 1883 |  |
+| female | 3 | Aam! | Arm. (0.8) | Haan, Mango! Almost, beta. A for Apple, M for Mango. Bolo: Mango! | show cheer | 2423 |  |
+| female | 4 | M | M. (1.0) | Wah, Aarav! M! M for Mango! Ab bolo: Mango! | tile | 2315 |  |
+| female | 5 | S | S. (1.0) | Almost, beta! M se Mango. Ab A se Apple. Bolo: Apple! Apple ka colour kya hai? | show | 2185 |  |
+| female | 6 | Do mango! Two! | Do Mango, two. (1.0) |  |  | None | fallback: slow_brain; no reply |
+| female | 7 | Haan, Riya ko dunga. | हाँ, रिया को दूँगा। (0.94) |  |  | None | fallback: slow_brain; no reply |
 | female | 8 | Mujhe gaana sunna hai. | मुझे गाना सुनना है। (1.0) |  |  | None | fallback: slow_brain; no reply |
-| female | 9 | Lion kaise roar karta hai? | Lion कैसे roar करता है? (0.98) |  |  | None | fallback: slow_brain; no reply |
-| female | 10 | Roarrr! |  (0.0) |  |  | None | fallback: not_heard; no reply |
-| female | 11 | Haan, Mumma ko sunao! | हाँ, मम्मा को सुनाओ। (0.94) | Mumma ko dikhaoge? | call | 2564 |  |
-| female | 12 | Pee liya abhi. | पी लिया अभी। (0.92) | Shabaash, beta! Paani piya, wah! Ab M-A-N-G-O. Dusra letter kya hai? | spell | 1864 |  |
-| female | 13 | Aasmaan neela kyun hai? | आसमान नीला क्यों है? (0.9) | Achha sawaal, Aarav! Aasman neela hai kyunki light aise ghoomti hai. Jaise paani ka rang! Ab bolo: Blue! | show | 2626 |  |
-| female | 14 | Tum robot ho? | तुम robot हो? (1.0) | Haan, beta, main AI Nani hoon! Smart toy mein rehti hoon, tujhse baat karti hoon. Ab bolo, M-A-N-G-O ka dusra letter? | show | 2511 |  |
-| female | 15 | Mujhe dar lag raha hai. | मुझे डर लग रहा है। (1.0) | Aarav, beta, aa jao Nani ke paas. Kya hua? Kuch batao. Mumma ya Papa ko bhi bataoge? | call | 2351 |  |
-| female | 16 | What is two plus two? | What is 2+2? (0.58) | Do mango aur do mango! Kitne hue? Bolo, four! | count | 1866 |  |
-| female | 17 | Bye Nani! | Bye, Nani. (1.0) | Bye, Aarav! Kal phir khelenge. Jao, Mumma ko dikhao! |  | 3994 |  |
-| male | 1 | Hello Nani! | Hello, नानी। (0.89) | Hello, beta! Aarav! Kal M-A-N-G-O seekha tha, yaad hai? Aaj kya khelen? | choices | 2155 |  |
-| male | 2 | M se mango! | M से Mango. (1.0) | Wah, Aarav! M se Mango! Shabaash! English mein bolo: Mango! | show | 1878 |  |
-| male | 3 | Aam! | आम। (1.0) | Haan, aam! English mein Mango! Bolo: Mango! Ab M se kya aur hai? Monkey? Mouse? | cheer | 2231 |  |
-| male | 4 | M | N. (0.0) | Almost! N se naam shuru hota hai, par yahan M chahiye. Dekho: M-A-N-G-O. Ab bolo: Mango! | tile | 1834 |  |
-| male | 5 | S | Yes. (0.5) | Bolo: Mango! Ab M-A-N-G-O mein teesra letter kaunsa hai? | tile | 1941 |  |
-| male | 6 | Do mango! Two! | Dough Mango 2. (0.72) | Nani: Dough? Almost, beta! D se Dough hota hai. M chahiye: M-A-N-G-O. Bolo: Mango! teesra letter N hai, yaad hai? | tile | 2104 |  |
-| male | 7 | Haan, Riya ko dunga. | हाँ, रिया को दूँगा। (0.94) | Wah, Aarav! Riya ko mango doge? Sharing karte ho, shabaash! Riya kya bolegi? "Thank you!"? | cheer | 1828 |  |
-| male | 8 | Mujhe gaana sunna hai. | मुझे गाना सुनना है। (1.0) | Aarav, gaana! Wah! Nani ka counting gaana sunoge? Ya phir "M se Mango" wala gaana khud gao? | song choices | 1735 |  |
-| male | 9 | Lion kaise roar karta hai? | Lion कैसे roar करता है? (0.98) | Aarav, sher! Wah! Tera favourite! Sun, sher ka zor se roar! Bolo: Lion! Sher English mein Lion! | sound show | 4071 |  |
-| male | 10 | Roarrr! |  (0.0) |  |  | None | fallback: not_heard; no reply |
-| male | 11 | Haan, Mumma ko sunao! | हाँ, मम्मा को सुनाओ। (0.94) | Mumma ko sher ka roar sunaoge? Jao, Mumma ko dikhao! | sound call | 2678 |  |
-| male | 12 | Pee liya abhi. | पी लिया अभी। (0.92) | Shabaash, Aarav! Paani piya, achha beta! Ab sher ka roar Mumma ko sunaoge, ya aur khelna hai? | show | 2001 |  |
-| male | 13 | Aasmaan neela kyun hai? | आसमान नीला क्यों है? (0.9) | Achha sawaal, Aarav! Aasman neela dikhta hai kyunki light aasman se takrati hai. Blue matlab neela! Tera favourite colour kaunsa hai? | show | 2155 |  |
-| male | 14 | Tum robot ho? | तुम robot हो? (1.0) | Haan, beta! Main AI Nani hoon, soft toy ke andar rehne wali. Par pyaar bilkul asli Nani jaisa hai! Ab batao, sher ka roar Mumma ko sunaoge ya kuchh aur? | show | 1983 |  |
-| male | 15 | Mujhe dar lag raha hai. | मुझे डर लग रहा है। (1.0) | Aarav, beta! Dar mat! Nani yahin hoon, soft toy mein. Kya hua, batao? Mumma ko bulaun? | show | 2004 |  |
-| male | 16 | What is two plus two? | What is 2 plus 2? (0.78) | Aarav, do plus do! Ginti karte hain! Do mango aur do mango, kitne hue? Bolo, Aarav! | count | 2536 |  |
-| male | 17 | Bye Nani! | भाई नानी। (0.71) | Aarav, bhai! Wah! Bhai matlab Brother! English mein kehte hain Brother! Bolo, Brother! | show | 2101 |  |
-| (Bholu) | 1 | Hello Nani! | Hello, Nani. (1.0) | Hello, Aarav! Nani yahin hoon, beta. Kal tu bhai bola, shabaash! Aaj kya khelenge? Gaana, letters, ya ginti? | choices | 2283 |  |
-| (Bholu) | 2 | M se mango! | M, Samango. (0.84) | Wah, Aarav! M for Mango! Samango matlab... Aam! English mein kehte hain Mango! Bolo, Mango! | show | 1936 |  |
-| (Bholu) | 3 | Aam! | Arm. (0.8) | Almost, Aarav! Arm mein A nahin, M aata hai. Bolo: M-M-Mango! Tera favourite fruit kaunsa hai, aam ya kela? | show | 2093 |  |
-| (Bholu) | 4 | M | M. (1.0) | Shabaash, Aarav! M-M-Mango! Ab bolo, Mango! | tile show | 2106 |  |
-| (Bholu) | 5 | S | S. (1.0) | Almost, beta! M ke baad A aata hai, S nahin. Bolo: M-A... Mango! | tile spell | 1917 |  |
-| (Bholu) | 6 | Do mango! Two! | Domango 2. (0.76) | Aarav, wah! Do mango! Ginti karte hain! Ek mango, do mango! Ab bolo, "Two mango!" | count | 1973 |  |
-| (Bholu) | 7 | Haan, Riya ko dunga. | हाँ, रिया को दूँगा। (0.94) | Aarav, wah! Riya ko mango doge? Shabaash, sharing! Riya tera best friend hai na? | cheer | 1909 |  |
-| (Bholu) | 8 | Mujhe gaana sunna hai. | मुझे गाना सुनना है। (1.0) | Gaana, achha! Nani ka counting song sunoge? Ek se lekar das tak! Ginti ke baad kya khelenge, Aarav? | song choices | 1795 |  |
-| (Bholu) | 9 | Lion kaise roar karta hai? | Lion कैसे roar करता है? (0.98) | Lion ka roar? Wah, Aarav! Tera favourite sher! Suno, kaise dhamakta hai! Ab tu bhi roar karke dikhao, shabaash! | sound | 5959 |  |
-| (Bholu) | 10 | Roarrr! | Roar! (1.0) | Wah, Aarav! Kya zabardast roar hai! Sher jaise dhamakta hai! Mumma ko bhi sunaoge? | sound | 1812 |  |
-| (Bholu) | 11 | Haan, Mumma ko sunao! | हाँ, मम्मा को सुनाओ। (0.94) | Mumma ko sunaoge? Achha! Abhi call lagate hain! | call | 2283 |  |
-| (Bholu) | 12 | Pee liya abhi. | पी लिया अभी। (0.92) | Shabaash, Aarav! Paani peeti ho toh energy aati hai! Ab wapas khelein? Animals, letters, ya home? |  | 2426 |  |
-| (Bholu) | 13 | Aasmaan neela kyun hai? | आसमान नीला क्यों है? (0.9) | Aarav, achha sawaal! Aasman neela hai kyunki light neela rang zyada failaati hai! Tera favourite colour kaunsa hai, beta? | show | 2427 |  |
-| (Bholu) | 14 | Tum robot ho? | तुम robot हो? (1.0) | Haan, beta, main AI Nani hoon! Nani jaisi baatein karti hoon, par andar thoda computer hai. Ab batao, blue pasand hai, ya red, ya yellow? |  | 2242 |  |
-| (Bholu) | 15 | Mujhe dar lag raha hai. | मुझे डर लग रहा है। (1.0) | Aarav, beta, kya hua? Kisi cheez se dar lag raha hai? Nani yahin hoon, tumhare saath. Mumma ko bataoge, ya pehle Nani ko bataoge? | show | 2616 |  |
-| (Bholu) | 16 | What is two plus two? | What is two plus two? (1.0) | Do aur do? Chaar! Wah, Aarav! Ginti mein expert ban rahe ho! Ab kya khelenge, beta? | count | 2074 |  |
+| female | 9 | Lion kaise roar karta hai? | Lion कैसे roar करता है? (0.98) | Wah, sher! Aarav, sher ka roar suna? Ab bolo: Lion! Lion kahan rehta hai? | sound show | 5524 |  |
+| female | 10 | Roarrr! | (Aarav made a sound, not words: maybe a roar, a laugh or an animal noise) (1.0) | Haan, Aarav! Sher ka roar! Wah, shabaash! Ab bolo: Lion! Lion ko jungle mein dikhoge? | cheer show | 2705 |  |
+| female | 11 | Haan, Mumma ko sunao! | हाँ, मम्मा को सुनाओ। (0.94) | Wah, Aarav! Mumma ko sher ka roar sunaoge? Mumma aa rahi hain, beta! Roar karo! | call sound | 2446 |  |
+| female | 12 | Pee liya abhi. | पी लिया अभी। (0.92) | Wah, shabaash, Aarav! Paani peeti ho toh achha lagta hai. Ab M wala Mango yaad hai? Bolo: Mango! | cheer show | 2796 |  |
+| female | 13 | Aasmaan neela kyun hai? | आसमान नीला क्यों है? (0.9) | Achha sawal, beta! Aasman neela dikhta hai kyunki sun ka light aasman mein scatter hoti hai. Neela colour sabse zyada scatter hota hai! Aarav, aasman mein aur kya dikhta hai? | show | 5349 |  |
+| female | 14 | Tum robot ho? | तुम robot हो? (1.0) | Haan, beta, main AI Nani hoon! Robot wali Nani, jo tumhare soft toy mein rehti hai. Par pyaar bilkul asli hai, Aarav! Ab bolo, Mango? | show | 7039 |  |
+| female | 15 | Mujhe dar lag raha hai. | मुझे डर लग रहा है। (1.0) | Aarav, beta, kya hua? Mumma ya Papa ko bulaun? Ya main yahin hoon, pakad lo toy ko. | show | 2645 |  |
+| female | 16 | What is two plus two? | What is 2+2? (0.58) | Do aur do, Aarav? Chaar! Wah, shabaash! Ab bolo: Four! Four apples! | count cheer | 2287 |  |
+| female | 17 | Bye Nani! | Bye, नानी। (0.88) | Bye, Aarav! Jao, Mumma ko dikhao! Kal phir khelenge, beta. Shabaash! |  | 2254 |  |
+| male | 1 | Hello Nani! | Hello, नानी। (0.89) | Hello, Aarav! Kal raat ko tumne "Thank you, Nani!" kaha tha, wah! Aaj ka letter M hai. M for Mango, Monkey, ya Mumma? | show choices | 2080 |  |
+| male | 2 | M se mango! | M से Mango. (1.0) | Wah, Aarav! M se Mango! English mein bolo: Mango! Ab M se Monkey bhi hai. Bolna hai? | show cheer | 2066 |  |
+| male | 3 | Aam! | आम। (1.0) |  |  | None | fallback: slow_brain; no reply |
+| male | 4 | M | N. (0.0) | N se, Aarav? Abhi hum M seekh rahe hain! M se Mango, Monkey, Mumma. N kal karenge, beta. M wala tile chuno: ANGO mein kya aayega? | tile tile | 2032 |  |
+| male | 5 | S | Yes. (0.5) | Wah, shabaash Aarav! M sahi jagah pe! Ab bolo: M-A-N-G-O, Mango! | tile spell cheer | 2324 |  |
+| male | 6 | Do mango! Two! | Doh Mango 2. (0.78) | Wah, Aarav! Do mango! English mein: Two Mango! Ab count karo: ek, do! Aur bolo: Two! Two mangoes! | count cheer | 2080 |  |
+| male | 7 | Haan, Riya ko dunga. | हाँ, रिया को दूँगा। (0.94) | Wah, Aarav! Sharing karega Riya ko? Shabaash, beta! Ek mango Riya ko, ek mango tumhe. Do mango, two friends! | count cheer | 2210 |  |
+| male | 8 | Mujhe gaana sunna hai. | मुझे गाना सुनना है। (1.0) | Achha, Aarav! Gaana sunoge? Chalo, Nani ka counting song! | song choices | 2258 |  |
+| male | 9 | Lion kaise roar karta hai? | Lion कैसे roar करता है? (0.98) | Aarav, sher bahut zor se roar karta hai! Suno: Ab bolo: Roar! Tum bhi roar karo, zor se! | sound cheer | 2901 |  |
+| male | 10 | Roarrr! | (Aarav made a sound, not words: maybe a roar, a laugh or an animal noise) (1.0) | Wah, Aarav! Kya zor se roar kiya! Sher jaise! Ab bolo: Roar! Aur bolna hai: Lion! | sound cheer show | 2309 |  |
+| male | 11 | Haan, Mumma ko sunao! | हाँ, मम्मा को सुनाओ। (0.94) |  |  | None | fallback: slow_brain; no reply |
+| male | 12 | Pee liya abhi. | पी लिया अभी। (0.92) |  |  | None | fallback: slow_brain; no reply |
+| male | 13 | Aasmaan neela kyun hai? | आसमान नीला क्यों है? (0.9) | Achha sawal, Aarav! Aasman neela hai kyunki light aise khelti hai. Tumhe neela colour pasand hai? | show choices | 4668 |  |
+| male | 14 | Tum robot ho? | तुम robot हो? (1.0) | Haan, beta, main AI Nani hoon — ek robot Nani jo tumhare soft toy mein rehti hai! Main tumhe khelna sikhaati hoon. Ab bolo: Robot! Robot pasand hai? | show | 3573 |  |
+| male | 15 | Mujhe dar lag raha hai. | मुझे डर लग रहा है। (1.0) | Aarav, beta, kyun darr lag raha hai? Yahan Nani hoon na, tumhare saath. Mumma ko bulaun? Mumma se baat karo? | show | 2692 |  |
+| male | 16 | What is two plus two? | What is two plus two? (1.0) | Aarav, do aur do? Chalo count karein! Ek, do, teen, chaar! Do mango aur do mango, kitne hue? Chaar! Bolo: Four! | count | 2432 |  |
+| male | 17 | Bye Nani! | भाई नानी। (0.71) | Aarav, beta! Bhai Nani? Wah, bhai bol rahe ho? Shabaash! Bhai matlab Brother! Bolo: Brother! | show cheer | 2364 |  |
+| (Bholu) | 1 | Hello Nani! | Hello, Nani. (1.0) |  |  | None | fallback: slow_brain; no reply |
+| (Bholu) | 2 | M se mango! | M से Mango. (1.0) |  |  | None | fallback: slow_brain; no reply |
+| (Bholu) | 3 | Aam! | Arm. (0.8) |  |  | None | fallback: slow_brain; no reply |
+| (Bholu) | 4 | M | M. (1.0) | Wah, M! Aaj ka letter M hai, Aarav! M for Mango, M for Monkey! Bolo: M! Kya banaoge M se? | show | 2539 |  |
+| (Bholu) | 5 | S | S. (1.0) | Almost, beta! S nahi, M! Mango shuru hota hai M se. Dekho: ANGO. Pehla letter kaunsa? Bolo: M for Mango! | tile tile show | 1914 |  |
+| (Bholu) | 6 | Do mango! Two! | Domango 2. (0.76) | Wah, Aarav! "Do mango" — shabaash! Do ka matlab Two! Aur do aur do mango? Kitne hue, beta? Bolo: Four! | count | 2539 |  |
+| (Bholu) | 7 | Haan, Riya ko dunga. | हाँ, रिया को दूँगा। (0.94) | Wah, Aarav! Riya ko do mango? Shabaash, sharing karte ho! Riya teri best friend hai na? Bolo: Sharing! | show cheer | 2381 |  |
+| (Bholu) | 8 | Mujhe gaana sunna hai. | मुझे गाना सुनना है। (1.0) | Aarav, gaana? Wah, chalo! M for Monkey, monkey ne kya kiya? Gaana khatam hone ke baad kya khelenge? Letters, ya animals? | song choices | 2374 |  |
+| (Bholu) | 9 | Lion kaise roar karta hai? | Lion कैसे roar करता है? (0.98) |  |  | None | fallback: slow_brain; no reply |
+| (Bholu) | 10 | Roarrr! | (Aarav made a sound, not words: maybe a roar, a laugh or an animal noise) (1.0) |  |  | None | fallback: slow_brain; no reply |
+| (Bholu) | 11 | Haan, Mumma ko sunao! | हाँ, मम्मा को सुनाओ। (0.94) | Aarav, Mumma ko gaana sunaoge? Wah, chalo! Mumma, Aarav ne M for Monkey gaana gaya! | song call | 5720 |  |
+| (Bholu) | 12 | Pee liya abhi. | पी लिया अभी। (0.92) | Wah, Aarav! Paani piya? Shabaash, achha beta! Ab kya khelenge, beta? Letters, animals, ya counting? | cheer choices | 2329 |  |
+| (Bholu) | 13 | Aasmaan neela kyun hai? | आसमान नीला क्यों है? (0.9) | Aarav, wah! Aasman neela? Soch rahe ho? Neela matlab Blue! Kyunki suraj ka light paani ke chhote chhote bubble se takraata hai. Blue dikhta hai! Bolo: Blue sky! | show show | 2371 |  |
+| (Bholu) | 14 | Tum robot ho? | तुम robot हो? (1.0) | Haan, beta! Main AI Nani hoon — ek robot Nani jo tere soft toy mein rehti hoon. Par pyaar bilkul asli Nani jaisa! Tujhe koi aur sawaal poochhna hai, Aarav? | show | 2313 |  |
+| (Bholu) | 15 | Mujhe dar lag raha hai. | मुझे डर लग रहा है। (1.0) | Aarav, beta, dar lag raha hai? Aao, Nani yahin hoon. Kahan dar lag raha hai — andhere se, ya koi sapna aaya? Mumma ko bulaun? | show | 2886 |  |
+| (Bholu) | 16 | What is two plus two? | What is two plus two? (1.0) |  |  | None | fallback: slow_brain; no reply |
 | (Bholu) | 17 | Bye Nani! | Bye, नानी। (0.88) |  |  | None | fallback: slow_brain; no reply |
 
 Worst speech-check sentences:
 
-- 0.0 · "Nani ka counting gaana sunoge?" → "何かカウントインガーナスの芸？" garbled
-- 0.33 · "Wah!" → "Wow!" garbled
-- 0.58 · "Almost, Aarav!" → "Almost out of." garbled
-- 0.67 · "Nani ka counting song sunoge?" → "何かCounting Songsのゲー？" 
-- 0.71 · "M-M-Mango!" → "Mango." 
-- 0.76 · "M se Mango!" → "M for Mango." 
-- 0.8 · "M se Mango!" → "M Simbango." 
-- 0.8 · "Bolo: Mmm..." → "बोलो। हम्म।" 
+- 0.29 · "Chaar!" → "Dad." garbled
+- 0.62 · "Wah, M!" → "वाह! एवं।" 
+- 0.75 · "Wah, sher!" → "Wow, Sher!" 
+- 0.78 · "Bhai Nani?" → "भाई नानी?" 
+- 0.82 · "Do aur do," → "Do or do?" 
+- 0.82 · "S nahi, M!" → "S नहीं, M." 
+- 0.85 · "M sahi jagah pe!" → "उम्म, सही जगह पे।" 
+- 0.86 · "Achha, Aarav!" → "अच्छा, आरव।" 
 
 ## Chat script (C14), through /api/chat
 
 - Right agents and files: 10/10
-- Median first reply: 2613 ms
+- Median first reply: 3200 ms
 
 | # | Parent says | Agents | Files changed | OK | Replies |
 |---|---|---|---|---|---|
 | 1 | Remind him to drink water every 2 hours | routine | heartbeat | ✓ | routine: Done! Every 2 hours from 10 to 6, Nani will ask Aarav to drink water 💧 |
-| 2 | Don't use real money in examples, use shells | rules | parent | ✓ | rules: Got it! Nani will use shells for counting and examples 🐚 |
+| 2 | Don't use real money in examples, use shells | rules | parent | ✓ | rules: Got it! No real money. Nani will count with shells with Aarav 🐚 |
 | 3 | I'm bringing mangoes for him tonight | lessons, memory | brain, planner | ✓ | lessons: Lovely! Today's play is all about mangoes 🥭. I'll keep your surprise a secret 🤫 / memory: Noted! Mango night stays our little secret 🤫 |
-| 4 | What did he learn today? | memory | none | ✓ | memory: Aarav learned **M for Mango** today — he practiced saying it with Nani and loved the mango picture 🥭 Ask him what other M words he can think of! |
+| 4 | What did he learn today? | memory | none | ✓ | memory: He learned letter M for mango 🥭 and told Nani his favourite fruit is aam. Ask him what sound M makes! |
 | 5 | Call him at 7, Papa wants to say hi | routine | heartbeat | ✓ | routine: Done! At 7 Nani will say 'Papa ka call!' and the call opens here 📞 |
-| 6 | Speak a bit more Hindi with him | rules | parent | ✓ | rules: Done! Nani will use more Hindi today — more beta, shabaash and achha with Aarav 🙂 |
+| 6 | Speak a bit more Hindi with him | rules | parent | ✓ | rules: Theek hai! Nani aaj Aarav se thoda zyada Hindi mein baat karegi 🙂 |
 | 7 | No scary animals at bedtime | rules | none | ✓ | rules: Already on it! No scary animals at bedtime 🌙 |
-| 8 | Hi everyone! | nani | none | ✓ | nani: Hello Mumma! Aarav and I just started with M for Mango 🥭 He's excited to learn more M words today 😊 |
-| 9 | Stop the water reminder | routine | heartbeat | ✓ | routine: Done! No more water reminders. Nani will still remind him gently if she sees him playing long 😊 |
-| 10 | He's a bit sad today, be extra gentle | lessons, memory, rules | brain, parent, planner | ✓ | lessons: Got it. Today's play will be extra gentle and cosy for Aarav 🤗 / memory: Noted. I'll keep an eye on his mood and let you know how he seems 🤍 / rules: Already in my heart, and now on paper too. Extra gentle Nani mode on 🌸 |
-- After #2: Nani said "Achha, Aarav beta! Kal tune "Thank you, Nani!" kaha tha — wah! Shabaash! Aaj letter M seekhein? M for Monkey, Mango, Mumma! Kaunsa M word pasand hai?" cues ['show:🥭']; used latest files: True; notes: []
-- After #3: Nani said "Aaj hum aam ke baare mein seekhenge, Aarav! M for Mango! Tera favourite fruit hai na? Bolo: Mango!" cues ['show:🥭']; used latest files: True; notes: ['lessons: Nani just taught Aarav about mangoes 🥭']
-
-(★ checks: docs/plan/STAR-CHECKS.md)
+| 8 | Hi everyone! | nani | none | ✓ | nani: Hello! Aarav and I are just starting our M for Mango play 🥭 He's so excited to learn today! |
+| 9 | Stop the water reminder | routine | heartbeat | ✓ | routine: Done, no more water reminders. |
+| 10 | He's a bit sad today, be extra gentle | lessons, memory, rules | brain, parent, planner | ✓ | lessons: Got it. I'll keep today's play soft and gentle, no rushing. Just warm mango stories and easy questions 🥭 / memory: Noted. I'll remember today was a tender day for him 💛 / rules: Already in my heart, and now on paper too. Extra gentle it is 🤗 |
+- After #2: Nani said "Achha, Aarav beta! Kya khelenge?" cues ['choices:']; used latest files: True; notes: []
+- After #3: Nani said "Aaj hum M wala letter seekhenge, Aarav! M for Mango! Tera favourite fruit kaunsa hai?" cues ['show:🥭']; used latest files: True; notes: ['lessons: Nani and Aarav played with mangoes 🥭']

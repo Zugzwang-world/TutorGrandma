@@ -246,6 +246,8 @@ def voice(voices, lines):
                 if sc < 0.6:
                     why.append("garbled")
                 sp.append({"text": s["text"], "back": back, "score": round(sc, 2), "dur": round(d, 2), "ok": not why, "why": ",".join(why)})
+            # Real pacing: Aarav answers after Nani has finished speaking (her audio plays on the toy).
+            time.sleep(sum(x.get("dur", 0) for x in sp) + 1.0)
             heard_score = overlap(line, ev["heard"] or "")
             issues = check_reply(n, text, cues, ev)
             r = {"voice": v["label"], "n": n, "line": line, "heard": ev["heard"], "heardScore": round(heard_score, 2),

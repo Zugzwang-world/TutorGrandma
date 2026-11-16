@@ -2,7 +2,7 @@
 // The reply is streamed: each action is handed over as soon as its JSON object closes, so the first agent can
 // answer while the brain is still writing the next one.
 import { z } from "zod";
-import { brainStreamHedged } from "../brain";
+import { brainStream } from "../brain";
 import { clockParts } from "../clock";
 import { supabaseAdmin } from "../supabase/server";
 import { BOT_KEYS, type BotKey, type Turn } from "../types";
@@ -122,8 +122,7 @@ export async function* sortStream(input: SorterInput): AsyncGenerator<SorterEven
   const scanner = new ActionScanner();
   let sentBots = false;
   let count = 0;
-  const stream = brainStreamHedged({
-    hedgeMs: 3500,
+  const stream = brainStream({
     messages: [
       { role: "system", content: systemPrompt(input.now.dayLabel) },
       { role: "user", content: userPrompt(input) },

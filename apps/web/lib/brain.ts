@@ -125,8 +125,8 @@ export async function* brainStream(o: BrainOptions): AsyncGenerator<string> {
 
 /**
  * Like brainStream, but if no first token arrives within `hedgeMs`, a second identical request starts and
- * whichever produces the first token wins; the other is aborted. Kimi sometimes stalls for 6 s+ on one
- * request (self-test: 3 of 51 turns); a fresh request usually answers in about 1 s.
+ * whichever produces the first token wins; the other is aborted.
+ * NOT USED with Kimi: Kimi throttles parallel requests (self-test run 2: stalls went from 3 to 13 of 51 turns).
  */
 export async function* brainStreamHedged(o: BrainOptions & { hedgeMs: number }): AsyncGenerator<string> {
   type Leg = { ac: AbortController; it: AsyncIterator<string> };
