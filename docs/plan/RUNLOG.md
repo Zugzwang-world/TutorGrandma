@@ -29,3 +29,4 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 03:43 | 2:35 | 3 | run 3: 15/51 slow_brain even single-request → Kimi k2.6 stalls ~10%/request; K3 unusable (always thinks); now cancel-and-retry at 2.5 s | 7% weekly | run 4 running; chat feel building |
 | 03:48 | 2:40 | polish | ★ chat feel #13 (typing rhythm, sheet animations, voice-note UI) | 7% weekly | prod chat check after run 4; then agent-replies + speed polish |
 | 04:01 | 2:53 | polish | run 4: 9/51 slow_brain (retry recovers many at 4–7 s) → up to 3 sequential attempts; prod chat-feel check OK | 7% weekly | launched agent replies (Opus high) and speed (expert high) |
+| 04:27 | 3:19 | polish | agent replies #14 (own voices, no stock openers) | 7% weekly | prod chat self-test 10/10 routing, replies varied; speed polish building |
