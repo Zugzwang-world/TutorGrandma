@@ -363,7 +363,9 @@ async function runTurn(
   }
 
   const spoken = sent.map((s) => s.speech).filter(Boolean).join(" ");
-  if (!spoken && !voiceFailed) emit({ t: "fallback", id: "slow_brain" });
+  // A cue-only reply (e.g. just [[song]] or [[sound lion]]) already went out as a `say` with cues: the toy plays it.
+  const hasCues = sent.some((x) => x.cues.length > 0);
+  if (!spoken && !hasCues && !voiceFailed) emit({ t: "fallback", id: "slow_brain" });
 
   const sentenceLog = chunks.map((c) => ({ i: c.i, cutAt: c.cutAt, ttsMs: c.ttsMs, kb: c.bytes ? +(c.bytes / 1024).toFixed(1) : 0, text: c.speech }));
   const newChanges = ctx.changes.flatMap((g) => g.versions);
