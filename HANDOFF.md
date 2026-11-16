@@ -1,7 +1,7 @@
 # Handoff · 2026-11-16
 
 ## State
-Step 1 (setup) is done, except T8: the four research reports are not on this Mac (OPEN.md). T9 a, b and c are done. The live brain is kimi-k2.6 until 22 November (buildathon), then Claude Haiku 5.5, through `brain` in content/demo.config.json. Next is planning in a new thinking-partner chat; the agenda is in OPEN.md. Software first: no hardware or firmware work, and no Sarvam, until a brief says so.
+Step 1 (setup) is done. Research lives in docs/thinking-partner/RESEARCH.md; R1 to R4 are not kept. T9 a, b and c are done. The live brain is kimi-k2.6 until 22 November (buildathon), then Claude Haiku 5.5, through `brain` in content/demo.config.json. Next is planning in a new thinking-partner chat; the agenda is in OPEN.md. Software first: no hardware or firmware work, and no Sarvam, until a brief says so.
 
 ## Branches and PRs
 None open. main only. PR #1 (T9b) is merged.
@@ -15,8 +15,7 @@ None open. main only. PR #1 (T9b) is merged.
 
 ## Next actions, in order
 1. Wait for the planning brief from the new thinking-partner chat. Run /preflight at its start.
-2. When the founder drops R1 to R4 into Downloads, file them as docs/research/R1-hardware.md, R2-voice.md, R3-agent.md and R4-parent.md. Convert from PDF or Word if needed.
-3. Before 22 November: the founder fixes Anthropic credit. Then set `brain.provider` to "anthropic" and run /preflight with the Anthropic check back on.
+2. Before 22 November: the founder fixes Anthropic credit. Then set `brain.provider` to "anthropic" and run /preflight with the Anthropic check back on.
 
 ## Gotchas
 - GitHub blocks pushes that use the founder's private email. This repo's local git config uses the GitHub noreply address, and worktrees share it.

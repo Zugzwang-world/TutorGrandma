@@ -1,8 +1,9 @@
 # Now · 2026-11-16
 
-**Step 1, setup: done, except the four research reports, which are not on this Mac (OPEN.md). Next: planning in a new thinking-partner chat.**
+**Step 1, setup: done. Next: planning in a new thinking-partner chat.**
 
 ## Step 1 results
+- Research lives in docs/thinking-partner/RESEARCH.md. It replaces the R1 to R4 reports, which are not kept.
 - Repo: https://github.com/Zugzwang-world/TutorGrandma, main only. Squash merge, branches deleted on merge.
 - Web: https://tutor-grandma.vercel.app (`/`, and `/home-base`, which shows "Grandma is on her way"). Vercel project tutor-grandma, team hrizzup. main deploys to production, PRs get previews. Last production build is green.
 - Supabase: org Tutor Grandma (Free plan), project tutor-grandma in Mumbai, ref kojmjmxnpaiuhswavarm. No tables yet. The repo is linked.

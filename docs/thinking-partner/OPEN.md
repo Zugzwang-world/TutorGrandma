@@ -1,6 +1,5 @@
 # Open
 
-- Founder: the four research reports (hardware, voice pipeline, agent and memory, parent side) are not on this Mac. A search of Downloads and the whole home folder, including inside PDFs and Word files, found nothing. Drop them into Downloads and the Coordinator will file them in docs/research as R1-hardware.md, R2-voice.md, R3-agent.md and R4-parent.md.
 - Anthropic credit: the last call (2026-11-16) still said "credit balance is too low". That's fine while Kimi runs the brain, but fix it before the switch to Claude on 22 November.
 - Which Indian languages the demo uses.
 
