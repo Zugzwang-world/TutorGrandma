@@ -182,6 +182,7 @@ async function runTurn(
       console.warn(`[turn] stt failed: ${msg(e)}`);
     }
     timings.stt = Math.round(performance.now() - t);
+    childText = snapToTiles(childText, input.board);
   }
   emit({ t: "heard", text: childText });
   if (!childText) {
@@ -485,3 +486,29 @@ function json<T>(v: FormDataEntryValue | null): T | null {
 function msg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
+
+// A single spoken letter is often misheard ("M" → "N", "S" → "Yes"). While a spelling is on the wall,
+// a one-word answer that sounds like a letter snaps to the board's tiles (M and N count as one sound).
+const LETTER_SOUNDS: Record<string, string> = {
+  em: "M", aem: "M", yem: "M", "एम": "M", "ऍम": "M", "म": "M",
+  en: "N", "एन": "N", "न": "N",
+  es: "S", ess: "S", yes: "S", "एस": "S", "स": "S",
+  tee: "T", ti: "T", "टी": "T", "ट": "T",
+  ay: "A", "ए": "A", bee: "B", "बी": "B", see: "C", "सी": "C", dee: "D", "डी": "D",
+  oh: "O", "ओ": "O", pee: "P", "पी": "P", are: "R", "आर": "R",
+};
+function snapToTiles(text: string, board: BoardState | null | undefined): string {
+  const tiles = board?.spell && !board.spell.filled ? board.spell.tiles.map((x) => x.toUpperCase()) : [];
+  if (!tiles.length) return text;
+  const w = text.trim().toLowerCase().replace(/[.!?।,]/g, "").trim();
+  if (!w || w.includes(" ") || w.length > 4) return text;
+  let letter = /^[a-z]$/.test(w) ? w.toUpperCase() : LETTER_SOUNDS[w];
+  if (!letter) return text;
+  if (!tiles.includes(letter)) {
+    if (letter === "N" && tiles.includes("M")) letter = "M";
+    else if (letter === "M" && tiles.includes("N")) letter = "N";
+    else return text;
+  }
+  return letter;
+}
+
