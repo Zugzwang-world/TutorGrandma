@@ -4,14 +4,15 @@
 // System message (stable across turns, so the provider can cache it):
 //   persona.md, planner.md, parent.md, brain.md, a heartbeat summary, the wall marker table, reply rules.
 // User message (fresh every turn):
-//   the last 8 turns, changes since the child's last turn, the board, the last Nani event, the demo time,
-//   and what the child said.
+//   the last 8 turns, changes since the child's last turn (G3, B7), the board, the last Nani event, the demo time,
+//   how to follow the parents' changes (only when there are some), and what the child said.
 import type { BrainMessage } from "@/lib/brain";
 import { clockParts, type ClockParts } from "@/lib/clock";
 import { config } from "@/lib/config";
 import { parseJobs, summarizeJobs } from "@/lib/jobs";
 import { cueToMarker } from "@/lib/markers";
-import { BOTS, BOT_OF_FILE, type AgentFile, type BoardState, type FileName, type NaniEvent, type Turn } from "@/lib/types";
+import type { ChangeGroup } from "@/lib/agents/changes";
+import { BOTS, type AgentFile, type BoardState, type FileName, type NaniEvent, type Turn } from "@/lib/types";
 
 const CHILD = config.childName;
 const NANI = config.grandmaName;
@@ -19,9 +20,12 @@ const NANI = config.grandmaName;
 export interface TurnPromptInput {
   files: Record<FileName, AgentFile>;
   recentTurns: Turn[]; // oldest first, at most 8
-  changes: AgentFile[]; // file versions written since the child's last turn, oldest first
+  changes: ChangeGroup[]; // parent messages that changed files since the child's last talk turn, oldest first
+  unused: ChangeGroup[]; // earlier ones Nani has not been seen to follow yet (at most 3)
   board: BoardState | null;
   lastEvent: NaniEvent | null;
+  lastEventFresh: boolean; // no talk turn since that event: the child is probably answering it
+  clockOffsetMs: number; // demo clock offset, for the event's time
   clock: ClockParts;
   childText: string;
 }
@@ -74,7 +78,7 @@ Markers drive the wall (a projector). They are never spoken. Put a marker right 
 export const REPLY_RULES = `<reply_rules>
 - One or two short sentences, then one simple question. At most 35 words.
 - At most two wall markers. Most replies have no note: add one only for the cases in persona.md's "Telling the parents".
-- Plain spoken words only: no emoji, asterisks, lists or stage directions outside markers.
+- Plain spoken words only: no emoji, asterisks, lists or stage directions outside markers. No "${NANI}:" label.
 - Write the way the examples in persona.md are written.
 </reply_rules>`;
 
@@ -83,12 +87,15 @@ export const REPLY_RULES = `<reply_rules>
 export function userTurn(i: TurnPromptInput): string {
   return [
     recentTurnsSection(i.recentTurns),
-    changesSection(i.changes),
+    changesSection(i.changes, i.unused),
     boardSection(i.board),
-    lastEventSection(i.lastEvent),
+    lastEventSection(i.lastEvent, i.lastEventFresh, i.clockOffsetMs),
     timeSection(i.clock),
+    followSection(i.changes, i.unused),
     `${CHILD} said: "${i.childText.trim()}"`,
-  ].join("\n\n");
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 export function recentTurnsSection(turns: Turn[]): string {
@@ -105,16 +112,33 @@ export function recentTurnsSection(turns: Turn[]): string {
   return `## Last turns (oldest first)\n${lines.join("\n")}`;
 }
 
-/** "Changes since Aarav's last turn" (B7). G3 extends this. */
-export function changesSection(changes: AgentFile[]): string {
+const FILE_OF: Record<string, string> = { rules: "parent.md", lessons: "planner.md", memory: "brain.md" };
+
+function groupLine(g: ChangeGroup): string {
+  const where = g.bots.filter((b) => b !== "routine").map((b) => FILE_OF[b]);
+  const routine = g.bots.includes("routine") ? `${BOTS.routine.name} will do it on time` : "";
+  const tail = [where.length ? `now in ${where.join(" and ")}` : "", routine].filter(Boolean).join("; ");
+  return `- ${g.sender}: "${g.words}" (${tail})`;
+}
+
+/** "Changes since Aarav's last turn" (B7): what the parents changed, by their own words. */
+export function changesSection(changes: ChangeGroup[], unused: ChangeGroup[] = []): string {
   const head = `## Changes since ${CHILD}'s last turn`;
-  if (!changes.length) return `${head}\nNone.`;
-  const lines = changes.map((c) => {
-    const bot = BOTS[BOT_OF_FILE[c.name]];
-    const by = c.changed_by ? `, by ${c.changed_by}` : "";
-    return `- ${bot.fileLabel} v${c.version}${by}: ${c.change_note ?? "updated"}`;
-  });
-  return `${head}\n${lines.join("\n")}\nFollow these at once (the files above already include them). Never reveal a surprise a parent planned.`;
+  if (!changes.length && !unused.length) return `${head}\nNone.`;
+  const parts = [head, changes.length ? `NEW from the parents. Follow them in THIS reply:\n${changes.map(groupLine).join("\n")}` : "Nothing new."];
+  if (unused.length) parts.push(`Earlier today, not used with ${CHILD} yet. Still follow them:\n${unused.map(groupLine).join("\n")}`);
+  return parts.join("\n");
+}
+
+/** How to follow the changes (B7). Sits right before the child's words, so it weighs on this reply. */
+export function followSection(changes: ChangeGroup[], unused: ChangeGroup[] = []): string {
+  if (!changes.length && !unused.length) return "";
+  return `## Follow the parents' changes now
+- They come before your habits and the old plan, starting with this reply.
+- A rule about what to use or avoid (e.g. "use shells, not money"): every count and example follows it from now on, e.g. [[count 🐚 3]]. Never say rupees, paise, coins or money.
+- News for today's play (e.g. mangoes): answer ${CHILD}, then turn this same reply's play to it: show, spell or count it, e.g. [[show 🥭 Mango]]. You may say it naturally: "Aaj hum aam ke baare mein seekhenge!"
+- A surprise stays secret: play with the topic, but never say that anyone is bringing anything, what is coming, or when.
+- A new reminder or call time: ${BOTS.routine.name} does it on time. Don't do it now.`;
 }
 
 export function boardSection(board: BoardState | null): string {
@@ -129,10 +153,16 @@ export function boardSection(board: BoardState | null): string {
   return `${head}\n${lines.length ? lines.join("\n") : "Nothing yet."}`;
 }
 
-export function lastEventSection(ev: NaniEvent | null): string {
-  if (!ev) return `## ${NANI}'s last event\nNone.`;
-  const at = Number.isNaN(Date.parse(ev.at)) ? ev.at : clockParts(new Date(ev.at)).hhmm;
-  return `## ${NANI}'s last event\n${ev.kind} at ${at}: "${ev.text}"`;
+export function lastEventSection(ev: NaniEvent | null, fresh = false, offsetMs = 0): string {
+  const head = `## ${NANI}'s last event`;
+  if (!ev) return `${head}\nNone.`;
+  const t = Date.parse(ev.at);
+  const at = Number.isNaN(t) ? ev.at : clockParts(new Date(t + offsetMs)).hhmm; // demo time, like the routine clock
+  if (!fresh) return `${head}\nEarlier, at ${at}: ${ev.kind} "${ev.text}". ${CHILD} has talked since; don't bring it up again.`;
+  if (ev.kind === "reminder") {
+    return `${head}\nJust now, at ${at}, you reminded ${CHILD}: "${ev.text}"\nHis words below are probably his answer: reply to that first (praise him warmly if he did it), then carry on.`;
+  }
+  return `${head}\nJust now, at ${at}: ${ev.kind} "${ev.text}".`;
 }
 
 export function timeSection(c: ClockParts): string {
