@@ -6,7 +6,7 @@ Buildathon prototype. Priorities, in order: low latency, high impact, demo relia
 
 ## Stack so far
 - Voice: ElevenLabs. Scribe for hearing, Eleven v4 Turbo for live speech, Eleven v4 for pre-made lines, grandma's voice clone.
-- Live brain: Claude Haiku 5.5 (claude-haiku-5-5), thinking off, low effort. Grandma fillers cover every wait.
+- Live brain: Kimi kimi-k2.6, thinking off, until buildathon day; then Claude Haiku 5.5 (claude-haiku-5-5), thinking off, low effort. One switch: `brain.provider` in content/demo.config.json. Code reads provider and model from there, never hard-coded. Grandma fillers cover every wait.
 - Indian languages: ElevenLabs covers them for now.
 - Web: Next.js on Vercel. Parent website plus the /home-base projector page.
 - Supabase, kept light: Realtime for live cues, one table for the agent files. Nothing else.

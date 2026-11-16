@@ -3,5 +3,22 @@
   "grandmaName": "TBD",
   "letters": [],
   "places": [],
-  "animals": []
+  "animals": [],
+  "brain": {
+    "provider": "kimi",
+    "providers": {
+      "kimi": {
+        "baseUrl": "https://api.moonshot.ai/v1",
+        "model": "kimi-k2.6",
+        "keyEnv": "KIMI_API_KEY",
+        "thinking": "off"
+      },
+      "anthropic": {
+        "model": "claude-haiku-5-5",
+        "keyEnv": "ANTHROPIC_API_KEY",
+        "thinking": "off",
+        "effort": "low"
+      }
+    }
+  }
 }

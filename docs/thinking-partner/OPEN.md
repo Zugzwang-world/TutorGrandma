@@ -1,7 +1,9 @@
 # Open
 
-- Founder: the ElevenLabs key did not come through in chat (twice). Paste it again, or add ELEVENLABS_API_KEY=... to .env.local in the main Tutor-Grandma folder yourself.
 - Founder: OK to copy the Supabase URL, publishable key and secret key into Vercel env vars (all three environments)? The permission check stopped it because you hadn't asked for it.
+- When is buildathon day? kimi-k2.6 is expected to be deprecated in late December 2026. If the buildathon is later, switch `brain.providers.kimi.model` to kimi-k3.1-pro-highspeed (1.4 s to first word instead of 0.7 s).
+- Anthropic credit: the last call today (2026-11-16) still said "credit balance is too low". That's fine while Kimi runs the brain, but it must be fixed before switching to Claude.
+- The Supabase project is on the Free plan, which pauses after about a week without activity. Open it or ping it before demo day.
 - Product session with the founder: hardware and software changes.
 - Game spec for the demo.
 - Relay host: Vercel or the founder's laptop.
