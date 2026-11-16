@@ -1,7 +1,7 @@
 "use client";
 // The parent's group chat with Nani's five agents (PLAN.md B4).
 import "./chat.css";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ChatHeader } from "./chat-header";
 import { Composer } from "./composer";
 import { MessageList, type WhatChangedTarget } from "./message-list";
@@ -10,10 +10,26 @@ import { useChat } from "./use-chat";
 import { WhatChangedSheet } from "./what-changed-sheet";
 import { WhoIsThis } from "./who-is-this";
 
+// This device's sender name (localStorage tg_sender), read without touching it during prerender.
+const SERVER = "\u0000server";
+let memSender: string | null = null; // fallback when storage is blocked
+const senderSubs = new Set<() => void>();
+function subscribeSender(cb: () => void) {
+  senderSubs.add(cb);
+  window.addEventListener("storage", cb);
+  return () => {
+    senderSubs.delete(cb);
+    window.removeEventListener("storage", cb);
+  };
+}
+const senderSnapshot = () => readSender() ?? memSender ?? "";
+const serverSnapshot = () => SERVER;
+
 export function GuidanceChat() {
-  // Everything that reads the device (localStorage, time) happens after mount, so the prerendered shell is static.
-  const [ready, setReady] = useState(false);
-  const [sender, setSender] = useState<string | null>(null);
+  // Everything that reads the device (localStorage, time) happens after hydration, so the prerendered shell is static.
+  const stored = useSyncExternalStore(subscribeSender, senderSnapshot, serverSnapshot);
+  const ready = stored !== SERVER;
+  const sender = ready && stored ? stored : null;
   const { rows, pending, working, loaded, localAudio, sendText, sendVoice, retry } = useChat(sender);
   const [sheet, setSheet] = useState<WhatChangedTarget | null>(null);
   const [showNew, setShowNew] = useState(false);
@@ -22,11 +38,6 @@ export function GuidanceChat() {
   const content = useRef<HTMLDivElement | null>(null);
   const stuck = useRef(true);
   const lastKey = useRef<string>("");
-
-  useEffect(() => {
-    setSender(readSender());
-    setReady(true);
-  }, []);
 
   const toBottom = useCallback((smooth = false) => {
     const el = scroller.current;
@@ -57,16 +68,24 @@ export function GuidanceChat() {
     lastKey.current = last;
   }, [rows, pending]);
 
+  // Only the user's own scrolling (wheel, touch, keys, scrollbar) unpins the view; layout shifts never do.
+  const userAt = useRef(0);
+  const markUser = () => {
+    userAt.current = Date.now();
+  };
   const onScroll = () => {
     const el = scroller.current;
     if (!el) return;
-    stuck.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    if (nearBottom) stuck.current = true;
+    else if (Date.now() - userAt.current < 1200) stuck.current = false;
     if (stuck.current && showNew) setShowNew(false);
   };
 
   const pick = (name: string) => {
+    memSender = name;
     saveSender(name);
-    setSender(name);
+    senderSubs.forEach((cb) => cb());
     requestAnimationFrame(() => toBottom(true));
   };
 
@@ -76,7 +95,15 @@ export function GuidanceChat() {
     <div className="flex h-dvh w-full flex-col bg-cream">
       <ChatHeader sender={sender} working={working} />
 
-      <div ref={scroller} onScroll={onScroll} className="relative flex-1 overflow-y-auto overscroll-contain">
+      <div
+        ref={scroller}
+        onScroll={onScroll}
+        onWheel={markUser}
+        onTouchMove={markUser}
+        onPointerDown={markUser}
+        onKeyDown={markUser}
+        className="relative flex-1 overflow-y-auto overscroll-contain"
+      >
         <div ref={content}>
           {!loaded && (
             <div className="flex justify-center pt-16" aria-label="Loading chat">

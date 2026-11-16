@@ -229,19 +229,31 @@ export function WhatChangedSheet({ target, onClose }: { target: WhatChangedTarge
                       </p>
                     );
                   }
+                  const bullet = l.match(/^([-*]|\d+\.)\s+/);
                   return (
-                    <p
+                    <div
                       key={i}
                       data-new={isNew}
-                      className={`relative my-0.5 rounded-lg px-2 py-0.5 break-words ${
+                      className={`relative my-0.5 flex gap-2 rounded-lg px-2 py-1 break-words ${
                         isNew
-                          ? "bg-marigold-soft font-semibold before:absolute before:inset-y-1 before:left-0 before:w-[3px] before:rounded-full before:bg-marigold"
+                          ? "bg-marigold-soft font-semibold before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-marigold"
                           : "text-ink/80"
                       }`}
                     >
-                      {isNew && <span className="mr-1.5 rounded-md bg-marigold px-1.5 py-px align-[1px] text-[11px] font-extrabold text-white uppercase">new</span>}
-                      {l}
-                    </p>
+                      {bullet && (
+                        <span className={`shrink-0 ${isNew ? "text-[#b86a00]" : "text-muted"}`}>
+                          {bullet[1].endsWith(".") ? bullet[1] : "•"}
+                        </span>
+                      )}
+                      <span className="min-w-0 flex-1">
+                        {bullet ? l.slice(bullet[0].length) : l}
+                        {isNew && (
+                          <span className="ml-1.5 inline-block rounded-md bg-marigold px-1.5 py-px align-[2px] text-[10px] font-extrabold tracking-wide text-white uppercase">
+                            new
+                          </span>
+                        )}
+                      </span>
+                    </div>
                   );
                 })}
               </div>
