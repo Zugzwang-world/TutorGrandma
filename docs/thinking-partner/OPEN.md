@@ -1,7 +1,7 @@
 # Open
 
-- Founder, to finish Step 1 (one message): start a new Claude Code session and say "continue Step 1". In the same message, paste the ElevenLabs key and a Supabase access token from supabase.com/dashboard/account/tokens (it starts with sbp_). Running `supabase login` in a terminal also works instead of the token.
-- Founder, before /preflight or the live brain can pass: top up Anthropic API credit ("credit balance is too low"), or paste a different Anthropic key that has credit. The GraphPay key is the only one on this Mac.
+- Founder: the ElevenLabs key did not come through in chat (twice). Paste it again, or add ELEVENLABS_API_KEY=... to .env.local in the main Tutor-Grandma folder yourself.
+- Founder: OK to copy the Supabase URL, publishable key and secret key into Vercel env vars (all three environments)? The permission check stopped it because you hadn't asked for it.
 - Product session with the founder: hardware and software changes.
 - Game spec for the demo.
 - Relay host: Vercel or the founder's laptop.

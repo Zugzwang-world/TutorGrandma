@@ -46,7 +46,8 @@ Size S, M or L · Who: coordinator, builder, expert or scout (plus reviewer if u
 - S: commit straight to main. M and L: branch in a worktree, PR, squash-merge as soon as it builds, delete the branch.
 - No GitHub Actions, no branch protection, no required checks, no reviews except the reviewer rule above.
 - apps/web deploys only through Vercel's Git integration: main to production, PRs to previews. No manual deploys from branches.
-- Supabase changes only by you.
+- Supabase changes only by you, and only in the Tutor Grandma org (tlwtdcmdpydwzijvfogz), project tutor-grandma (ref kojmjmxnpaiuhswavarm). This repo is linked to it.
+- Never touch hrizzup-staging or anything else in the founder's other Supabase org (Zugzwang-world's Org, ricebmnezbfuolqartfi): no links, queries, changes or deletes.
 - Done means merged to main and checked live, on the URL or by running it. Read status from main, not from PR pages.
 
 ## Status for the thinking partner
