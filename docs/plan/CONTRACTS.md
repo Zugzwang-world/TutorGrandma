@@ -50,7 +50,7 @@ Next.js 16.4.6 with cacheComponents on: read `apps/web/AGENTS.md` and the matchi
 /api/chat behaviour:
 1. Post the parent's message first (`sender_kind` "parent", meta `{ clientId }`, plus `{ kind: "voice", transcript }` and `audio_url` for voice notes).
 2. Broadcast `chat:aarav` `working`. Payload `bots` is the FULL set currently writing (replace, don't merge); `on: false` clears all. At the start, send all five bots; after sorting, only those about to reply.
-3. Post each agent reply in order, with a natural gap of 0.8 to 1.6 s (longer text, longer gap). Reply meta: `{ file, fromVersion, toVersion, changedLines }` when its file changed.
+3. Post each agent reply in order, as soon as its action is ready (streamed sorter), with a natural gap of 0.8 to 1.6 s. Reply meta: `{ file, fromVersion, toVersion, changedLines, removedLines }` when its file changed. A removal has empty changedLines and the removed line in removedLines.
 
 ## Realtime broadcast (topics from `channelName`)
 - `chat:aarav`: `working {bots, on}`.

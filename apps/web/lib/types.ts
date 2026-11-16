@@ -52,6 +52,7 @@ export interface MessageMeta {
   fromVersion?: number;
   toVersion?: number;
   changedLines?: string[];
+  removedLines?: string[]; // lines the edit removed (e.g. a deleted job)
   // what kind of bubble this is; absent means a normal text bubble
   kind?: "voice" | "call" | "call_clip" | "note" | "event" | "brief";
   // voice notes: transcript shown under the audio bubble
