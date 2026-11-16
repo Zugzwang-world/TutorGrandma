@@ -1,16 +1,21 @@
 // Web Audio player for /toy (browser only). One AudioContext, the pre-made clips decoded up front, and
 // simple handles for playing, fading and stopping. Missing ids are skipped quietly (manifest may be []).
 import type { AudioEntry } from "../types";
+import { cutPoints, findPauses, type Pause } from "./pauses";
 
 export interface Clip {
   id: string;
   duration: number; // seconds
   /** Seconds left to play (0 once ended). */
   remaining(): number;
+  /** Seconds played so far. */
+  position(): number;
   playing(): boolean;
   stop(): void;
   /** Fade to silence over `ms`, then stop. Resolves when silent. */
   fade(ms?: number): Promise<void>;
+  /** Stop with a short fade when playback reaches `pos` seconds (on the audio clock). Resolves when silent. */
+  stopAt(pos: number, ms?: number): Promise<void>;
   /** Resolves when the clip ends, is stopped or fades out. */
   ended: Promise<void>;
 }
@@ -23,6 +28,7 @@ export class NaniPlayer {
   private buffers = new Map<string, AudioBuffer>();
   private live = new Set<Clip>();
   private entries: AudioEntry[] = [];
+  private cuts = new Map<string, Pause[]>();
 
   /** Start downloading the manifest files at page load (no AudioContext needed yet). */
   prefetch(entries: AudioEntry[]): void {
@@ -65,6 +71,7 @@ export class NaniPlayer {
         } catch {}
       }),
     );
+    for (const e of this.entries) if (e.kind === "filler") this.cutPoints(e.id); // at wake, not at the 1.2 s filler
   }
 
   get ready(): boolean {
@@ -73,6 +80,18 @@ export class NaniPlayer {
 
   has(id: string): boolean {
     return this.buffers.has(id);
+  }
+
+  /** Where a pre-made clip may stop early: its sentence ends (pauses.ts). Computed once per clip. */
+  cutPoints(id: string): Pause[] {
+    const known = this.cuts.get(id);
+    if (known) return known;
+    const b = this.buffers.get(id);
+    if (!b) return [];
+    const text = this.entries.find((e) => e.id === id)?.text;
+    const c = cutPoints(text, findPauses(b.getChannelData(0), b.sampleRate));
+    this.cuts.set(id, c);
+    return c;
   }
 
   /** Decode Nani's live mp3 (bytes from a `say` event). */
@@ -125,8 +144,12 @@ export class NaniPlayer {
       id,
       duration: buffer.duration,
       remaining: () => (done ? 0 : Math.max(0, buffer.duration - (ctx.currentTime - startedAt))),
+      position: () => (done ? buffer.duration : Math.min(buffer.duration, ctx.currentTime - startedAt)),
       playing: () => !done,
       stop: () => {
+        // Silence at once, even if an earlier scheduled stop (stopAt, fade) makes stop() throw.
+        g.gain.cancelScheduledValues(ctx.currentTime);
+        g.gain.setValueAtTime(0, ctx.currentTime);
         try {
           src.stop();
         } catch {}
@@ -140,6 +163,17 @@ export class NaniPlayer {
         g.gain.linearRampToValueAtTime(0, now + ms / 1000);
         try {
           src.stop(now + ms / 1000 + 0.02);
+        } catch {}
+        return ended;
+      },
+      stopAt: (pos, ms = 60) => {
+        if (done) return Promise.resolve();
+        const at = Math.max(ctx.currentTime, startedAt + pos);
+        g.gain.cancelScheduledValues(ctx.currentTime);
+        g.gain.setValueAtTime(g.gain.value, at);
+        g.gain.linearRampToValueAtTime(0, at + ms / 1000);
+        try {
+          src.stop(at + ms / 1000 + 0.02);
         } catch {}
         return ended;
       },
