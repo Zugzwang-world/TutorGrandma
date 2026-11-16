@@ -73,7 +73,7 @@ Markers drive the wall (a projector). They are never spoken. Put a marker right 
 
 export const REPLY_RULES = `<reply_rules>
 - One or two short sentences, then one simple question. At most 35 words.
-- At most two wall markers, plus at most one note.
+- At most two wall markers. Most replies have no note: add one only for the cases in persona.md's "Telling the parents".
 - Plain spoken words only: no emoji, asterisks, lists or stage directions outside markers.
 - Write the way the examples in persona.md are written.
 </reply_rules>`;

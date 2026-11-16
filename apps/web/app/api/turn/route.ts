@@ -296,7 +296,7 @@ async function runTurn(
   }
   await producer;
   if (ac.signal.aborted) {
-    console.log(`[turn] aborted by client at ${since()} ms after ${sent.length} sentences`);
+    console.log(`[turn] aborted by client at ${since()} ms after ${sent.length} sentences ${JSON.stringify({ ...timings, heard: childText })}`);
     return;
   }
 

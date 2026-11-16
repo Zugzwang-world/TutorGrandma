@@ -17,6 +17,11 @@ export function areaOfCue(c: Cue): string | null {
   return null;
 }
 
+/** Layer 3 clips fade when Nani's reply arrives; reactions and learning fillers play to the end. */
+export function isLongWait(id: string): boolean {
+  return LONG_WAIT_IDS.includes(id);
+}
+
 function pick<T>(xs: T[]): T | undefined {
   return xs.length ? xs[Math.floor(Math.random() * xs.length)] : undefined;
 }

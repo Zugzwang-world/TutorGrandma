@@ -3,14 +3,14 @@
 // No React here; use-talk.ts wraps it.
 import type { BoardState, Cue, FallbackId, NaniEvent, TurnEvent } from "@/lib/types";
 import type { Clip, NaniPlayer } from "@/lib/voice/player";
-import { WaitPicker, areaOfCue } from "./fillers";
+import { WaitPicker, areaOfCue, isLongWait } from "./fillers";
 import type { EyeState, WallPayload } from "./use-toy-core";
 
 const MIN_PRESS_MS = 250; // shorter presses are accidental taps (they still stop Nani)
 const FILLER_AT_MS = 1200; // no voice yet: one learning filler
 const LONG_WAIT_AT_MS = 4000; // song snippet or the chashma line
 const SLOW_BRAIN_AT_MS = 8000; // give up: slow_brain line, abort the request
-const SHORT_CLIP_S = 0.7; // a wait clip with less than this left finishes; a longer one fades
+const SHORT_CLIP_S = 0.7; // a long-wait clip with less than this left finishes anyway
 const SFX_GAIN = 0.6;
 
 export interface TalkStats {
@@ -257,7 +257,10 @@ export class TalkLoop {
     else go();
   }
 
-  /** Nani's first sentence arrived: let a short wait clip finish, fade a long one, then play the queue. */
+  /**
+   * Nani's first sentence arrived. A reaction or learning filler finishes (cutting "Tab tak teen baar
+   * taali baj—" sounds broken); the long wait (song snippet, chashma line) fades. Then play the queue.
+   */
   private async startVoice(t: Turn): Promise<void> {
     if (t.voiceStarted || t.over) return;
     t.voiceStarted = true;
@@ -265,7 +268,7 @@ export class TalkLoop {
     this.d.sendWall("thinking", { on: false });
     const fx = t.fx;
     if (fx?.playing()) {
-      if (fx.remaining() <= SHORT_CLIP_S) await fx.ended;
+      if (!isLongWait(fx.id) || fx.remaining() <= SHORT_CLIP_S) await fx.ended;
       else await fx.fade(250);
     }
     if (t.over) return;
