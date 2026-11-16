@@ -22,6 +22,8 @@ export const maxDuration = 60;
 
 const BRAIN_MAX_TOKENS = 150;
 const FIRST_TOKEN_TIMEOUT_MS = 6000; // no brain token by then: slow_brain
+const BRAIN_IDLE_MS = 3000; // no new token for this long after the first: end the reply
+const TTS_TIMEOUT_MS = 5000; // one sentence of voice; past this it counts as voice_failed
 // Hinglish TTS language. Tested "hi" vs none on 4 Hinglish lines (transcribed back): identical words,
 // "hi" slightly faster, so keep config.nani.languageCode ("hi"). undefined = config; "" = none.
 const TTS_LANGUAGE: string | undefined = undefined;
@@ -190,7 +192,7 @@ async function runTurn(
     const c: Chunk = { i: chunks.length, raw, speech, tts: null, cutAt: since(), emitted: false };
     if (speech) {
       const t = performance.now();
-      c.tts = tts(speech, { languageCode: TTS_LANGUAGE, signal: work.signal }).then((b) => {
+      c.tts = tts(speech, { languageCode: TTS_LANGUAGE, signal: AbortSignal.any([work.signal, AbortSignal.timeout(TTS_TIMEOUT_MS)]) }).then((b) => {
         c.ttsMs = Math.round(performance.now() - t);
         c.bytes = b.length;
         return b;
@@ -219,12 +221,24 @@ async function runTurn(
         brainAc.abort();
       }
     }, FIRST_TOKEN_TIMEOUT_MS);
+    // A stall after the first token ends the reply with what we have (reviewer: the turn must always close).
+    let stalled = false;
+    let idle: ReturnType<typeof setTimeout> | undefined;
+    const bumpIdle = () => {
+      if (idle) clearTimeout(idle);
+      idle = setTimeout(() => {
+        stalled = true;
+        console.warn(`[turn] brain stalled ${BRAIN_IDLE_MS} ms mid-reply; speaking what we have`);
+        brainAc.abort();
+      }, BRAIN_IDLE_MS);
+    };
     try {
       for await (const d of brainStream({ messages, maxTokens: BRAIN_MAX_TOKENS, signal: brainAc.signal })) {
         if (timings.brainFirst === undefined) {
           timings.brainFirst = since();
           clearTimeout(timer);
         }
+        bumpIdle();
         reply += d;
         splitter.push(d);
         for (;;) {
@@ -236,9 +250,10 @@ async function runTurn(
       }
       timings.brainDone = since();
     } catch (e) {
-      if (!work.signal.aborted) brainError = brainError ?? msg(e);
+      if (!work.signal.aborted && !stalled) brainError = brainError ?? msg(e);
     } finally {
       clearTimeout(timer);
+      if (idle) clearTimeout(idle);
     }
     if (!brainError && !work.signal.aborted) {
       attachTrailing();
