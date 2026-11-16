@@ -1,30 +1,32 @@
-# Handoff · 2026-11-16
+# Handoff · overnight beta · 2026-11-17
 
 ## State
-Step 1 (setup) is done. Research lives in docs/thinking-partner/RESEARCH.md; R1 to R4 are not kept. T9 a, b and c are done. The live brain is kimi-k2.6 until 22 November (buildathon), then Claude Haiku 5.5, through `brain` in content/demo.config.json. Next is planning in a new thinking-partner chat; the agenda is in OPEN.md. Software first: no hardware or firmware work, and no Sarvam, until a brief says so.
+The overnight beta run (docs/plan/PLAN.md) is in progress. T0 was 01:08 IST and the hard stop is 09:08 IST. Wave 0 is done: tables, seed, shared layer (apps/web/lib), contracts (docs/plan/CONTRACTS.md), lookups, Nani's voice, functions in bom1. Wave 1 is running. Progress is in docs/plan/RUNLOG.md.
+
+**Resume:** re-read docs/plan/RUN.md, RUNLOG.md and this file. Check open PRs with `gh pr list`. Read usage with the `mcp__ccd_session_mgmt__get_usage` tool (live mode).
 
 ## Branches and PRs
-None open. main only. PR #1 (T9b) is merged.
+Wave 1 builders open PRs from their own worktrees: G1, G2, N1, S1, then W1. Merge one at a time: squash, delete the branch, pull, run /api/reset, check production.
 
 ## Running
+- Production: https://tutor-grandma.vercel.app (`/`, `/toy`, `/home-base`, `/presenter` once built). Functions run in bom1.
 - GitHub: https://github.com/Zugzwang-world/TutorGrandma
-- Production: https://tutor-grandma.vercel.app (`/`, `/home-base`)
-- Vercel: project tutor-grandma (prj_Fk2AIqrl3S9XeUi0aiXY6uuQRyVm), team hrizzup (team_m0d8TiC9xuPrm9qI8ob6byBM), root apps/web, Git connected
-- Supabase: org Tutor Grandma (tlwtdcmdpydwzijvfogz, Free), project tutor-grandma (ref kojmjmxnpaiuhswavarm, ap-south-1), no tables. Repo linked via supabase/config.toml; run `supabase link --project-ref kojmjmxnpaiuhswavarm` in any new checkout (link state is gitignored).
-- Env, in .env.local and in Vercel (all three environments): ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, KIMI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY. In .env.local only: SUPABASE_DB_PASSWORD, SUPABASE_PROJECT_REF, VERCEL_OIDC_TOKEN.
+- Vercel: project tutor-grandma, team hrizzup (`--scope hrizzup`), root apps/web.
+- Supabase: project tutor-grandma (ref kojmjmxnpaiuhswavarm, ap-south-1). Tables agent_files, messages, turns, demo_state; bucket `audio`; realtime on all four tables.
+- Seed: `curl -X POST https://tutor-grandma.vercel.app/api/reset` restores content/seed.json.
+- Nani's voice: wSMP2ehaozb5I36yi8vg (Dulari Didi). Models are in content/demo.config.json and LOOKUPS.md.
 
 ## Next actions, in order
-1. Wait for the planning brief from the new thinking-partner chat. Run /preflight at its start.
-2. Before 22 November: the founder fixes Anthropic credit. Then set `brain.provider` to "anthropic" and run /preflight with the Anthropic check back on.
+1. Merge wave 1 PRs as they arrive (reviewer on G1, G2, N1). Launch W1 when a slot frees.
+2. Before wave 2: add `POST /api/event` (Routine/system chat posts and job turns) to CONTRACTS.md and build it.
+3. Wave 2: G3 after G1, G2 and N1 merge; G4 and P1 alongside it; then G5; N2 after G4.
+4. Wave 3: self-test (T1), then the report (T2, A11).
 
 ## Gotchas
-- GitHub blocks pushes that use the founder's private email. This repo's local git config uses the GitHub noreply address, and worktrees share it.
-- After every squash-merge, run `git pull --ff-only` on local main, or the next S commit diverges.
-- The Vercel MCP connection has no access to team hrizzup. Use the Vercel CLI with `--scope hrizzup`. To add env vars, pipe the value in with `printf %s` so no newline is stored.
-- Preview and per-deployment URLs sit behind Vercel auth and return 401. Check the production alias instead.
-- Next.js 16.4.6 has cacheComponents on. apps/web/AGENTS.md says to read node_modules/next/dist/docs before writing Next code.
-- If a key or token arrives in chat, write it to .env.local or export it, and never echo it. The repo is public.
-- Supabase: never touch hrizzup-staging or anything in Zugzwang-world's Org (CLAUDE.md). Hosted Supabase CLI changes need `--yes` in agent mode. A brand-new org can return "Not Found" on project create for a few seconds; retry.
-- Kimi: base https://api.moonshot.ai/v1 (OpenAI-compatible). Turn thinking off with `"thinking": {"type": "disabled"}`. K3 models also accept it, even though the docs say they always think. Balance: GET /users/me/balance.
-- ANTHROPIC_API_KEY in .env.local is quoted. Strip the quotes when reading it in shell.
-- `supabase projects api-keys` masks secret keys unless you pass `--reveal`. A masked key fails with "Invalid API key".
+- The Coordinator commits in the worktree `.claude/worktrees/overnight-beta-execution-10a681` and runs `git push origin HEAD:main`. After every squash-merge, run `git pull --ff-only origin main` in that worktree AND `git -C /Users/hrishikesh/Tutor-Grandma pull --ff-only`.
+- Commit `pnpm-lock.yaml` with any package change, or Vercel's frozen install fails.
+- Kimi k2.6: never send temperature (fixed at 0.6 with thinking off).
+- Preview URLs return 401: check production.
+- GitHub blocks pushes that use the founder's private email; the repo config uses the noreply address.
+- Never touch hrizzup-staging or Zugzwang-world's Org in Supabase.
+- `supabase db push --remote --yes -p "$SUPABASE_DB_PASSWORD"` applies migrations; the worktree is linked.
