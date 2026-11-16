@@ -18,7 +18,7 @@ const FIRST_BREAK = /[,—–;:]/; // where the first chunk may end early
 
 export function wordCount(text: string): number {
   const s = stripMarkers(text).trim();
-  return s ? s.split(/\s+/).length : 0;
+  return s ? s.split(/\s+/).filter((w) => /\p{L}/u.test(w)).length : 0; // dashes and emoji are not words
 }
 
 /** Sound and song markers play in order on the toy, so they start the next chunk instead of trailing the last one. */
