@@ -40,7 +40,7 @@
 - Credits: ElevenLabs about 17% of 100k characters used (resets 17 Nov 21:01 UTC); Kimi about 14.3 USD left.
 
 ## Known issues and next steps
-1. **Kimi k2.6 stalls** on 10–15% of turns for 7–10 s, worse in some periods. The loop cancels and retries one at a time (up to 3 tries) and fillers cover the wait, but about 1 turn in 7 can still end with the "Chalo, ek naya khel" line. K3 models can't turn thinking off. Best fix: move the brain to Claude Haiku 5.5 once Anthropic credit is fixed (one switch in demo.config.json).
+1. **Kimi k2.6 stalls** on 10–15% of turns for 7–10 s, worse in some periods. The loop cancels and retries one at a time (up to 3 tries) and fillers cover the wait, but about 1 turn in 7 can still end with the "Chalo, ek naya khel" line. K3 models can't turn thinking off. Best fix: move the brain to Claude Haiku 5.5 once Anthropic credit is fixed. The switch is one value in demo.config.json, but the Anthropic path in lib/brain.ts is written and untested end to end (the key still says "credit balance is too low" at 05:15), and the sorter's streamed JSON has only ever run on Kimi.
 2. Test on real devices: phone mic, iPhone Safari, the projector browser.
 3. Single-letter answers: while a spelling is on the wall, a one-letter answer now snaps to the board's tiles ("M" heard as "N" → M; checked 3/3 voices). Outside the spelling game, single letters can still be misheard.
 4. A "once at 19:00" job with no date repeats daily; a clock jump only catches jobs from the last 30 minutes.
