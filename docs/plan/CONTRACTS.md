@@ -33,7 +33,7 @@ Next.js 16.4.6 with cacheComponents on: read `apps/web/AGENTS.md` and the matchi
 - `demo_state(child_id, clock_offset_ms, show_timings, updated_at)`: one row per child.
 - Browser: read with `supabaseBrowser()`, subscribe with `postgres_changes` (filter `child_id=eq.aarav`). All four tables are in the realtime publication.
 - Writes happen only in API routes, with the server helpers.
-- Storage bucket `audio` (public). Paths: `voice/<uuid>.webm` (parent voice notes), `say/<sha1 of voice+model+text>.mp3` (cached Nani lines), `clips/<callId>/<ts>.webm` (call clips). Public URL: `${NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/audio/<path>`.
+- Storage bucket `audio` (public). Paths: `voice/<uuid>.webm` (parent voice notes), `say/<sha1 of voice+model+text>.mp3` (cached Nani lines), `clips/<callId>/<ts>.wav` (call clips, 16 kHz WAV so every browser plays them). Public URL: `${NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/audio/<path>`.
 
 ## API routes
 | Route | Request | Response | Owner |
