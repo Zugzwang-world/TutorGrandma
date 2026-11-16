@@ -2,7 +2,13 @@
 // The parent's side of a call (N2): a sheet over the chat with a big hold-to-talk button, the toy's clips
 // playing as they arrive, and End. Opened from the call bubble's Join tap, which also unlocked `audio`
 // (one <audio> element reused for every clip, so iPhone Safari lets it play without another tap).
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { callApi, ClipRecorder, sendClip } from "@/lib/call/client";
 import { listenCall } from "@/lib/call/listen";
 import { CALL_IDLE_MS, sentAtOf, type CallState } from "@/lib/call/shared";
@@ -49,6 +55,7 @@ export function CallPanel({
   const stream = useRef<MediaStream | null>(null);
   const holding = useRef(false);
   const queue = useRef<Promise<void>>(Promise.resolve());
+  const playingDone = useRef<(() => void) | null>(null); // settles the clip playing now (pause fires no "ended")
   const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
@@ -81,37 +88,40 @@ export function CallPanel({
         setLog((l) => [...l, { key: p.url, from: p.from, url: p.url }]);
         if (p.from !== "toy") return;
         const got = Date.now();
-        queue.current = queue.current.then(
-          () =>
-            new Promise<void>((resolve) => {
-              if (holding.current) return resolve(); // talking: it stays in the list to replay
-              const done = () => {
-                audio.onended = null;
-                audio.onerror = null;
-                setHearing(false);
-                resolve();
-              };
-              audio.onended = done;
-              audio.onerror = done;
-              audio.src = p.url;
-              audio
-                .play()
-                .then(() => {
-                  setBlocked(false);
-                  setHearing(true);
-                  const sent = sentAtOf(p.url);
-                  console.log(
-                    `[call] clip from toy played: broadcast→playing ${Date.now() - got} ms` +
-                      (sent ? `, stored→playing ${Date.now() - sent} ms` : ""),
-                  );
-                })
-                .catch((e) => {
+        queue.current = queue.current.then(async () => {
+          while (holding.current) await new Promise((r) => setTimeout(r, 100)); // the parent is talking: play after
+          await new Promise<void>((resolve) => {
+            const done = () => {
+              if (playingDone.current === done) playingDone.current = null;
+              audio.onended = null;
+              audio.onerror = null;
+              setHearing(false);
+              resolve();
+            };
+            playingDone.current = done;
+            audio.onended = done;
+            audio.onerror = done;
+            audio.src = p.url;
+            audio
+              .play()
+              .then(() => {
+                setBlocked(false);
+                setHearing(true);
+                const sent = sentAtOf(p.url);
+                console.log(
+                  `[call] clip from toy played: broadcast→playing ${Date.now() - got} ms` +
+                    (sent ? `, stored→playing ${Date.now() - sent} ms` : ""),
+                );
+              })
+              .catch((e) => {
+                if ((e as Error)?.name === "NotAllowedError") {
                   console.warn("[call] autoplay blocked", e);
                   setBlocked(true);
-                  done();
-                });
-            }),
-        );
+                }
+                done();
+              });
+          });
+        });
       },
     });
     return () => {
@@ -181,6 +191,7 @@ export function CallPanel({
     e.currentTarget.setPointerCapture(e.pointerId);
     holding.current = true;
     audio.pause(); // talking over Aarav's clip stops it
+    playingDone.current?.();
     setHearing(false);
     setHold("starting");
     try {
@@ -188,7 +199,9 @@ export function CallPanel({
     } catch {}
     let s: MediaStream;
     try {
-      s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      s = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true },
+      });
     } catch {
       holding.current = false;
       setHold("idle");
@@ -225,18 +238,33 @@ export function CallPanel({
             : "Connecting…";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={`Call with ${child}`}>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Call with ${child}`}
+    >
       <div className="tg-backdrop absolute inset-0 bg-ink/40" />
       <div className="tg-sheet relative flex h-[86dvh] w-full max-w-[640px] flex-col rounded-t-[28px] bg-cream shadow-[0_-8px_40px_rgba(43,33,24,0.18)]">
         <header className="flex items-center gap-3 border-b border-line px-5 pt-5 pb-4">
-          <span className="emoji flex h-12 w-12 items-center justify-center rounded-full bg-marigold-soft text-2xl">🧸</span>
+          <span className="emoji flex h-12 w-12 items-center justify-center rounded-full bg-marigold-soft text-2xl">
+            🧸
+          </span>
           <div className="min-w-0 flex-1">
-            <p className="text-lg leading-tight font-extrabold">Call with {child}</p>
-            <p className={`text-[14px] font-bold ${ended ? "text-muted" : "text-marigold"}`} aria-live="polite">
+            <p className="text-lg leading-tight font-extrabold">
+              Call with {child}
+            </p>
+            <p
+              className={`text-[14px] font-bold ${ended ? "text-muted" : "text-marigold"}`}
+              aria-live="polite"
+            >
               {status}
             </p>
           </div>
-          <span className={`h-3 w-3 rounded-full ${ended ? "bg-muted/40" : hearing ? "animate-pulse bg-marigold" : "bg-[#3aa55d]"}`} aria-hidden />
+          <span
+            className={`h-3 w-3 rounded-full ${ended ? "bg-muted/40" : hearing ? "animate-pulse bg-marigold" : "bg-[#3aa55d]"}`}
+            aria-hidden
+          />
         </header>
 
         <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-3">
@@ -248,23 +276,36 @@ export function CallPanel({
             </p>
           ) : (
             log.map((it) => (
-              <div key={it.key} className={`mt-2 flex ${it.from === "parent" ? "justify-end" : "justify-start"}`}>
+              <div
+                key={it.key}
+                className={`mt-2 flex ${it.from === "parent" ? "justify-end" : "justify-start"}`}
+              >
                 <div
                   className={`rounded-[20px] px-3 py-1.5 ${
-                    it.from === "parent" ? "border border-marigold/25 bg-marigold-soft" : "border border-line bg-paper"
+                    it.from === "parent"
+                      ? "border border-marigold/25 bg-marigold-soft"
+                      : "border border-line bg-paper"
                   }`}
                 >
-                  <p className="text-[12px] font-extrabold text-muted">{it.from === "parent" ? "You" : child}</p>
+                  <p className="text-[12px] font-extrabold text-muted">
+                    {it.from === "parent" ? "You" : child}
+                  </p>
                   <VoicePlayer src={it.url} mine={it.from === "parent"} />
                 </div>
               </div>
             ))
           )}
-          {blocked && <p className="mt-3 text-center text-[13px] text-muted">Tap ▶ to hear {child} (the browser blocked autoplay)</p>}
+          {blocked && (
+            <p className="mt-3 text-center text-[13px] text-muted">
+              Tap ▶ to hear {child} (the browser blocked autoplay)
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col items-center gap-3 border-t border-line px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-          <p className="min-h-5 text-[13px] font-bold text-muted">{note ?? (ended ? "" : "Hold to talk, let go to send")}</p>
+          <p className="min-h-5 text-[13px] font-bold text-muted">
+            {note ?? (ended ? "" : "Hold to talk, let go to send")}
+          </p>
           <button
             type="button"
             disabled={ended}
@@ -274,12 +315,29 @@ export function CallPanel({
             onPointerCancel={() => void release()}
             onContextMenu={(e) => e.preventDefault()}
             className={`tg-mic flex h-32 w-32 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-150 select-none disabled:opacity-40 ${
-              hold === "recording" ? "scale-110 bg-[#d64545]" : hold === "starting" ? "scale-105 bg-marigold/80" : "bg-marigold"
+              hold === "recording"
+                ? "scale-110 bg-[#d64545]"
+                : hold === "starting"
+                  ? "scale-105 bg-marigold/80"
+                  : "bg-marigold"
             }`}
           >
             <svg viewBox="0 0 24 24" className="h-12 w-12" aria-hidden>
-              <rect x="8.5" y="2.5" width="7" height="12" rx="3.5" fill="currentColor" />
-              <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <rect
+                x="8.5"
+                y="2.5"
+                width="7"
+                height="12"
+                rx="3.5"
+                fill="currentColor"
+              />
+              <path
+                d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </svg>
           </button>
           <button
