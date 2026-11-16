@@ -43,6 +43,7 @@ Next.js 16.4.6 with cacheComponents on: read `apps/web/AGENTS.md` and the matchi
 | POST /api/say | JSON `{ text, voiceId? }` | `{ url, cached }`: public mp3 in Nani's voice, cached by hash | N1 |
 | POST /api/turn | multipart: `audio` (file) OR `text` (string, skips STT; for tests), `sessionId`, `board` (JSON BoardState), `lastEvent` (JSON NaniEvent or "null"), `clockOffsetMs` | NDJSON stream of `TurnEvent` lines (types.ts): `heard`, then `say` (in order, i = 0,1,…), `fallback`, `done` | N1 |
 | POST /api/reset | none | `{ ok, files, messages }`; broadcasts `reset` on toy and wall | Coordinator (P1 extends) |
+| POST /api/event | JSON `{ bot, text?, meta?, turn?: { kind, child_text?, nani_text?, meta? } }` | `{ ok, turnId?, messageId?, duplicate? }`. Posts `text` as that bot (meta kind "event"). With `turn`, records a turns row; a job fire uses `turn: { kind: "job", meta: { jobKey, dueAt } }`, and a repeat of the same jobKey + dueAt returns `duplicate: true` and posts nothing | Coordinator |
 | POST /api/clip | wave 2 (N2) | | N2 |
 | POST /api/brief | wave 2 (G5) | | G5 |
 
