@@ -7,6 +7,7 @@ import { Composer } from "./composer";
 import { MessageList, type WhatChangedTarget } from "./message-list";
 import { readSender, saveSender } from "./ui";
 import { useChat } from "./use-chat";
+import { useTyping } from "./use-typing";
 import { WhatChangedSheet } from "./what-changed-sheet";
 import { WhoIsThis } from "./who-is-this";
 
@@ -31,8 +32,10 @@ export function GuidanceChat() {
   const ready = stored !== SERVER;
   const sender = ready && stored ? stored : null;
   const { rows, pending, working, loaded, localAudio, sendText, sendVoice, retry } = useChat(sender);
+  const { typing, landedId } = useTyping(working, rows);
   const [sheet, setSheet] = useState<WhatChangedTarget | null>(null);
-  const [showNew, setShowNew] = useState(false);
+  const [newCount, setNewCount] = useState(0);
+  const showNew = newCount > 0;
 
   const scroller = useRef<HTMLDivElement | null>(null);
   const content = useRef<HTMLDivElement | null>(null);
@@ -43,8 +46,8 @@ export function GuidanceChat() {
     const el = scroller.current;
     if (!el) return;
     stuck.current = true;
-    setShowNew(false);
-    if (smooth) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    setNewCount(0);
+    if (smooth && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     else el.scrollTop = el.scrollHeight;
   }, []);
 
@@ -61,10 +64,10 @@ export function GuidanceChat() {
     return () => ro.disconnect();
   }, []);
 
-  // A new message while scrolled up shows a "new messages" pill instead of yanking the view.
+  // A new message while scrolled up shows a "new messages" pill (with a count) instead of yanking the view.
   useEffect(() => {
     const last = pending.length ? pending[pending.length - 1].clientId : rows.length ? `m${rows[rows.length - 1].id}` : "";
-    if (last && lastKey.current && last !== lastKey.current && !stuck.current) setShowNew(true);
+    if (last && lastKey.current && last !== lastKey.current && !stuck.current) setNewCount((n) => n + 1);
     lastKey.current = last;
   }, [rows, pending]);
 
@@ -79,7 +82,7 @@ export function GuidanceChat() {
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
     if (nearBottom) stuck.current = true;
     else if (Date.now() - userAt.current < 1200) stuck.current = false;
-    if (stuck.current && showNew) setShowNew(false);
+    if (stuck.current && showNew) setNewCount(0);
   };
 
   const pick = (name: string) => {
@@ -118,7 +121,8 @@ export function GuidanceChat() {
             <MessageList
               rows={rows}
               pending={pending}
-              working={working}
+              typing={typing}
+              landedId={landedId}
               me={sender}
               localAudio={localAudio}
               onWhatChanged={setSheet}
@@ -130,16 +134,21 @@ export function GuidanceChat() {
       </div>
 
       <div className="relative">
-        <button
-          type="button"
-          onClick={() => toBottom(true)}
-          className={`tg-press absolute -top-12 left-1/2 z-10 -translate-x-1/2 rounded-full border border-line bg-paper px-3.5 py-1.5 text-[13px] font-extrabold text-ink/80 shadow-md transition-[opacity,transform] duration-200 ${
-            showNew ? "opacity-100" : "pointer-events-none translate-y-2 opacity-0"
-          }`}
-          tabIndex={showNew ? 0 : -1}
-        >
-          New messages ↓
-        </button>
+        <div className="pointer-events-none absolute -top-14 left-1/2 z-10 -translate-x-1/2">
+          <button
+            type="button"
+            onClick={() => toBottom(true)}
+            data-on={showNew}
+            className="tg-pill pointer-events-auto flex items-center gap-1.5 rounded-full border border-marigold/40 bg-paper py-2 pr-3 pl-3.5 text-[14px] font-extrabold whitespace-nowrap text-[#b86a00] shadow-[0_6px_20px_rgba(43,33,24,0.14)]"
+            tabIndex={showNew ? 0 : -1}
+            aria-hidden={!showNew}
+          >
+            {newCount > 1 ? `${newCount} new messages` : "New message"}
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+              <path d="M7 2.5v9M3 7.5l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
         <Composer disabled={!sender} onSendText={sendText} onSendVoice={sendVoice} onSent={() => toBottom()} />
       </div>
 
