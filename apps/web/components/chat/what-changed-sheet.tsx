@@ -28,7 +28,7 @@ function summary(added: number, removed: number, version: number): string {
 }
 
 /** One line of an agent file: heading, bullet or text; marked new (highlighted) or removed (struck through). */
-function FileLine({ text, mark }: { text: string; mark: "new" | "removed" | null }) {
+function FileLine({ text, mark, i = 0 }: { text: string; mark: "new" | "removed" | null; i?: number }) {
   if (text.startsWith("#") && mark !== "removed") {
     const h1 = /^#\s/.test(text);
     return <p className={`px-2 font-extrabold ${h1 ? "pt-1 text-[18px]" : "pt-2 text-[15px] text-ink/80"}`}>{text.replace(/^#+\s*/, "")}</p>;
@@ -40,7 +40,8 @@ function FileLine({ text, mark }: { text: string; mark: "new" | "removed" | null
     <div
       data-new={isNew}
       data-removed={gone}
-      className={`relative my-0.5 flex gap-2 rounded-lg px-2 py-1 break-words ${
+      style={mark ? ({ "--i": i } as CSSProperties) : undefined}
+      className={`tg-line relative my-0.5 flex gap-2 rounded-lg px-2 py-1 break-words ${
         isNew
           ? "bg-marigold-soft font-semibold before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-marigold"
           : gone
@@ -54,10 +55,10 @@ function FileLine({ text, mark }: { text: string; mark: "new" | "removed" | null
         </span>
       )}
       <span className="min-w-0 flex-1">
-        <span className={gone ? "line-through decoration-[#b42318]/60 decoration-2" : ""}>{bullet ? text.slice(bullet[0].length) : text}</span>
+        <span className={gone ? "tg-strike text-[#b42318]" : ""}>{bullet ? text.slice(bullet[0].length) : text}</span>
         {(isNew || gone) && (
           <span
-            className={`ml-1.5 inline-block rounded-md px-1.5 py-px align-[2px] text-[10px] font-extrabold tracking-wide text-white uppercase no-underline ${
+            className={`tg-badge ml-1.5 inline-block rounded-md px-1.5 py-px align-[2px] text-[10px] font-extrabold tracking-wide text-white uppercase no-underline ${
               gone ? "bg-[#e5484d]" : "bg-marigold"
             }`}
           >
@@ -187,9 +188,18 @@ export function WhatChangedSheet({ target, onClose }: { target: WhatChangedTarge
     pills.current?.querySelector<HTMLElement>("[data-picked='true']")?.scrollIntoView({ block: "nearest", inline: "center" });
   }, [current?.id]);
 
-  // Drag the handle down to dismiss.
+  // The line highlights wait for the sheet to finish sliding in; after that, switching versions replays them at once.
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setSettled(true), 400);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Drag the handle down to dismiss: far enough, or a quick flick. Pulling up resists.
+  const flick = useRef<{ y: number; t: number; v: number }>({ y: 0, t: 0, v: 0 });
   const onDragStart = (e: ReactPointerEvent<HTMLDivElement>) => {
     dragStart.current = e.clientY;
+    flick.current = { y: e.clientY, t: e.timeStamp, v: 0 };
     setDragging(true);
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -199,25 +209,33 @@ export function WhatChangedSheet({ target, onClose }: { target: WhatChangedTarge
   };
   const onDragMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (dragStart.current == null) return;
-    setDrag(Math.max(0, e.clientY - dragStart.current));
+    const dy = e.clientY - dragStart.current;
+    setDrag(dy >= 0 ? dy : -Math.min(14, Math.sqrt(-dy) * 1.6));
+    const f = flick.current;
+    const dt = e.timeStamp - f.t;
+    if (dt > 0) flick.current = { y: e.clientY, t: e.timeStamp, v: (e.clientY - f.y) / dt };
   };
-  const onDragEnd = () => {
+  const onDragEnd = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (dragStart.current == null) return;
     dragStart.current = null;
     setDragging(false);
-    if (drag > 110) setClosing(true);
+    const fresh = e.timeStamp - flick.current.t < 100;
+    if (drag > 110 || (drag > 24 && fresh && flick.current.v > 0.5)) setClosing(true);
     else setDrag(0);
   };
 
   const lines = current ? current.content.replace(/\r\n/g, "\n").split("\n") : [];
   const latest = versions?.length ? versions[versions.length - 1].version : null;
   const newCount = lines.filter((l) => highlighted.has(l.trim()) && !l.trim().startsWith("#")).length;
+  let nth = 0; // order of the marked lines, for the staggered highlight
+  const fade = Math.max(0.15, 1 - drag / 420); // the backdrop lightens as the sheet is pulled down
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={`What changed in ${label}`}>
       <div
         className="tg-backdrop absolute inset-0 bg-ink/35"
         data-closing={closing}
+        style={{ opacity: fade, transition: dragging ? undefined : "opacity 260ms ease" }}
         onClick={close}
         onAnimationEnd={() => {
           if (closing) onClose();
@@ -296,13 +314,13 @@ export function WhatChangedSheet({ target, onClose }: { target: WhatChangedTarge
           {current && (
             <>
               <p className="mb-2 px-2 text-[13px] font-bold text-muted">{summary(newCount, removed.length, current.version)}</p>
-              <div className="text-base leading-[1.45]">
+              <div key={current.id} className="text-base leading-[1.45]" style={{ "--tg-base": settled ? "60ms" : "320ms" } as CSSProperties}>
                 {(removedAt.get(-1) ?? []).map((r, k) => (
-                  <FileLine key={`r-top-${k}`} text={r} mark="removed" />
+                  <FileLine key={`r-top-${k}`} text={r} mark="removed" i={nth++} />
                 ))}
                 {lines.map((raw, i) => {
                   const l = raw.trim();
-                  const gone = (removedAt.get(i) ?? []).map((r, k) => <FileLine key={`r${i}-${k}`} text={r} mark="removed" />);
+                  const gone = (removedAt.get(i) ?? []).map((r, k) => <FileLine key={`r${i}-${k}`} text={r} mark="removed" i={nth++} />);
                   if (!l)
                     return (
                       <Fragment key={i}>
@@ -310,9 +328,10 @@ export function WhatChangedSheet({ target, onClose }: { target: WhatChangedTarge
                         {gone}
                       </Fragment>
                     );
+                  const isNew = highlighted.has(l) && !l.startsWith("#");
                   return (
                     <Fragment key={i}>
-                      <FileLine text={l} mark={highlighted.has(l) && !l.startsWith("#") ? "new" : null} />
+                      <FileLine text={l} mark={isNew ? "new" : null} i={isNew ? nth++ : 0} />
                       {gone}
                     </Fragment>
                   );

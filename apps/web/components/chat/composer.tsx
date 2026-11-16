@@ -1,6 +1,6 @@
 "use client";
 // Sticky input: "Try saying…" chips, a growing text box, and a hold-to-record mic (slide off to cancel).
-import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { config } from "@/lib/config";
 
 type RecState = "idle" | "starting" | "recording";
@@ -45,6 +45,74 @@ function Elapsed({ since }: { since: number }) {
   );
 }
 
+const LEVEL_BARS = 22;
+
+/**
+ * Live mic level: a short scrolling waveform, plus a --lvl CSS variable on `halo` (the mic button) for its glow.
+ * Written straight to the DOM each frame, so recording never re-renders the composer.
+ */
+function LiveLevel({ stream, halo }: { stream: MediaStream; halo: RefObject<HTMLElement | null> }) {
+  const box = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    const Ctx: typeof AudioContext | undefined =
+      typeof window !== "undefined" ? (window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext) : undefined;
+    const glow = halo.current;
+    if (!Ctx) return;
+    let ctx: AudioContext;
+    try {
+      ctx = new Ctx();
+    } catch {
+      return;
+    }
+    const src = ctx.createMediaStreamSource(stream);
+    const an = ctx.createAnalyser();
+    an.fftSize = 512;
+    src.connect(an);
+    const buf = new Uint8Array(an.fftSize);
+    const hist: number[] = Array(LEVEL_BARS).fill(0);
+    let raf = 0;
+    let last = 0;
+    let smooth = 0;
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      an.getByteTimeDomainData(buf);
+      let sum = 0;
+      for (let i = 0; i < buf.length; i++) {
+        const v = (buf[i] - 128) / 128;
+        sum += v * v;
+      }
+      const lvl = Math.min(1, Math.sqrt(sum / buf.length) * 4.5);
+      smooth = smooth * 0.7 + lvl * 0.3;
+      glow?.style.setProperty("--lvl", smooth.toFixed(3));
+      if (now - last < 75) return;
+      last = now;
+      hist.shift();
+      hist.push(smooth);
+      const bars = box.current?.children;
+      if (!bars) return;
+      for (let i = 0; i < bars.length; i++) (bars[i] as HTMLElement).style.transform = `scaleY(${Math.max(0.14, hist[i]).toFixed(3)})`;
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      glow?.style.removeProperty("--lvl");
+      try {
+        src.disconnect();
+      } catch {
+        /* ignore */
+      }
+      void ctx.close().catch(() => {});
+    };
+  }, [stream, halo]);
+  return (
+    <span ref={box} className="tg-level min-w-0 flex-1 justify-center overflow-hidden text-[#e5484d]/80" aria-hidden>
+      {Array.from({ length: LEVEL_BARS }, (_, i) => (
+        <span key={i} />
+      ))}
+    </span>
+  );
+}
+
 export function Composer({
   disabled,
   onSendText,
@@ -61,6 +129,8 @@ export function Composer({
   const [armed, setArmed] = useState(false); // release now cancels
   const [startedAt, setStartedAt] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const micBtn = useRef<HTMLButtonElement | null>(null);
   const box = useRef<HTMLTextAreaElement | null>(null);
   const recRef = useRef<Rec | null>(null);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -168,6 +238,7 @@ export function Composer({
     mr.start(250);
     r.startedAt = Date.now();
     setStartedAt(r.startedAt);
+    setStream(stream);
     setRec("recording");
     try {
       navigator.vibrate?.(12);
@@ -229,6 +300,7 @@ export function Composer({
     if (r.cancelled && r.mr) flash("Voice note cancelled");
     setRec("idle");
     setArmed(false);
+    setStream(null);
   };
 
   const recording = rec !== "idle";
@@ -270,16 +342,34 @@ export function Composer({
 
         <div className="flex items-end gap-2 px-3 pt-2">
           <div
-            className={`relative flex min-h-[48px] flex-1 items-center rounded-[24px] border bg-paper transition-colors ${
+            className={`relative flex min-h-[48px] min-w-0 flex-1 items-center rounded-[24px] border bg-paper transition-colors ${
               recording ? (armed ? "border-memory/60" : "border-marigold/60") : "border-line focus-within:border-marigold/70"
             }`}
           >
             {recording ? (
-              <div className="flex w-full items-center gap-2.5 px-4 py-3 text-base select-none">
-                <span className={`h-2.5 w-2.5 rounded-full ${armed ? "bg-memory" : "tg-rec-dot bg-[#e5484d]"}`} />
-                {rec === "recording" ? <Elapsed since={startedAt} /> : <span className="text-muted">Starting mic…</span>}
-                <span className={`ml-auto truncate text-[14px] font-bold ${armed ? "text-memory" : "text-muted"}`}>
-                  {armed ? "Let go to cancel" : "‹ Slide away to cancel"}
+              <div className="tg-panel-in flex w-full items-center gap-2.5 px-4 py-3 text-base select-none" role="status">
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full transition-colors ${armed ? "bg-memory" : "tg-rec-dot bg-[#e5484d]"}`} />
+                {rec === "recording" ? (
+                  <span className="w-[2.6rem] shrink-0 font-semibold">
+                    <Elapsed since={startedAt} />
+                  </span>
+                ) : (
+                  <span className="text-muted">Starting mic…</span>
+                )}
+                {rec === "recording" && stream && !armed && <LiveLevel stream={stream} halo={micBtn} />}
+                <span
+                  className={`ml-auto flex shrink-0 items-center gap-1 text-[14px] font-bold whitespace-nowrap transition-colors ${armed ? "text-memory" : "text-muted"}`}
+                >
+                  {armed ? (
+                    "Let go to cancel"
+                  ) : (
+                    <>
+                      <span className="tg-nudge inline-block" aria-hidden>
+                        ‹
+                      </span>
+                      Slide to cancel
+                    </>
+                  )}
                 </span>
               </div>
             ) : (
@@ -317,6 +407,7 @@ export function Composer({
             </button>
           ) : (
             <button
+              ref={micBtn}
               type="button"
               aria-label="Hold to record a voice note"
               disabled={disabled}
@@ -332,7 +423,12 @@ export function Composer({
                 recording ? (armed ? "scale-100 bg-memory" : "scale-110 bg-[#e5484d]") : "bg-marigold"
               }`}
             >
-              {rec === "recording" && !armed && <span className="tg-mic-ring absolute inset-0 rounded-full bg-[#e5484d]" />}
+              {rec === "recording" && !armed && (
+                <>
+                  <span className="tg-mic-halo absolute inset-0 rounded-full bg-[#e5484d]/30" aria-hidden />
+                  <span className="tg-mic-ring absolute inset-0 rounded-full bg-[#e5484d]" aria-hidden />
+                </>
+              )}
               <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden className="relative">
                 <rect x="7" y="2.5" width="6" height="10" rx="3" fill="currentColor" />
                 <path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
