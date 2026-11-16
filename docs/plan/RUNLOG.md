@@ -13,3 +13,4 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 01:56 | 0:50 | 1 | G2 #3 sorter (+ reviewer fix: compare-and-swap edits) | 6% weekly | prod check: 2 parallel messages kept both jobs, first reply 2.6–3.8 s; G1 in review; N1, W1 building |
 | 02:01 | 0:55 | 1→2 | W1 #5 wall | 6% weekly | launched G4+P1 and G5 (Sonnet, high); N1 building; G1 in review |
 | 02:03 | 0:57 | 1 | G1 #4 chat (+ iOS ▶ fix) | 6% weekly | prod: mangoes → Lessons + Memory live with 'what changed'; first reply 13 s this time (Kimi variance, watch); N1 #6 in review; G4+P1, G5 building |
+| 02:07 | 1:00 | 2 | G5 #7 brief + Memory answers; fix: never invent moments (prod showed copied example) | 6% weekly | prod: quiet brief and 'what did he learn' grounded; N1 #6 in review; G4+P1 building |
