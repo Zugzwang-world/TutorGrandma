@@ -1,6 +1,6 @@
 # Now · 2026-11-16
 
-**Step 1, setup: mostly done. Waiting on the founder for 4 things (see OPEN.md).**
+**Step 1, setup: mostly done. To finish it, the founder sends one message (ElevenLabs key, Supabase token, new session). Separately, Anthropic needs credit. Details in OPEN.md.**
 
 ## Running
 - Repo: https://github.com/Zugzwang-world/TutorGrandma (main; squash merge only, auto-merge on, branches deleted on merge)

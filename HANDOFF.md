@@ -15,7 +15,7 @@ None open. main only.
 
 ## Next actions, in order
 1. Store the ElevenLabs key as ELEVENLABS_API_KEY in .env.local, then in Vercel: `printf %s "$VAL" | vercel env add ELEVENLABS_API_KEY -e production,preview,development --no-sensitive --yes --force --scope hrizzup`.
-2. T5 Supabase, after the founder runs `supabase login`:
+2. T5 Supabase, after `supabase login` or with the founder's sbp_ token set as SUPABASE_ACCESS_TOKEN:
    - Run `supabase orgs list` and pick the Pro org. If there are several, check the plan through the management API.
    - Run `supabase projects create tutor-grandma --org-id <id> --region ap-south-1 --db-password <generated>` and save SUPABASE_DB_PASSWORD in .env.local.
    - Wait for ACTIVE_HEALTHY, then run `supabase projects api-keys --project-ref <ref>`.
@@ -31,4 +31,5 @@ None open. main only.
 - The Vercel MCP connection has no access to team hrizzup. Use the Vercel CLI with `--scope hrizzup`. To add env vars, pipe the value in with `printf %s` so no newline is stored.
 - Preview and per-deployment URLs sit behind Vercel auth and return 401. Check the production alias instead.
 - Next.js 16.4.6 has cacheComponents on. apps/web/AGENTS.md says to read node_modules/next/dist/docs before writing Next code.
+- If a key or token arrives in chat, write it to .env.local or export it, and never echo it. The repo is public.
 - Anthropic credit was empty on 2026-11-16, so any Haiku call fails until the founder tops it up.

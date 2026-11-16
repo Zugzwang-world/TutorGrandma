@@ -1,9 +1,7 @@
 # Open
 
-- Founder: top up Anthropic API credit. Preflight says "credit balance is too low", so the live brain can't run.
-- Founder: paste the ElevenLabs key. It did not come through in chat.
-- Founder: run `supabase login` on this Mac. The CLI is not logged in, so the Mumbai project can't be created yet.
-- Founder: start a new Claude Code session and say "continue Step 1". The new subagents only load in a fresh session.
+- Founder, to finish Step 1 (one message): start a new Claude Code session and say "continue Step 1". In the same message, paste the ElevenLabs key and a Supabase access token from supabase.com/dashboard/account/tokens (it starts with sbp_). Running `supabase login` in a terminal also works instead of the token.
+- Founder, before /preflight or the live brain can pass: top up Anthropic API credit ("credit balance is too low"), or paste a different Anthropic key that has credit. The GraphPay key is the only one on this Mac.
 - Product session with the founder: hardware and software changes.
 - Game spec for the demo.
 - Relay host: Vercel or the founder's laptop.
