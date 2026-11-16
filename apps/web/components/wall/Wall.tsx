@@ -1,7 +1,7 @@
 "use client";
 // The projector wall (PLAN C4). Listens on wall:<child>, shows one cue at a time, plays no audio.
 import "./wall.css";
-import { useCallback, useEffect, useReducer, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState, type ReactNode } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { CHILD_ID } from "@/lib/config";
 import { clockParts } from "@/lib/clock";
@@ -131,6 +131,41 @@ function hasTimings(t: unknown): t is TurnTimings {
   return !!t && typeof t === "object" && Object.values(t as object).some((v) => typeof v === "number");
 }
 
+// Keeps the scene that is leaving on the wall for a moment, fading out while the new one fades in,
+// so the wall is never blank between cues. Scenes are keyed, so a leaving scene keeps its DOM
+// (its animations do not restart).
+const EXIT_MS = 300;
+
+function Stage({ k, children }: { k: string; children: ReactNode }) {
+  const last = useRef<{ key: string; node: ReactNode }>({ key: k, node: children });
+  const [prevKey, setPrevKey] = useState(k);
+  const [leaving, setLeaving] = useState<{ key: string; node: ReactNode } | null>(null);
+  if (prevKey !== k) {
+    setPrevKey(k);
+    setLeaving(last.current);
+  }
+  useEffect(() => {
+    last.current = { key: k, node: children };
+  });
+  useEffect(() => {
+    if (!leaving) return;
+    const id = setTimeout(() => setLeaving(null), EXIT_MS);
+    return () => clearTimeout(id);
+  }, [leaving]);
+  return (
+    <>
+      {leaving && leaving.key !== k && (
+        <div key={leaving.key} className="wall-layer wall-leaving" aria-hidden>
+          {leaving.node}
+        </div>
+      )}
+      <div key={k} className="wall-layer">
+        {children}
+      </div>
+    </>
+  );
+}
+
 export default function Wall() {
   const [s, dispatch] = useReducer(reduce, initial);
   const [stickers, setStickers] = useState<string[]>([]);
@@ -140,6 +175,7 @@ export default function Wall() {
   const [live, setLive] = useState(false);
   const [tapped, setTapped] = useState(false);
   const demoRef = useRef(false);
+  const rootRef = useRef<HTMLElement>(null);
   const stickersRef = useRef<string[]>([]);
 
   const onCue = useCallback((cue: Cue) => {
@@ -156,6 +192,19 @@ export default function Wall() {
     }
     dispatch({ t: "cue", cue });
   }, []);
+
+  // The new sticker flies from the middle of the stage down into its place in the strip.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    const el = root?.querySelector<HTMLElement>(".wall-sticker-new");
+    const stage = root?.querySelector<HTMLElement>(".wall-stage");
+    const strip = el?.offsetParent as HTMLElement | null;
+    if (!root || !el || !stage || !strip) return;
+    const x = el.offsetLeft + el.offsetWidth / 2;
+    const y = strip.offsetTop + el.offsetTop + el.offsetHeight / 2;
+    el.style.setProperty("--fx", `${root.clientWidth / 2 - x}px`);
+    el.style.setProperty("--fy", `${stage.offsetHeight / 2 - y}px`);
+  }, [newest]);
 
   // Today's stickers, and demo mode.
   useEffect(() => {
@@ -318,9 +367,9 @@ export default function Wall() {
   const offset = stickers.length - shown.length;
 
   return (
-    <main className="wall-root" data-scene={sceneKey}>
-      <div className="wall-stage" key={sceneKey}>
-        {scene}
+    <main className="wall-root" data-scene={sceneKey} ref={rootRef}>
+      <div className="wall-stage">
+        <Stage k={sceneKey}>{scene}</Stage>
       </div>
 
       {s.speaking && (

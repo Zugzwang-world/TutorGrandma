@@ -56,6 +56,21 @@ function spread(n: number, seed: number) {
   }));
 }
 
+// A word that appears one letter at a time (each letter pops in, transform and opacity only).
+function Letters({ text, delay = 0.35, className = "" }: { text: string; delay?: number; className?: string }) {
+  const chars = Array.from(text);
+  const step = chars.length > 9 ? 0.04 : 0.065;
+  return (
+    <p className={`wall-word ${className}`} aria-label={text}>
+      {chars.map((c, i) => (
+        <span key={i} className="wall-ch" aria-hidden style={{ animationDelay: `${delay + i * step}s` }}>
+          {c}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 export function IdleScene() {
   return (
     <div className="wall-scene">
@@ -66,6 +81,7 @@ export function IdleScene() {
           style={{ left: `${s.left}%`, top: `${s.top * 0.8}%`, animationDelay: `${s.delay}s` } as Vars}
         />
       ))}
+      <span className="wall-aura" />
       <Emoji className="wall-breathe" style={{ fontSize: "42vmin" }}>
         👵
       </Emoji>
@@ -96,10 +112,12 @@ export function ThinkingScene() {
 export function ShowScene({ emoji, word }: { emoji: string; word: string }) {
   return (
     <div className="wall-scene">
-      <Emoji className="wall-pop" style={{ fontSize: "46vmin" }}>
-        {emoji}
-      </Emoji>
-      <p className="wall-word wall-rise">{word}</p>
+      <div className="wall-pop">
+        <Emoji className="wall-floaty" style={{ fontSize: "46vmin" }}>
+          {emoji}
+        </Emoji>
+      </div>
+      <Letters text={word} />
     </div>
   );
 }
@@ -184,32 +202,77 @@ export function CountScene({ cue }: { cue: Extract<Cue, { type: "count" }> }) {
   const a = Math.max(0, Math.min(10, cue.a));
   const b = cue.b === undefined ? undefined : Math.max(0, Math.min(10, cue.b));
   const total = a + (b ?? 0);
-  const step = 0.55;
+  const step = total <= 3 ? 0.4 : total <= 6 ? 0.3 : 0.2; // seconds between items
+  const half = step * 0.6; // the "+" and "=" take a shorter beat
   const size = total <= 3 ? 24 : total <= 5 ? 18 : total <= 8 ? 13 : 10;
+
+  // One timeline for the whole scene: items, then "+", more items, then "=" and the answer.
+  let t = 0;
+  const at: number[] = [];
+  for (let i = 0; i < a; i++) {
+    at.push(t);
+    t += step;
+  }
+  let plusAt = 0;
+  let eqAt = 0;
+  if (b !== undefined) {
+    plusAt = t;
+    t += half;
+    for (let i = 0; i < b; i++) {
+      at.push(t);
+      t += step;
+    }
+    eqAt = t;
+    t += half;
+  }
+  const answerAt = t;
+  const sumDelay = (x: number) => ({ animationDelay: `${x}s` });
+
   const item = (n: number) => (
-    <div key={n} className="wall-count-item" style={{ animationDelay: `${(n - 1) * step}s` }}>
+    <div key={n} className="wall-count-item" style={sumDelay(at[n - 1])}>
       <Emoji style={{ fontSize: `${size}vmin` }}>{cue.emoji}</Emoji>
-      <span className="wall-count-num" style={{ color: PALETTE[(n - 1) % PALETTE.length] }}>
+      <span className="wall-count-num" style={{ color: PALETTE[(n - 1) % PALETTE.length], animationDelay: `${at[n - 1] + 0.12}s` }}>
         {n}
       </span>
     </div>
   );
-  const done = total * step + 0.2;
   return (
     <div className="wall-scene">
       <div className="wall-count-row">
         {Array.from({ length: a }, (_, i) => item(i + 1))}
         {b !== undefined && (
           <>
-            <span className="wall-plus" style={{ animationDelay: `${a * step - 0.2}s` }}>
+            <span className="wall-plus" style={sumDelay(plusAt)}>
               +
             </span>
             {Array.from({ length: b }, (_, i) => item(a + i + 1))}
           </>
         )}
       </div>
-      <p className="wall-sum wall-rise" style={{ animationDelay: `${done}s` }}>
-        {b !== undefined ? `${a} + ${b} = ${total}` : total}
+      <p className="wall-sum">
+        {b !== undefined ? (
+          <>
+            <span className="wall-sum-p" style={sumDelay(a > 0 ? at[a - 1] + 0.1 : 0)}>
+              {a}
+            </span>
+            <span className="wall-sum-p" style={sumDelay(plusAt)}>
+              +
+            </span>
+            <span className="wall-sum-p" style={sumDelay(b > 0 ? at[total - 1] + 0.1 : plusAt)}>
+              {b}
+            </span>
+            <span className="wall-sum-p" style={sumDelay(eqAt)}>
+              =
+            </span>
+            <span className="wall-sum-p wall-sum-total" style={sumDelay(answerAt)}>
+              {total}
+            </span>
+          </>
+        ) : (
+          <span className="wall-sum-p wall-sum-total" style={sumDelay(answerAt)}>
+            {total}
+          </span>
+        )}
       </p>
     </div>
   );
@@ -222,7 +285,7 @@ export function ChoicesScene({ items }: { items: { emoji: string; label: string 
       <p className="wall-title wall-rise">What next?</p>
       <div className={`wall-cards ${list.length === 4 ? "wall-cards-4" : ""}`}>
         {list.map((it, i) => (
-          <div key={i} className="wall-card" style={{ "--c": PALETTE[i % PALETTE.length], animationDelay: `${0.15 + i * 0.18}s` } as Vars}>
+          <div key={i} className="wall-card" style={{ "--c": PALETTE[i % PALETTE.length], animationDelay: `${0.1 + i * 0.12}s` } as Vars}>
             <Emoji className="wall-card-emoji">{it.emoji}</Emoji>
             <span className="wall-card-label">{it.label}</span>
           </div>
@@ -236,7 +299,7 @@ export function CheerScene({ emoji }: { emoji: string }) {
   return (
     <div className="wall-scene">
       <div className="wall-confetti" aria-hidden>
-        {spread(48, 3).map((c, i) => (
+        {spread(40, 3).map((c, i) => (
           <span
             key={i}
             style={
