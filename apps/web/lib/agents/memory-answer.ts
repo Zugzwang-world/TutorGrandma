@@ -41,7 +41,7 @@ ${brain.content.trim()}`;
       { role: "user", content: user },
     ],
     maxTokens: 200,
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(7_000), // past this the sorter's own reply is used
   });
   const text = r.text.trim().replace(/^["“]|["”]$/g, "").replace(/\s*\n+\s*/g, " ");
   if (!text) throw new Error("memory answer: empty");

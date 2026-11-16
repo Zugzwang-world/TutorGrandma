@@ -79,6 +79,9 @@ export async function POST(req: Request) {
 
     // Edits to the same file run one after another; different files run in parallel.
     const note = changeNote(sender, text);
+    // Questions about Aarav: start Memory's grounded answer now, in parallel with the sorter (saves ~3 s).
+    const looksLikeQuestion = /\?|\b(what|how|did|does|learn|learned|today|kya|kaise|kaisa|kitna)\b/i.test(text);
+    const earlyAnswer = looksLikeQuestion ? answerMemoryQuestion(text, sender).catch(() => null) : null;
     const fileChain = new Map<string, Promise<unknown>>();
     const startEdit = (a: SorterAction): Promise<WriteResult | null> => {
       const g = guardEdit(a.bot, a.edit, files);
@@ -101,10 +104,12 @@ export async function POST(req: Request) {
       // Memory's questions get a grounded answer (C12), started now so it runs during the typing gap; the sorter's reply is the fallback.
       const answer =
         a.bot === "memory" && a.kind === "question"
-          ? answerMemoryQuestion(text, sender).catch((e) => {
-              console.warn(`[chat] memory answer failed: ${(e as Error).message}`);
-              return a.reply;
-            })
+          ? earlyAnswer
+            ? earlyAnswer.then((early) => early ?? a.reply)
+            : answerMemoryQuestion(text, sender).catch((e) => {
+                console.warn(`[chat] memory answer failed: ${(e as Error).message}`);
+                return a.reply;
+              })
           : null;
       if (lastPost) await sleep(Math.max(0, gapFor(a.reply) - (Date.now() - lastPost)));
       const w = await write;
