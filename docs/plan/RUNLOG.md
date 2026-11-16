@@ -25,3 +25,4 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 03:24 | 2:20 | 3 | self-test run 2: 10/10 chat, 99% speech, but 13/51 slow_brain → reverted parallel brain requests (Kimi throttles bursts), timeout 7 s | 7% weekly | run 3 (voice, real pacing) running; polish: chat feel (Opus high), wall (Sonnet high) launched |
 | 03:31 | 2:20 | polish | wall animations #11 | 7% weekly | launched topic fillers (Sonnet high); chat feel building; self-test run 3 running |
 | 03:31 | 2:23 | polish | wall animations #11 | 7% weekly | launched topic fillers (Sonnet high); chat feel building; self-test run 3 running |
+| 03:38 | 2:31 | polish | topic fillers #12 (14 new lines, picks today's topic) | 7% weekly | prod /toy OK (reaction 1 ms, first say 1.76 s); chat feel building; run 3 running |
