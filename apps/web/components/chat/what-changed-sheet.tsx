@@ -2,6 +2,7 @@
 // "What changed" bottom sheet (for judges): the file's friendly name, that version with its new lines
 // highlighted, who changed it and when, and the version list. Live on agent_files inserts.
 import {
+  Fragment,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -11,12 +12,62 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { CHILD_ID } from "@/lib/config";
-import { diffLines } from "@/lib/files-pure";
+import { diffLines, removedLines } from "@/lib/files-pure";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { BOT_OF_FILE, BOTS, type AgentFile } from "@/lib/types";
 import { BotAvatar } from "./avatar";
 import type { WhatChangedTarget } from "./message-list";
 import { botOf, uid, whenLabel } from "./ui";
+
+function summary(added: number, removed: number, version: number): string {
+  const parts: string[] = [];
+  if (added) parts.push(`${added} new line${added > 1 ? "s" : ""}`);
+  if (removed) parts.push(`${removed} removed`);
+  if (parts.length) return `${parts.join(", ")} in v${version}`;
+  return version === 1 ? "The first version" : `Nothing new to show in v${version}`;
+}
+
+/** One line of an agent file: heading, bullet or text; marked new (highlighted) or removed (struck through). */
+function FileLine({ text, mark }: { text: string; mark: "new" | "removed" | null }) {
+  if (text.startsWith("#") && mark !== "removed") {
+    const h1 = /^#\s/.test(text);
+    return <p className={`px-2 font-extrabold ${h1 ? "pt-1 text-[18px]" : "pt-2 text-[15px] text-ink/80"}`}>{text.replace(/^#+\s*/, "")}</p>;
+  }
+  const bullet = text.match(/^([-*]|\d+\.)\s+/);
+  const isNew = mark === "new";
+  const gone = mark === "removed";
+  return (
+    <div
+      data-new={isNew}
+      data-removed={gone}
+      className={`relative my-0.5 flex gap-2 rounded-lg px-2 py-1 break-words ${
+        isNew
+          ? "bg-marigold-soft font-semibold before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-marigold"
+          : gone
+            ? "bg-[#fdecea] text-[#b42318] before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-[#e5484d]"
+            : "text-ink/80"
+      }`}
+    >
+      {bullet && (
+        <span className={`shrink-0 ${isNew ? "text-[#b86a00]" : gone ? "text-[#b42318]/70" : "text-muted"}`}>
+          {bullet[1].endsWith(".") ? bullet[1] : "•"}
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className={gone ? "line-through decoration-[#b42318]/60 decoration-2" : ""}>{bullet ? text.slice(bullet[0].length) : text}</span>
+        {(isNew || gone) && (
+          <span
+            className={`ml-1.5 inline-block rounded-md px-1.5 py-px align-[2px] text-[10px] font-extrabold tracking-wide text-white uppercase no-underline ${
+              gone ? "bg-[#e5484d]" : "bg-marigold"
+            }`}
+          >
+            {gone ? "removed" : "new"}
+          </span>
+        )}
+      </span>
+    </div>
+  );
+}
 
 function whoLabel(changedBy: string | null): string {
   if (!changedBy || changedBy === "seed") return "Starting version";
@@ -84,18 +135,53 @@ export function WhatChangedSheet({ target, onClose }: { target: WhatChangedTarge
     return versions.find((v) => v.version === picked) ?? versions[versions.length - 1];
   }, [versions, picked]);
 
+  const prev = useMemo(() => {
+    if (!current || !versions) return null;
+    return [...versions].reverse().find((v) => v.version < current.version) ?? null;
+  }, [current, versions]);
+
   const highlighted = useMemo(() => {
-    if (!current || !versions) return new Set<string>();
+    if (!current) return new Set<string>();
     if (current.version === target.toVersion && target.changedLines?.length) {
       return new Set(target.changedLines.map((l) => l.trim()).filter(Boolean));
     }
-    const prev = [...versions].reverse().find((v) => v.version < current.version);
     return new Set(prev ? diffLines(prev.content, current.content) : []);
-  }, [current, versions, target.toVersion, target.changedLines]);
+  }, [current, prev, target.toVersion, target.changedLines]);
 
-  // Bring the first highlighted line into view, and the picked version pill.
+  // Lines that were in the previous version and are gone now (e.g. a stopped reminder).
+  const removed = useMemo(() => {
+    if (!current) return [] as string[];
+    if (current.version === target.toVersion && target.removedLines?.length) {
+      return target.removedLines.map((l) => l.trim()).filter(Boolean);
+    }
+    return prev ? removedLines(prev.content, current.content) : [];
+  }, [current, prev, target.toVersion, target.removedLines]);
+
+  // Place each removed line where it used to be: after the last surviving line above it (-1 = top).
+  const removedAt = useMemo(() => {
+    const at = new Map<number, string[]>();
+    if (!current || !removed.length) return at;
+    const cur = current.content.replace(/\r\n/g, "\n").split("\n").map((l) => l.trim());
+    const rest = new Set(removed);
+    let last = -1;
+    for (const raw of prev ? prev.content.replace(/\r\n/g, "\n").split("\n") : []) {
+      const l = raw.trim();
+      if (!l) continue;
+      if (rest.has(l)) {
+        at.set(last, [...(at.get(last) ?? []), l]);
+        rest.delete(l);
+      } else {
+        const j = cur.indexOf(l, last + 1);
+        if (j >= 0) last = j;
+      }
+    }
+    if (rest.size) at.set(cur.length - 1, [...(at.get(cur.length - 1) ?? []), ...rest]);
+    return at;
+  }, [current, prev, removed]);
+
+  // Bring the first change into view, and the picked version pill.
   useLayoutEffect(() => {
-    const el = body.current?.querySelector<HTMLElement>("[data-new='true']");
+    const el = body.current?.querySelector<HTMLElement>("[data-new='true'], [data-removed='true']");
     if (el && body.current) body.current.scrollTop = Math.max(0, el.offsetTop - 72);
     else if (body.current) body.current.scrollTop = 0;
     pills.current?.querySelector<HTMLElement>("[data-picked='true']")?.scrollIntoView({ block: "nearest", inline: "center" });
@@ -209,51 +295,26 @@ export function WhatChangedSheet({ target, onClose }: { target: WhatChangedTarge
           {failed && <p className="px-2 py-6 text-center text-muted">Couldn&apos;t open the file right now.</p>}
           {current && (
             <>
-              <p className="mb-2 px-2 text-[13px] font-bold text-muted">
-                {newCount > 0
-                  ? `${newCount} new line${newCount > 1 ? "s" : ""} in v${current.version}`
-                  : current.version === 1
-                    ? "The first version"
-                    : `Nothing new to show in v${current.version}`}
-              </p>
+              <p className="mb-2 px-2 text-[13px] font-bold text-muted">{summary(newCount, removed.length, current.version)}</p>
               <div className="text-base leading-[1.45]">
+                {(removedAt.get(-1) ?? []).map((r, k) => (
+                  <FileLine key={`r-top-${k}`} text={r} mark="removed" />
+                ))}
                 {lines.map((raw, i) => {
                   const l = raw.trim();
-                  if (!l) return <div key={i} className="h-2" />;
-                  const isNew = highlighted.has(l) && !l.startsWith("#");
-                  if (l.startsWith("#")) {
-                    const h1 = /^#\s/.test(l);
+                  const gone = (removedAt.get(i) ?? []).map((r, k) => <FileLine key={`r${i}-${k}`} text={r} mark="removed" />);
+                  if (!l)
                     return (
-                      <p key={i} className={`px-2 font-extrabold ${h1 ? "pt-1 text-[18px]" : "pt-2 text-[15px] text-ink/80"}`}>
-                        {l.replace(/^#+\s*/, "")}
-                      </p>
+                      <Fragment key={i}>
+                        <div className="h-2" />
+                        {gone}
+                      </Fragment>
                     );
-                  }
-                  const bullet = l.match(/^([-*]|\d+\.)\s+/);
                   return (
-                    <div
-                      key={i}
-                      data-new={isNew}
-                      className={`relative my-0.5 flex gap-2 rounded-lg px-2 py-1 break-words ${
-                        isNew
-                          ? "bg-marigold-soft font-semibold before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-marigold"
-                          : "text-ink/80"
-                      }`}
-                    >
-                      {bullet && (
-                        <span className={`shrink-0 ${isNew ? "text-[#b86a00]" : "text-muted"}`}>
-                          {bullet[1].endsWith(".") ? bullet[1] : "•"}
-                        </span>
-                      )}
-                      <span className="min-w-0 flex-1">
-                        {bullet ? l.slice(bullet[0].length) : l}
-                        {isNew && (
-                          <span className="ml-1.5 inline-block rounded-md bg-marigold px-1.5 py-px align-[2px] text-[10px] font-extrabold tracking-wide text-white uppercase">
-                            new
-                          </span>
-                        )}
-                      </span>
-                    </div>
+                    <Fragment key={i}>
+                      <FileLine text={l} mark={highlighted.has(l) && !l.startsWith("#") ? "new" : null} />
+                      {gone}
+                    </Fragment>
                   );
                 })}
               </div>

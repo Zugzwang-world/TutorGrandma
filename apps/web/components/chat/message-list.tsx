@@ -12,6 +12,7 @@ export interface WhatChangedTarget {
   file: FileName;
   toVersion: number;
   changedLines?: string[];
+  removedLines?: string[];
 }
 
 type Item =
@@ -232,7 +233,14 @@ function MessageRow({
           canDiff ? (
             <WhatChangedLink
               bot={bot}
-              onOpen={() => onWhatChanged({ file: m.file as FileName, toVersion: m.toVersion as number, changedLines: m.changedLines })}
+              onOpen={() =>
+                onWhatChanged({
+                  file: m.file as FileName,
+                  toVersion: m.toVersion as number,
+                  changedLines: Array.isArray(m.changedLines) ? m.changedLines : undefined,
+                  removedLines: Array.isArray(m.removedLines) ? (m.removedLines as string[]) : undefined,
+                })
+              }
             />
           ) : null
         }
