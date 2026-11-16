@@ -1,4 +1,4 @@
-# Handoff · overnight beta · 2026-11-17, 03:15 IST
+# Handoff · overnight beta · 2026-11-17, 05:15 IST
 
 ## State
 The overnight beta is done and live. Waves 0–3 and the whole A10 polish list are merged; the ★ B11 checks pass on production (docs/plan/STAR-CHECKS.md); the final self-test is in docs/plan/SELFTEST.md; the report is in docs/thinking-partner/NOW.md. Production was reset to the seed at the end.
@@ -23,7 +23,7 @@ None open. All 15 PRs are merged; branches are deleted.
 ## Gotchas
 - The Coordinator commits in `.claude/worktrees/overnight-beta-execution-10a681` and runs `git push origin HEAD:main`. After every merge: `git pull --ff-only origin main` there AND `git -C /Users/hrishikesh/Tutor-Grandma pull --ff-only`.
 - Wait for a deploy with: `gh api repos/Zugzwang-world/TutorGrandma/commits/<sha>/status --jq .state` until it reads `success`.
-- Kimi k2.6: never send temperature. It sometimes stalls past 6 s; /api/turn and the sorter send a backup request (`brainStreamHedged`).
+- Kimi k2.6: never send temperature. It stalls on 10–15% of requests; /api/turn and the sorter cancel and retry one at a time (`brainStreamRetry`). Never send parallel requests: Kimi throttles bursts.
 - Commit `pnpm-lock.yaml` with any package change.
 - Builders share the Playwright browser: tell them to open their own context.
 - Preview URLs return 401: check production.
