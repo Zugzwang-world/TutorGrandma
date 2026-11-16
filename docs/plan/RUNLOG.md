@@ -21,3 +21,4 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 02:38 | 1:31 | 2 | N2 #10 call with Mumma (WAV clips) | 6% weekly | prod: call start/join/end posts OK; G3★ #9 in review; then wave 3 self-test |
 | 02:47 | 1:33 | 2 end | G3★ #9 live sync + outcome notes; call marker rule in turn prompt | 6% weekly | wave 3: full self-test on production |
 | 03:03 | 1:58 | 3 | self-test run 1 + fixes (hedged brain, roar, mic wake, Memory 18→3 s); ★ B11 1–5 ✓ on production | 6% weekly | advisor before calling ★ done |
+| 03:12 | 2:07 | 3 | advisor fixes: noise not-heard, call needs yes, lastEvent once; B11 #1 via real toy, toy→wall, 19:00 double job ✓ | 6% weekly | full self-test run 2 |
