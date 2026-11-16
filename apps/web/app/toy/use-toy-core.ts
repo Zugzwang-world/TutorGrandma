@@ -146,18 +146,22 @@ export function useToyCore(): ToyCore {
   const wake = useCallback(async () => {
     // Both must start inside the tap gesture (iOS).
     const unlocked = player.unlock();
-    try {
-      if (!micRef.current) {
-        micRef.current = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
-        });
+    // The mic request runs alongside: Nani wakes (and reminders play) even if the permission prompt is never answered.
+    const mic = (async () => {
+      try {
+        if (!micRef.current) {
+          micRef.current = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
+          });
+        }
+        setMicError(null);
+      } catch (e) {
+        setMicError((e as Error).name === "NotAllowedError" ? "Microphone blocked" : "No microphone");
       }
-      setMicError(null);
-    } catch (e) {
-      setMicError((e as Error).name === "NotAllowedError" ? "Microphone blocked" : "No microphone");
-    }
+    })();
     await unlocked;
     setAwake(true);
+    await mic;
   }, [player]);
 
   return {
