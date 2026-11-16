@@ -104,8 +104,7 @@ function drop(bot: BotKey, why: string): null {
 
 /** "Mumma: remind him to drink water every 2 hours". What Nani sees under "Changes since Aarav's last turn". */
 export function changeNote(sender: string, text: string): string {
-  let t = text.replace(/\s+/g, " ").trim();
-  if (!/^I\b/.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1);
+  let t = text.replace(/\s+/g, " ").trim(); // case kept, so names like Riya stay right
   if (t.length > 120) t = `${t.slice(0, 117).trimEnd()}…`;
   return `${sender}: ${t}`;
 }
