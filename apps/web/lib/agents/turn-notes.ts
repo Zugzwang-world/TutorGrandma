@@ -117,7 +117,8 @@ Counts: the change visibly shaped what ${NANI} said or showed in this turn. For 
 - "speak more Hindi": this reply is clearly more Hindi than English.
 Does not count: she talked about something else, or the topic came up only by chance.
 
-If one counts, write the note its agent posts in the parents' chat: one casual line in English, at most 14 words, at most one emoji, saying what just happened with ${CHILD}. Like "${NANI} just counted shells with ${CHILD} 🐚" or "${NANI} and ${CHILD} just played with mangoes 🥭 The surprise is still safe." Never mention files, versions or system words.
+If one counts, write the note posted in the parents' chat by the FIRST agent named in "handled by", in that agent's voice: House rules is warm and firm, Lessons a playful teacher, Memory a doting family historian. One casual line, at most 16 words, at most one emoji, in the language the parent used for that change (English, Hindi or a mix).
+Name the real moment from THIS turn with one concrete detail: what was counted and how many, the word, or ${CHILD}'s own words in quotes. Use only what this turn shows; never invent a detail or a contrast. Like "Shells in action: ${NANI} and ${CHILD} just counted 3 of them 🐚" or "First mango round done: he said 'M se mango!' 🥭 The surprise is still safe." Don't open with "Done", "Got it" or "Noted". Never mention files, versions or system words.
 
 Reply with JSON only: {"change": <its number, or null>, "text": "<the note, or empty>"}`;
 
@@ -220,11 +221,12 @@ function quote(text: string): string {
 
 /** One clean line: no markers, no wrapping quotes, at most 160 characters. */
 function clean(text: string): string {
-  const t = text
+  const s = text
     .replace(/\[\[[^\]]*\]\]/g, " ")
     .replace(/\s+/g, " ")
-    .trim()
-    .replace(/^["“]+|["”]+$/g, "");
+    .trim();
+  // Unwrap only a fully quoted line, so a note ending in his quoted words keeps its closing quote.
+  const t = /^["“][^"“”]*["”]$/.test(s) ? s.slice(1, -1).trim() : s;
   return t.length > 160 ? `${t.slice(0, 157).trimEnd()}…` : t;
 }
 
