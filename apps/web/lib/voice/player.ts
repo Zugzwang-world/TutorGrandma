@@ -71,6 +71,7 @@ export class NaniPlayer {
         } catch {}
       }),
     );
+    for (const e of this.entries) if (e.kind === "filler") this.cutPoints(e.id); // at wake, not at the 1.2 s filler
   }
 
   get ready(): boolean {
