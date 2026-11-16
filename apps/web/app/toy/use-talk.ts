@@ -1,6 +1,7 @@
 "use client";
 // React wrapper around TalkLoop: one loop per page, wired to the toy core.
 import { useEffect, useRef, useState } from "react";
+import { watchToday } from "./fillers";
 import { TalkLoop, type TalkStats } from "./talk-loop";
 import type { ToyCore } from "./use-toy-core";
 
@@ -41,7 +42,9 @@ export function useTalk(core: ToyCore, opts: { onCall?: (who: "mumma" | "papa") 
       onCall: (who) => onCallRef.current?.(who),
     });
     loopRef.current = loop;
+    const stopToday = watchToday((t) => loop.setToday(t));
     return () => {
+      stopToday();
       loop.stop();
       loopRef.current = null;
     };
