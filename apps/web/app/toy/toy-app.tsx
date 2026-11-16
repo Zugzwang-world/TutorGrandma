@@ -6,6 +6,8 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { NaniFace } from "./face";
 import s from "./toy.module.css";
+import { AUDIO } from "@/lib/audio";
+import { useRoutine } from "./use-routine";
 import { useTalk } from "./use-talk";
 import { useToyCore, type EyeState } from "./use-toy-core";
 
@@ -23,6 +25,22 @@ const noSubscribe = () => () => {};
 export function ToyApp() {
   const core = useToyCore();
   const { talk: loop, stats: st } = useTalk(core);
+
+  // G4: routine jobs (reminders, calls, brief, song) fire on the demo clock through the toy's speaker.
+  useRoutine({
+    enabled: core.awake,
+    play: async (url) => {
+      const pre = AUDIO.find((a) => a.file === url);
+      const clip = pre ? core.player.playId(pre.id) : await core.player.load(url).then((b) => (b ? core.player.play(b, "routine") : null));
+      if (!clip) return;
+      core.setEyes("speaking");
+      await clip.ended;
+      core.setEyes("idle");
+    },
+    setLastEvent: (e) => {
+      core.lastEventRef.current = e;
+    },
+  });
   const [down, setDown] = useState(false);
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
