@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       const g = guardEdit(a.bot, a.edit, files);
       if (!g) return Promise.resolve(null);
       const p = (fileChain.get(g.file) ?? Promise.resolve())
-        .then(() => applyEdit(child, a.bot, g, note))
+        .then(() => applyEdit(child, a.bot, a.edit!, note))
         .catch((e) => {
           console.error(`[chat] ${a.bot} edit failed: ${(e as Error).message}`);
           return null;

@@ -1,5 +1,7 @@
 // Guards and applies one agent's edit to its own file (PLAN.md B5 step 4, B6, D5). Server-only.
-import { replaceSection, sectionLines, type WriteResult } from "../files";
+import { getLatest, sectionLines, type WriteResult } from "../files";
+import { diffLines, removedLines, replaceSectionText } from "../files-pure";
+import { supabaseAdmin } from "../supabase/server";
 import { parseJobLine, parseJobs } from "../jobs";
 import { BOTS, type AgentFile, type BotKey, type FileName } from "../types";
 
@@ -109,6 +111,38 @@ export function changeNote(sender: string, text: string): string {
   return `${sender}: ${t}`;
 }
 
-export function applyEdit(child: string, bot: BotKey, edit: GuardedEdit, note: string): Promise<WriteResult> {
-  return replaceSection(child, edit.file, edit.heading, edit.newSection, bot, note);
+/**
+ * Applies an edit to the file as it is RIGHT NOW: re-reads the latest version, re-runs guardEdit on it,
+ * and inserts version+1. If another write took that version first (unique clash), it retries from the
+ * fresh file, so two quick edits to the same file never overwrite each other (works across instances).
+ */
+export async function applyEdit(child: string, bot: BotKey, edit: SorterEdit, note: string): Promise<WriteResult | null> {
+  const file = BOTS[bot].file;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const cur = await getLatest(child, file);
+    const g = guardEdit(bot, edit, { [file]: cur } as Record<FileName, AgentFile>);
+    if (!g) return null;
+    const next = replaceSectionText(cur.content, g.heading, g.newSection);
+    if (next === cur.content) {
+      return { file: cur, fromVersion: cur.version, toVersion: cur.version, changedLines: [], removedLines: [], changed: false };
+    }
+    const { data, error } = await supabaseAdmin()
+      .from("agent_files")
+      .insert({ child_id: child, name: file, version: cur.version + 1, content: next, changed_by: bot, change_note: note })
+      .select()
+      .single();
+    if (!error) {
+      return {
+        file: data as AgentFile,
+        fromVersion: cur.version,
+        toVersion: cur.version + 1,
+        changedLines: diffLines(cur.content, next),
+        removedLines: removedLines(cur.content, next),
+        changed: true,
+      };
+    }
+    if (!/duplicate|unique/i.test(error.message)) throw new Error(`applyEdit(${file}): ${error.message}`);
+    await new Promise((r) => setTimeout(r, 40 + Math.random() * 160));
+  }
+  throw new Error(`applyEdit(${file}): version clash, gave up`);
 }
