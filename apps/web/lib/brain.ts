@@ -128,7 +128,7 @@ export async function* brainStream(o: BrainOptions): AsyncGenerator<string> {
  * fresh request starts (never two in flight: Kimi throttles parallel requests). Kimi k2.6 stalls ~10% of
  * requests for 7–10 s; a fresh request usually answers in ~1 s (probe 17 Nov: 2 stalls in 20, retry 1.9 s).
  */
-export async function* brainStreamRetry(o: BrainOptions & { retryAfterMs: number }): AsyncGenerator<string> {
+export async function* brainStreamRetry(o: BrainOptions & { retryAfterMs: number; attempts?: number }): AsyncGenerator<string> {
   type Leg = { ac: AbortController; it: AsyncIterator<string> };
   const outer = o.signal;
   const start = (): Leg => {
@@ -140,28 +140,33 @@ export async function* brainStreamRetry(o: BrainOptions & { retryAfterMs: number
     return { ac, it: brainStream({ ...o, signal: ac.signal })[Symbol.asyncIterator]() };
   };
 
+  const attempts = Math.max(1, o.attempts ?? 2);
   let leg = start();
-  const pA = leg.it.next();
-  pA.catch(() => {});
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const late = new Promise<"retry">((res) => (timer = setTimeout(() => res("retry"), o.retryAfterMs)));
-  const early = await Promise.race([pA.then((r) => ({ r }), (e: unknown) => ({ err: e })), late]);
-  clearTimeout(timer);
-
-  let res: IteratorResult<string>;
-  if (early !== "retry" && "r" in early) {
-    res = early.r;
-  } else {
+  let res: IteratorResult<string> | null = null;
+  for (let n = 1; n <= attempts && !res; n++) {
+    const p = leg.it.next();
+    p.catch(() => {});
+    if (n === attempts) {
+      res = await p; // last attempt: wait for it (the caller's own timeout still applies)
+      break;
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const late = new Promise<"retry">((r) => (timer = setTimeout(() => r("retry"), o.retryAfterMs)));
+    const early = await Promise.race([p.then((r) => ({ r }), (e: unknown) => ({ err: e })), late]);
+    clearTimeout(timer);
+    if (early !== "retry" && "r" in early) {
+      res = early.r;
+      break;
+    }
     if (outer?.aborted) return;
     leg.ac.abort();
-    console.warn(early === "retry" ? `[brain] no first token in ${o.retryAfterMs} ms, retrying once` : `[brain] request failed, retrying once: ${(early.err as Error)?.message}`);
+    console.warn(early === "retry" ? `[brain] no first token in ${o.retryAfterMs} ms (attempt ${n}), retrying` : `[brain] attempt ${n} failed, retrying: ${(early.err as Error)?.message}`);
     leg = start();
-    res = await leg.it.next();
   }
-  if (!res.done) yield res.value;
+  if (res && !res.done) yield res.value;
   while (true) {
-    const n = await leg.it.next();
-    if (n.done) return;
-    yield n.value;
+    const next = await leg.it.next();
+    if (next.done) return;
+    yield next.value;
   }
 }
