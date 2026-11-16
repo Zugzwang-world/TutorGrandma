@@ -339,7 +339,7 @@ def med(xs):
 
 
 def report(voice_res=None, chat_res=None):
-    lines = [f"# SELFTEST · {time.strftime('%Y-%m-%d %H:%M')} IST · {BASE}", ""]
+    lines = ["(★ B11 checks live in docs/plan/STAR-CHECKS.md)", "", f"# SELFTEST · {time.strftime('%Y-%m-%d %H:%M')} IST · {BASE}", ""]
     if voice_res:
         ms = [r["ms"] or {} for r in voice_res]
         sp = [x for r in voice_res for x in r["speech"]]
