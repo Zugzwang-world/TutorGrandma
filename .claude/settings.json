@@ -4,5 +4,10 @@
   "advisorModel": "claude-opus-5-5",
   "permissions": {
     "defaultMode": "bypassPermissions"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash .claude/usage-snapshot.sh",
+    "refreshInterval": 60
   }
 }
