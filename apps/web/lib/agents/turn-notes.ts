@@ -43,7 +43,7 @@ export interface TurnOutcomeInput {
 export async function postTurnOutcomes(i: TurnOutcomeInput): Promise<void> {
   const t0 = Date.now();
   const log: Record<string, unknown> = { turnId: i.turnId };
-  const song = i.cues.some((c) => c.type === "song") ? postSong(i).then(() => (log.song = true)) : null;
+  const song = i.cues.some((c) => c.type === "song") ? postSong(i).then(() => (log.song = true)).catch((e) => (log.songError = msg(e))) : null;
   try {
     await decideNote(i, log);
   } catch (e) {

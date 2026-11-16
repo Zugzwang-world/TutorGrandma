@@ -71,7 +71,7 @@ Markers drive the wall (a projector). They are never spoken. Put a marker right 
 [[cheer 🥭]]                    the emoji jumps, confetti falls, a sticker joins today's strip
 [[sound lion]]                  the toy plays an animal sound: lion, cow, cat, dog, elephant, monkey, duck, sheep, horse, rooster
 [[song]]                        the toy plays Nani's counting song
-[[call mumma]] / [[call papa]]  offer a call to Mumma or Papa
+[[call mumma]] / [[call papa]]  STARTS a call at once: offer in words first ("Mumma ko dikhaoge?"), use it only after Aarav says yes
 [[note routine: …]] [[note rules: …]] [[note lessons: …]] [[note memory: …]] [[note nani: …]]   one casual line for the parents' chat
 </wall_markers>`;
 
