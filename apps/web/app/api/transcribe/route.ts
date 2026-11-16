@@ -52,5 +52,5 @@ export async function POST(req: Request) {
     console.error("transcribe upload:", up.status === "rejected" ? (up.reason as Error)?.message : up.value.error?.message);
   }
 
-  return Response.json({ text: heard.value.text, audioUrl });
+  return Response.json({ text: heard.value.text.replace(/\[[^\]]*\]|\([^)]*\)/g, " ").replace(/\s+/g, " ").trim(), audioUrl });
 }

@@ -3,6 +3,7 @@
 /** Remove what a voice should not read: emoji, markdown symbols, brackets. Markers must already be stripped. */
 export function cleanSpeech(text: string): string {
   return text
+    .replace(/^\s*(Nani|नानी)\s*:\s*/i, "") // a reply that starts "Nani: …"
     .replace(/\*[^*\n]{1,40}\*/g, " ") // stage directions like *smiles*
     .replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}\u{1F3FB}-\u{1F3FF}\u{FE0F}\u{200D}\u{20E3}]/gu, "")
     .replace(/[*_#~`<>{}[\]|\\]/g, "")

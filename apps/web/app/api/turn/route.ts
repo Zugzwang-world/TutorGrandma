@@ -20,7 +20,7 @@ import {
   type Reported,
 } from "@/lib/agents/changes";
 import { postTurnOutcomes, type TurnOutcomeInput } from "@/lib/agents/turn-notes";
-import { brainStream } from "@/lib/brain";
+import { brainStreamHedged } from "@/lib/brain";
 import { clockParts, demoNow } from "@/lib/clock";
 import { CHILD_ID, config } from "@/lib/config";
 import { stt, tts } from "@/lib/eleven";
@@ -36,6 +36,8 @@ export const maxDuration = 60;
 
 const BRAIN_MAX_TOKENS = 150;
 const FIRST_TOKEN_TIMEOUT_MS = 6000; // no brain token by then: slow_brain
+const SOUND_ONLY = "(Aarav made a sound, not words: maybe a roar, a laugh or an animal noise)";
+const BRAIN_HEDGE_MS = 2200; // no first token by then: fire a second identical request, first one wins
 const BRAIN_IDLE_MS = 3000; // no new token for this long after the first: end the reply
 const TTS_TIMEOUT_MS = 5000; // one sentence of voice; past this it counts as voice_failed
 // Hinglish TTS language. Tested "hi" vs none on 4 Hinglish lines (transcribed back): identical words,
@@ -168,7 +170,9 @@ async function runTurn(
     try {
       const name = input.audio instanceof File && input.audio.name ? input.audio.name : "turn.webm";
       const r = await stt(input.audio, { filename: name, languageCode: STT_LANGUAGE, signal: ac.signal });
-      childText = /[\p{L}\p{N}]/u.test(r.text) ? r.text : "";
+      // Audio events are tagged ([roar], (laughs)): a press with only a sound is a roar or a laugh, not silence.
+      const words = r.text.replace(/\[[^\]]*\]|\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
+      childText = /[\p{L}\p{N}]/u.test(words) ? words : /[\[(]/.test(r.text) ? SOUND_ONLY : "";
     } catch (e) {
       if (ac.signal.aborted) return null;
       console.warn(`[turn] stt failed: ${msg(e)}`);
@@ -270,7 +274,7 @@ async function runTurn(
       }, BRAIN_IDLE_MS);
     };
     try {
-      for await (const d of brainStream({ messages, maxTokens: BRAIN_MAX_TOKENS, signal: brainAc.signal })) {
+      for await (const d of brainStreamHedged({ messages, maxTokens: BRAIN_MAX_TOKENS, signal: brainAc.signal, hedgeMs: BRAIN_HEDGE_MS })) {
         if (timings.brainFirst === undefined) {
           timings.brainFirst = since();
           clearTimeout(timer);

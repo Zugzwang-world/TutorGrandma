@@ -2,6 +2,11 @@
 import { supabaseAdmin } from "./supabase/server";
 import type { Message, MessageMeta, SenderKind } from "./types";
 
+/** Agent bubbles are plain text: drop markdown bold/italics the brain sometimes adds. */
+function plain(t: string): string {
+  return t.replace(/\*\*(.+?)\*\*/g, "$1").replace(/__(.+?)__/g, "$1");
+}
+
 export async function post(
   child: string,
   sender: string,
@@ -12,7 +17,7 @@ export async function post(
 ): Promise<Message> {
   const { data, error } = await supabaseAdmin()
     .from("messages")
-    .insert({ child_id: child, sender, sender_kind: senderKind, text, meta, audio_url: audioUrl })
+    .insert({ child_id: child, sender, sender_kind: senderKind, text: senderKind === "bot" ? plain(text) : text, meta, audio_url: audioUrl })
     .select()
     .single();
   if (error) throw new Error(`messages.post: ${error.message}`);

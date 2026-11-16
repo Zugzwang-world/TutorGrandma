@@ -19,7 +19,7 @@ export async function stt(
   fd.append("model_id", STT_MODEL);
   fd.append("file", audio, opts.filename ?? "audio.webm");
   if (opts.languageCode) fd.append("language_code", opts.languageCode);
-  fd.append("tag_audio_events", "false");
+  fd.append("tag_audio_events", "true"); // roars and laughs come back as [tags], not as silence
   const res = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
     method: "POST",
     headers: { "xi-api-key": key() },
