@@ -16,3 +16,4 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 02:07 | 1:00 | 2 | G5 #7 brief + Memory answers; fix: never invent moments (prod showed copied example) | 6% weekly | prod: quiet brief and 'what did he learn' grounded; N1 #6 in review; G4+P1 building |
 | 02:09 | 1:01 | 2 | G4+P1 #8 routine clock + presenter | 6% weekly | prod: /presenter 200, /api/presenter OK; hook to wire into /toy after N1 merges; N1 #6 in review |
 | 02:13 | 1:07 | 2 | N1 #6 talking loop (+ reviewer fix: idle and TTS timeouts); routine wired into /toy; persona call rule | 6% weekly | prod: streaming turns OK, first audio 1.2–2.7 s; launched G3★ (expert xhigh) and N2 (expert high) |
+| 02:16 | 1:15 | 2 | self-test harness (scripts/selftest) | 6% weekly | waiting on G3★ and N2; then wave 3 full self-test |
