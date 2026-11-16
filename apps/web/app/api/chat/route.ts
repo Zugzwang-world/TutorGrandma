@@ -2,6 +2,7 @@
 import { applyEdit, changeNote, guardEdit } from "@/lib/agents/apply";
 import { sortStream, todaysTurns, tomorrowLabel, type SorterAction } from "@/lib/agents/sorter";
 import type { SorterInput } from "@/lib/agents/prompt";
+import { answerMemoryQuestion } from "@/lib/agents/memory-answer";
 import { broadcastSafe } from "@/lib/broadcast";
 import { clockParts, demoNow } from "@/lib/clock";
 import { CHILD_ID } from "@/lib/config";
@@ -97,6 +98,14 @@ export async function POST(req: Request) {
 
     // Posts one agent's reply after its edit lands, with a natural gap after the previous reply.
     const reply = async (a: SorterAction, write: Promise<WriteResult | null>) => {
+      // Memory's questions get a grounded answer (C12), started now so it runs during the typing gap; the sorter's reply is the fallback.
+      const answer =
+        a.bot === "memory" && a.kind === "question"
+          ? answerMemoryQuestion(text, sender).catch((e) => {
+              console.warn(`[chat] memory answer failed: ${(e as Error).message}`);
+              return a.reply;
+            })
+          : null;
       if (lastPost) await sleep(Math.max(0, gapFor(a.reply) - (Date.now() - lastPost)));
       const w = await write;
       const m: MessageMeta = {};
@@ -110,7 +119,7 @@ export async function POST(req: Request) {
         });
       }
       try {
-        await post(child, a.bot, "bot", a.reply, m);
+        await post(child, a.bot, "bot", answer ? await answer : a.reply, m);
         if (!ms.firstReply) ms.firstReply = Date.now() - t0;
       } catch (e) {
         console.error(`[chat] ${a.bot} reply failed: ${(e as Error).message}`);
