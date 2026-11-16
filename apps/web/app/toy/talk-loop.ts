@@ -34,6 +34,8 @@ export interface TalkDeps {
   showTimings: () => boolean;
   onStats: (s: TalkStats) => void;
   onRecording: (on: boolean) => void;
+  /** N2: Nani's reply had [[call mumma]] / [[call papa]]; called once the reply has finished playing. */
+  onCall?: (who: "mumma" | "papa") => void;
 }
 
 interface Item {
@@ -56,6 +58,7 @@ interface Turn {
   serverDone: boolean;
   over: boolean;
   stats: TalkStats;
+  call?: "mumma" | "papa"; // a call cue in this reply
 }
 
 interface Recording {
@@ -224,6 +227,7 @@ export class TalkLoop {
           t.stats.firstSayMs = Math.round(performance.now() - t.t0);
           this.stats(t);
         }
+        for (const c of ev.cues) if (c.type === "call") t.call = c.who;
         t.queue.push({ i: ev.i, cues: ev.cues, buffer: ev.audio ? this.d.player.decode(b64ToBuffer(ev.audio)) : Promise.resolve(null) });
         if (!t.voiceStarted) void this.startVoice(t);
         else this.playNext(t);
@@ -354,6 +358,7 @@ export class TalkLoop {
     this.d.sendWall("speaking", { on: false });
     if (this.turn === t) this.turn = null;
     if (!this.rec) this.d.setEyes(navigator.onLine ? "idle" : "offline");
+    if (t.call && !t.ac.signal.aborted && !this.rec) this.d.onCall?.(t.call); // not after a barge-in
   }
 
   private clearTimers(t: Turn): void {
