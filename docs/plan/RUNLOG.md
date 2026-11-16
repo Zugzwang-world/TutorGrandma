@@ -19,3 +19,4 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 02:16 | 1:15 | 2 | self-test harness (scripts/selftest) | 6% weekly | waiting on G3★ and N2; then wave 3 full self-test |
 | 02:36 | 1:30 | 2 | Memory answers: parallel start, 7 s cap, parent's language (18 s → ~4.5 s); persona note rules | 6% weekly | G3★ #9 in review; N2 building |
 | 02:38 | 1:31 | 2 | N2 #10 call with Mumma (WAV clips) | 6% weekly | prod: call start/join/end posts OK; G3★ #9 in review; then wave 3 self-test |
+| 02:47 | 1:33 | 2 end | G3★ #9 live sync + outcome notes; call marker rule in turn prompt | 6% weekly | wave 3: full self-test on production |
