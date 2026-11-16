@@ -23,3 +23,9 @@ One line each: date · decision · why.
 - 2026-11-16 · Software first: the whole product runs end to end without the toy. Hardware joins later as an outside layer through one contract, the toy-to-relay message format, which only the Coordinator changes · the demo can't depend on hardware timing.
 - 2026-11-16 · After planning, the thinking partner works in two chats, software and hardware · keeps each context lean.
 - 2026-11-16 · The Grandma Plush Blueprint page is out of date and will be replaced by the plan · founder's call.
+- 2026-11-17 · Overnight beta: Nani's voice is "Dulari Didi – Gentle Old Aunty" from the shared library (wSMP2ehaozb5I36yi8vg). Test voices: Muskaan, Amit Bhawani, Bholu (child) · the account had no grandma voice; plan C9.
+- 2026-11-17 · Kimi k2.6 temperature is not sent (the API fixes it at 0.6 with thinking off; other values error) · overrides the plan's "about 0.7".
+- 2026-11-17 · Speech-to-text model is scribe_v3, live voice eleven_v4_turbo, pre-made lines eleven_v4, sound effects eleven_text_to_sound_v3, music music_v2_5 · newest per LOOKUPS.md.
+- 2026-11-17 · Added a demo_state table (clock offset, wall timings switch) and a meta column on turns · a freshly loaded /toy needs the presenter clock, and job fires need a key.
+- 2026-11-17 · Shared layer adds brain.ts, eleven.ts, broadcast.ts, clock.ts, demo-state.ts, seed.ts beyond the plan's list · stops five builders writing five Kimi and ElevenLabs clients.
+- 2026-11-17 · Seed lives in content/seed.json; the chat broadcast channel is chat:aarav (event "working") · one source for the seed and /api/reset.

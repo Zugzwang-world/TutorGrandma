@@ -1,9 +1,49 @@
 {
-  "childName": "TBD",
-  "grandmaName": "TBD",
+  "childName": "Aarav",
+  "childId": "aarav",
+  "age": 5,
+  "grandmaName": "Nani",
+  "parents": [
+    "Mumma",
+    "Papa"
+  ],
+  "homeLanguage": "Hindi",
+  "timezone": "Asia/Kolkata",
   "letters": [],
   "places": [],
   "animals": [],
+  "nani": {
+    "voiceId": "wSMP2ehaozb5I36yi8vg",
+    "voiceName": "Dulari Didi (shared library)",
+    "voiceModel": "eleven_v4_turbo",
+    "premadeModel": "eleven_v4",
+    "languageCode": "hi",
+    "outputFormat": "mp3_44100_64"
+  },
+  "testVoices": [
+    {
+      "id": "xoV6iGVuOGYHLWjXhVC7",
+      "label": "adult female (Muskaan)"
+    },
+    {
+      "id": "bpkHhw4QrZFYIfahwsHh",
+      "label": "adult male (Amit Bhawani)"
+    },
+    {
+      "id": "5krdMTA5HonvWAlY2vSx",
+      "label": "child (Bholu)"
+    }
+  ],
+  "trySaying": [
+    "Remind him to drink water every 2 hours",
+    "Don't use real money in examples, use shells",
+    "I'm bringing mangoes for him tonight",
+    "What did he learn today?",
+    "Call him at 7, Papa wants to say hi",
+    "Speak a bit more Hindi with him",
+    "No scary animals at bedtime",
+    "He's a bit sad today, be extra gentle"
+  ],
   "brain": {
     "provider": "kimi",
     "providers": {
