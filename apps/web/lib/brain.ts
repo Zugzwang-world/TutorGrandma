@@ -124,11 +124,11 @@ export async function* brainStream(o: BrainOptions): AsyncGenerator<string> {
 }
 
 /**
- * Like brainStream, but if no first token arrives within `hedgeMs`, a second identical request starts and
- * whichever produces the first token wins; the other is aborted.
- * NOT USED with Kimi: Kimi throttles parallel requests (self-test run 2: stalls went from 3 to 13 of 51 turns).
+ * Like brainStream, but if no first token arrives within `retryAfterMs`, that request is cancelled and ONE
+ * fresh request starts (never two in flight: Kimi throttles parallel requests). Kimi k2.6 stalls ~10% of
+ * requests for 7–10 s; a fresh request usually answers in ~1 s (probe 17 Nov: 2 stalls in 20, retry 1.9 s).
  */
-export async function* brainStreamHedged(o: BrainOptions & { hedgeMs: number }): AsyncGenerator<string> {
+export async function* brainStreamRetry(o: BrainOptions & { retryAfterMs: number }): AsyncGenerator<string> {
   type Leg = { ac: AbortController; it: AsyncIterator<string> };
   const outer = o.signal;
   const start = (): Leg => {
@@ -139,33 +139,28 @@ export async function* brainStreamHedged(o: BrainOptions & { hedgeMs: number }):
     }
     return { ac, it: brainStream({ ...o, signal: ac.signal })[Symbol.asyncIterator]() };
   };
-  const first = (leg: Leg) => leg.it.next().then((r) => ({ leg, r }));
 
-  const a = start();
-  const pA = first(a);
+  let leg = start();
+  const pA = leg.it.next();
   pA.catch(() => {});
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const hedge = new Promise<"hedge">((res) => (timer = setTimeout(() => res("hedge"), o.hedgeMs)));
-  const early = await Promise.race([pA.then((x) => x, (e: unknown) => ({ err: e })), hedge]);
+  const late = new Promise<"retry">((res) => (timer = setTimeout(() => res("retry"), o.retryAfterMs)));
+  const early = await Promise.race([pA.then((r) => ({ r }), (e: unknown) => ({ err: e })), late]);
   clearTimeout(timer);
 
-  let winner: Leg;
   let res: IteratorResult<string>;
-  if (early !== "hedge" && !("err" in early)) {
-    ({ leg: winner, r: res } = early);
+  if (early !== "retry" && "r" in early) {
+    res = early.r;
   } else {
-    if (early !== "hedge") console.warn(`[brain] first request failed, retrying: ${(early.err as Error)?.message}`);
-    else console.warn(`[brain] no first token in ${o.hedgeMs} ms, hedging with a second request`);
-    const b = start();
-    const pB = first(b);
-    pB.catch(() => {});
-    const won = early === "hedge" ? await Promise.any([pA, pB]) : await pB;
-    ({ leg: winner, r: res } = won);
-    (winner === a ? b : a).ac.abort();
+    if (outer?.aborted) return;
+    leg.ac.abort();
+    console.warn(early === "retry" ? `[brain] no first token in ${o.retryAfterMs} ms, retrying once` : `[brain] request failed, retrying once: ${(early.err as Error)?.message}`);
+    leg = start();
+    res = await leg.it.next();
   }
   if (!res.done) yield res.value;
   while (true) {
-    const n = await winner.it.next();
+    const n = await leg.it.next();
     if (n.done) return;
     yield n.value;
   }

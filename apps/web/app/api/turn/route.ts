@@ -20,7 +20,7 @@ import {
   type Reported,
 } from "@/lib/agents/changes";
 import { postTurnOutcomes, type TurnOutcomeInput } from "@/lib/agents/turn-notes";
-import { brainStream } from "@/lib/brain";
+import { brainStreamRetry } from "@/lib/brain";
 import { clockParts, demoNow } from "@/lib/clock";
 import { CHILD_ID, config } from "@/lib/config";
 import { stt, tts } from "@/lib/eleven";
@@ -36,6 +36,7 @@ export const maxDuration = 60;
 
 const BRAIN_MAX_TOKENS = 150;
 const FIRST_TOKEN_TIMEOUT_MS = 7000; // no brain token by then: slow_brain (the toy's own fallback is at 8 s)
+const BRAIN_RETRY_MS = 2500; // no first token by then: cancel and send one fresh request
 const SOUND_ONLY = "(Aarav made a sound, not words: maybe a roar, a laugh or an animal noise)";
 // Speech-to-text tags for room noise, music, breath or silence: these presses stay "not heard", not a roar.
 const NOISE_TAG = /लगातार|शोर|संगीत|सन्नाटा|खामोशी|चुप्पी|साँस|सांस|हवा|noise|music|static|silence|background|hum|beep|click|wind|breath|typing/i;
@@ -277,7 +278,7 @@ async function runTurn(
       }, BRAIN_IDLE_MS);
     };
     try {
-      for await (const d of brainStream({ messages, maxTokens: BRAIN_MAX_TOKENS, signal: brainAc.signal })) {
+      for await (const d of brainStreamRetry({ messages, maxTokens: BRAIN_MAX_TOKENS, signal: brainAc.signal, retryAfterMs: BRAIN_RETRY_MS })) {
         if (timings.brainFirst === undefined) {
           timings.brainFirst = since();
           clearTimeout(timer);
