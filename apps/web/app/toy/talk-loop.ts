@@ -3,7 +3,7 @@
 // No React here; use-talk.ts wraps it.
 import type { BoardState, Cue, FallbackId, NaniEvent, TurnEvent } from "@/lib/types";
 import type { Clip, NaniPlayer } from "@/lib/voice/player";
-import { WaitPicker, areaOfCue, isLongWait } from "./fillers";
+import { WaitPicker, areaOfCue, isLongWait, type Today } from "./fillers";
 import type { EyeState, WallPayload } from "./use-toy-core";
 
 const MIN_PRESS_MS = 250; // shorter presses are accidental taps (they still stop Nani)
@@ -78,6 +78,11 @@ export class TalkLoop {
   readonly board: BoardState = { spell: null, showing: null };
 
   constructor(private d: TalkDeps) {}
+
+  /** Today's letter and theme (planner.md), so waiting fillers match what Nani is teaching. */
+  setToday(t: Today | null): void {
+    this.picker.setToday(t);
+  }
 
   get busy(): boolean {
     return !!this.turn || !!this.rec;

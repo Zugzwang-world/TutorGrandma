@@ -102,6 +102,14 @@
     "duration": 2.17
   },
   {
+    "id": "filler_animals_5",
+    "file": "/audio/filler_animals_5.mp3",
+    "kind": "filler",
+    "area": "animals",
+    "text": "Bandar jaisa ooh, ooh, aah karo!",
+    "duration": 3.42
+  },
+  {
     "id": "filler_body_1",
     "file": "/audio/filler_body_1.mp3",
     "kind": "filler",
@@ -150,6 +158,38 @@
     "duration": 2.4
   },
   {
+    "id": "filler_fruits_1",
+    "file": "/audio/filler_fruits_1.mp3",
+    "kind": "filler",
+    "area": "fruits",
+    "text": "Aam ka rang kya hai? Yellow!",
+    "duration": 2.93
+  },
+  {
+    "id": "filler_fruits_2",
+    "file": "/audio/filler_fruits_2.mp3",
+    "kind": "filler",
+    "area": "fruits",
+    "text": "Kela lamba aur yellow! Banana!",
+    "duration": 3.84
+  },
+  {
+    "id": "filler_fruits_3",
+    "file": "/audio/filler_fruits_3.mp3",
+    "kind": "filler",
+    "area": "fruits",
+    "text": "Seb ka rang kya hai? Red!",
+    "duration": 2.91
+  },
+  {
+    "id": "filler_fruits_4",
+    "file": "/audio/filler_fruits_4.mp3",
+    "kind": "filler",
+    "area": "fruits",
+    "text": "Santra gol hota hai! Circle banao!",
+    "duration": 3.16
+  },
+  {
     "id": "filler_letters_1",
     "file": "/audio/filler_letters_1.mp3",
     "kind": "filler",
@@ -164,6 +204,54 @@
     "area": "letters",
     "text": "M ki awaaz karo: mmmmm!",
     "duration": 3.34
+  },
+  {
+    "id": "filler_letters_3",
+    "file": "/audio/filler_letters_3.mp3",
+    "kind": "filler",
+    "area": "letters",
+    "text": "M se Monkey! Bandar jaisa uchhlo!",
+    "duration": 3.66
+  },
+  {
+    "id": "filler_letters_4",
+    "file": "/audio/filler_letters_4.mp3",
+    "kind": "filler",
+    "area": "letters",
+    "text": "M se Moon! Chanda mama ko hello bolo!",
+    "duration": 3.72
+  },
+  {
+    "id": "filler_letters_5",
+    "file": "/audio/filler_letters_5.mp3",
+    "kind": "filler",
+    "area": "letters",
+    "text": "Mmm… M se Mango!",
+    "duration": 3.08
+  },
+  {
+    "id": "filler_letters_6",
+    "file": "/audio/filler_letters_6.mp3",
+    "kind": "filler",
+    "area": "letters",
+    "text": "M se Mummy! Mummy ko ek flying kiss do!",
+    "duration": 3.9
+  },
+  {
+    "id": "filler_letters_7",
+    "file": "/audio/filler_letters_7.mp3",
+    "kind": "filler",
+    "area": "letters",
+    "text": "N se Nose! Naak chhuo!",
+    "duration": 2.91
+  },
+  {
+    "id": "filler_letters_8",
+    "file": "/audio/filler_letters_8.mp3",
+    "kind": "filler",
+    "area": "letters",
+    "text": "O for Orange! Bolo: orange!",
+    "duration": 3.65
   },
   {
     "id": "filler_manners_1",
@@ -196,6 +284,30 @@
     "area": "numbers",
     "text": "Jaldi se bolo: one, two, three!",
     "duration": 3.44
+  },
+  {
+    "id": "filler_numbers_4",
+    "file": "/audio/filler_numbers_4.mp3",
+    "kind": "filler",
+    "area": "numbers",
+    "text": "Aam gino! Ek, do, teen aam!",
+    "duration": 3.99
+  },
+  {
+    "id": "filler_numbers_5",
+    "file": "/audio/filler_numbers_5.mp3",
+    "kind": "filler",
+    "area": "numbers",
+    "text": "Seepiyan gino: one, two, three!",
+    "duration": 3.91
+  },
+  {
+    "id": "filler_numbers_6",
+    "file": "/audio/filler_numbers_6.mp3",
+    "kind": "filler",
+    "area": "numbers",
+    "text": "Ek aam, ek aam, kitne? Two!",
+    "duration": 3.96
   },
   {
     "id": "filler_review_1",
