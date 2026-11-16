@@ -9,3 +9,4 @@ Time guard: 6.5 h = 07:38 IST (features stop) · 7.5 h = 08:38 IST (report) · 8
 | 01:25 | 0:17m | 0 end | wave 0: data, seed, shared layer, contracts, voice, bom1 | live mode (get_usage): 4% weekly | launch wave 1: G1, G2, N1, S1; W1 next |
 Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__get_usage). The statusLine did not run.
 | 01:45 | 0:37 | 1 | S1 #2 (50 sounds, song) | 5% weekly | W1 launched (effort high); G1, G2, N1 running |
+| 01:52 | 0:44 | 1 | none (G1 #4, G2 #3 in review) | 6% weekly | N1, W1 building; wave 2 leaner: G4+P1 as one task, Sonnet for non-★ M tasks |

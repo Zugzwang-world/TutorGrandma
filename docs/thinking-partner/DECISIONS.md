@@ -32,3 +32,4 @@ One line each: date · decision · why.
 - 2026-11-17 · Vercel functions run in bom1 (Mumbai) via apps/web/vercel.json · Supabase is in ap-south-1 and the demo is in India; iad1 added about 200 ms per database hop.
 - 2026-11-17 · Nani writes Hindi in Roman letters (Hinglish), not Devanagari · C8 test, 10 lines in Nani's voice on eleven_v4_turbo with language_code hi: transcribed back almost identically (word overlap 0.81 Roman vs 0.80 Devanagari). Roman reads naturally in the parent chat and mixes cleanly with English and markers; persona.md examples stay as they are.
 - 2026-11-17 · Non-★ tasks run at high effort even under 8% · usage rose 4%→5% in the first 37 min; at that pace the night would pass 10%.
+- 2026-11-17 · Wave 2 is leaner: G4 and P1 run as one builder task (they share the clock), and non-★ M tasks (G4+P1, G5) use Sonnet 5.5 at high effort · usage was 6% at 44 min; Opus builders cost about 1% each.
