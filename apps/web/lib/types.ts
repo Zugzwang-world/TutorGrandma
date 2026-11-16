@@ -192,3 +192,16 @@ export type WallEvent =
 
 // Events on chat:<child>
 export type ChatEvent = { event: "working"; payload: { bots: BotKey[]; on: boolean } };
+
+// ---------- Pre-made audio (content/audio.json, written by S1) ----------
+
+export type AudioKind = "reaction" | "filler" | "fallback" | "line" | "sfx" | "sting" | "song" | "snippet";
+
+export interface AudioEntry {
+  id: string; // fixed ids: docs/plan/CONTRACTS.md
+  file: string; // public path, e.g. "/audio/reaction_ooh.mp3"
+  kind: AudioKind;
+  area?: string; // filler area: numbers, animals, letters, body, colours, shapes, manners, feelings, review, wait
+  text?: string; // what is said (for lines)
+  duration: number; // seconds
+}
