@@ -31,8 +31,8 @@ const SYSTEM = `You are Memory, the member of the family group chat who writes $
 ${MEMORY_TONE}
 
 Reply with ONE JSON object only: {"today":["..."],"starters":["..."],"summary":"..."}
-- today: exactly 3 short lines about today, each under 12 words, real moments only. Example: "M for Mango, and he spelled it with Nani." / "Counted mangoes up to two." / "Shared a mango with Riya."
-- starters: exactly 3 bedtime conversation starters, each a short question a parent can ask ${child} at bedtime, tied to a real moment from today. Example: "What colour is a mango?" / "What did you share with Riya?" Write them as the parent would say them, in simple words.
+- today: exactly 3 short lines about today, each under 12 words, taken ONLY from today's turns and notes below (a word he spelled, something he counted, a kind moment). Never invent a moment; brain.md is past days, not today.
+- starters: exactly 3 bedtime conversation starters, each a short question a parent can ask ${child} at bedtime, tied to a real moment from today's turns. Write them as the parent would say them, in simple words.
 - summary: two short sentences for ${child}'s diary of recent days (what he learned or did, one sweet detail). Plain text on one line, no date, no bullet.
 - Language: English with a little Hindi flavour is fine; keep it simple.
 - If there are no turns today: today is ONE short, gentle quiet-day line (he hasn't played with ${nani} today, it's fine), starters come from brain.md (things he loves or recently learned), and summary is "Quiet day, no chat with ${nani}."`;
@@ -58,7 +58,7 @@ export async function runBrief(): Promise<BriefResult> {
   const [brain, turns, notes] = await Promise.all([getLatest(CHILD_ID, "brain"), dayTurns(CHILD_ID), dayNotes(CHILD_ID)]);
   const quiet = turns.length === 0;
 
-  const user = `Today is ${now.dayLabel}.
+  const user = `Today is ${now.dayLabel}.${quiet ? `\nThere were NO turns with ${nani} today. Do not describe any activity from today.` : ""}
 
 TODAY'S TURNS WITH ${child.toUpperCase()}
 ${turnsText(turns)}
@@ -91,6 +91,8 @@ Write the brief now. JSON only.`;
     }
   }
   if (!out) throw new Error(`brief: brain failed: ${lastErr}`);
+  // A quiet day never lists moments, whatever the model wrote.
+  if (quiet) out = { ...out, today: [`No playtime with ${nani} today, and that's okay.`] };
 
   // Dated summary under "Last few days": one line per day, so a second brief today replaces the first. A quiet day adds nothing.
   let meta: Message["meta"] = { kind: "brief" };
