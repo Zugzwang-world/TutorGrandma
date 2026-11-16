@@ -1,24 +1,22 @@
 # Handoff · 2026-11-16
 
 ## State
-Step 1 (setup), brief in `~/Downloads/STEP_01_SETUP.md`, with one change from the founder: no Sarvam until buildathon day, ElevenLabs covers everything.
-Done: T1 to T4, T7, T8 (skipped, no reports), T9a. Done: T5 Supabase (org Tutor Grandma, project tutor-grandma, repo linked; vars in .env.local only), T6 keys (ElevenLabs and Kimi in .env.local and Vercel). Founder change: the live brain runs on Kimi kimi-k2.6 until buildathon day; the switch is `brain` in content/demo.config.json. Not started: T9b, T9c.
+Step 1 (setup) is done, except T8: the four research reports are not on this Mac (OPEN.md). T9 a, b and c are done. The live brain is kimi-k2.6 until 22 November (buildathon), then Claude Haiku 5.5, through `brain` in content/demo.config.json. Next is planning in a new thinking-partner chat; the agenda is in OPEN.md. Software first: no hardware or firmware work, and no Sarvam, until a brief says so.
 
 ## Branches and PRs
-None open. main only.
+None open. main only. PR #1 (T9b) is merged.
 
 ## Running
 - GitHub: https://github.com/Zugzwang-world/TutorGrandma
 - Production: https://tutor-grandma.vercel.app (`/`, `/home-base`)
 - Vercel: project tutor-grandma (prj_Fk2AIqrl3S9XeUi0aiXY6uuQRyVm), team hrizzup (team_m0d8TiC9xuPrm9qI8ob6byBM), root apps/web, Git connected
 - Supabase: org Tutor Grandma (tlwtdcmdpydwzijvfogz, Free), project tutor-grandma (ref kojmjmxnpaiuhswavarm, ap-south-1), no tables. Repo linked via supabase/config.toml; run `supabase link --project-ref kojmjmxnpaiuhswavarm` in any new checkout (link state is gitignored).
-- Env, in .env.local and in Vercel (all three environments): ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, KIMI_API_KEY. In .env.local only: SUPABASE_DB_PASSWORD, SUPABASE_PROJECT_REF, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, VERCEL_OIDC_TOKEN.
+- Env, in .env.local and in Vercel (all three environments): ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, KIMI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY. In .env.local only: SUPABASE_DB_PASSWORD, SUPABASE_PROJECT_REF, VERCEL_OIDC_TOKEN.
 
 ## Next actions, in order
-1. After the founder's OK, add NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY and SUPABASE_SECRET_KEY to Vercel: `printf %s "$VAL" | vercel env add NAME production,preview,development --no-sensitive --yes --scope hrizzup --cwd /Users/hrishikesh/Tutor-Grandma`. Auto mode blocks it without an explicit ask.
-2. T9b: the builder adds a "Grandma is on her way" line to /home-base in a worktree. Then PR, squash-merge, `git pull --ff-only`, and check that https://tutor-grandma.vercel.app/home-base shows it.
-3. T9c: the scout looks up the current stable Next.js version. Note in NOW.md which model each T9 task ran on.
-4. Update NOW.md and this file, then send the T10 report.
+1. Wait for the planning brief from the new thinking-partner chat. Run /preflight at its start.
+2. When the founder drops R1 to R4 into Downloads, file them as docs/research/R1-hardware.md, R2-voice.md, R3-agent.md and R4-parent.md. Convert from PDF or Word if needed.
+3. Before 22 November: the founder fixes Anthropic credit. Then set `brain.provider` to "anthropic" and run /preflight with the Anthropic check back on.
 
 ## Gotchas
 - GitHub blocks pushes that use the founder's private email. This repo's local git config uses the GitHub noreply address, and worktrees share it.
@@ -30,3 +28,4 @@ None open. main only.
 - Supabase: never touch hrizzup-staging or anything in Zugzwang-world's Org (CLAUDE.md). Hosted Supabase CLI changes need `--yes` in agent mode. A brand-new org can return "Not Found" on project create for a few seconds; retry.
 - Kimi: base https://api.moonshot.ai/v1 (OpenAI-compatible). Turn thinking off with `"thinking": {"type": "disabled"}`. K3 models also accept it, even though the docs say they always think. Balance: GET /users/me/balance.
 - ANTHROPIC_API_KEY in .env.local is quoted. Strip the quotes when reading it in shell.
+- `supabase projects api-keys` masks secret keys unless you pass `--reveal`. A masked key fails with "Invalid API key".

@@ -1,11 +1,16 @@
 # Open
 
-- Founder: OK to copy the Supabase URL, publishable key and secret key into Vercel env vars (all three environments)? The permission check stopped it because you hadn't asked for it.
-- When is buildathon day? kimi-k2.6 is expected to be deprecated in late December 2026. If the buildathon is later, switch `brain.providers.kimi.model` to kimi-k3.1-pro-highspeed (1.4 s to first word instead of 0.7 s).
-- Anthropic credit: the last call today (2026-11-16) still said "credit balance is too low". That's fine while Kimi runs the brain, but it must be fixed before switching to Claude.
-- The Supabase project is on the Free plan, which pauses after about a week without activity. Open it or ping it before demo day.
-- Product session with the founder: hardware and software changes.
-- Game spec for the demo.
-- Relay host: Vercel or the founder's laptop.
+- Founder: the four research reports (hardware, voice pipeline, agent and memory, parent side) are not on this Mac. A search of Downloads and the whole home folder, including inside PDFs and Word files, found nothing. Drop them into Downloads and the Coordinator will file them in docs/research as R1-hardware.md, R2-voice.md, R3-agent.md and R4-parent.md.
+- Anthropic credit: the last call (2026-11-16) still said "credit balance is too low". That's fine while Kimi runs the brain, but fix it before the switch to Claude on 22 November.
 - Which Indian languages the demo uses.
-- R1 to R4 were not in ~/Downloads, so T8 was skipped. ~/Downloads/Grandma Plush Blueprint.html (hardware and software) is there instead: file it in docs/product?
+
+## Planning agenda (new thinking-partner chat)
+1. Game walkthrough and demo segments, first.
+2. Master plan: order, parallel lanes, sizes and founder steps. Shown as the HTML build tracker and kept as PLAN.md.
+3. Toy contract (the toy-to-relay message format) and a toy stand-in web page.
+4. persona.md as the fifth agent file.
+5. Parent guidance site scope.
+6. Stories, pre-made lines and projector clips: Remotion for video, the Grok desk for sourcing.
+7. Relay host: Vercel or the founder's laptop.
+8. Latency log per hop, from the first talking loop.
+9. Splitting into the two chats, software and hardware.
