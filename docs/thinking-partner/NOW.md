@@ -8,6 +8,7 @@
 - Projector wall: https://tutor-grandma.vercel.app/home-base (`?demo=1` cycles every cue)
 - Presenter (hidden): https://tutor-grandma.vercel.app/presenter
 - Toy contract for the hardware track: docs/toy-contract.md
+- Tech pitch page (11-section deck, hardware first): https://tutor-grandma.vercel.app/pitch.html (brief and Blueprint in docs/pitch/)
 
 ## What works
 - ✓ Group chat with Nani's five agents: text and voice notes, live on two phones, one typing bubble at a time, "what changed" sheet with versions.
