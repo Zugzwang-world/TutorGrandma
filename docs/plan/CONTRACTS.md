@@ -76,7 +76,7 @@ Next.js 16.4.6 with cacheComponents on: read `apps/web/AGENTS.md` and the matchi
 
 ## Audio manifest (content/audio.json, S1 writes it; `lib/audio.ts` reads it)
 JSON array of `AudioEntry { id, file, kind, area?, text?, duration }`. `file` is a public path like `/audio/reaction_ooh.mp3`; `duration` is in seconds.
-- kinds: `reaction`, `filler`, `fallback`, `line`, `sfx`, `sting`, `song`, `snippet`.
+- kinds: `reaction`, `filler`, `fallback`, `line`, `sfx`, `sting`, `song`, `snippet`, `music` (`wait_music`, R3: plays only when Nani is late).
 - ids (fixed):
   - reactions: `reaction_ooh`, `reaction_achha`, `reaction_hmm`, `reaction_haanji`, `reaction_oho`, `reaction_achha_achha`
   - fillers: `filler_<area>_<n>` with area `numbers`, `animals`, `letters`, `fruits`, `body`, `colours`, `shapes`, `manners`, `feelings`, `review` (n from 1); the long wait line is `filler_wait_chashma` (area `wait`)

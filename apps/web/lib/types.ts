@@ -244,7 +244,7 @@ export type ChatEvent = { event: "working"; payload: { bots: BotKey[]; on: boole
 
 // ---------- Pre-made audio (content/audio.json, written by S1) ----------
 
-export type AudioKind = "reaction" | "filler" | "fallback" | "line" | "sfx" | "sting" | "song" | "snippet";
+export type AudioKind = "reaction" | "filler" | "fallback" | "line" | "sfx" | "sting" | "song" | "snippet" | "music";
 
 export interface AudioEntry {
   id: string; // fixed ids: docs/plan/CONTRACTS.md
