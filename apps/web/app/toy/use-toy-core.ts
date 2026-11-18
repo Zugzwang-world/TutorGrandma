@@ -2,6 +2,8 @@
 // The toy's shared core: player, eyes, mode, microphone, wall + toy channels, demo clock, last Nani event.
 // Feature hooks take this core: useTalk(core) today; useRoutine(core) (G4) and a call mode (N2) plug in
 // the same way. They listen to toy:<child> events with core.onToy(...) and drive the wall with core.sendWall(...).
+// On /stage (R1) the core also gets the page's wall bus: every wall event goes on the bus for the stage's own
+// <Wall bus>, and still out on wall:<child> for a projector on /home-base.
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { AUDIO } from "@/lib/audio";
@@ -9,6 +11,7 @@ import { CHILD_ID } from "@/lib/config";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { channelName, type NaniEvent, type ToyEvent, type WallEvent } from "@/lib/types";
 import { NaniPlayer } from "@/lib/voice/player";
+import type { WallBus, WallEvent as BusEvent } from "@/lib/wall-bus";
 
 export type EyeState = "idle" | "listening" | "thinking" | "speaking" | "calling" | "offline";
 /** What the paw does. "talk" is the talking loop; N2 adds "call". */
@@ -31,6 +34,8 @@ export interface ToyCore {
   /** Call from the "Tap to wake Nani" gesture: unlocks audio and opens the microphone once. */
   wake: () => Promise<void>;
   micRef: RefObject<MediaStream | null>;
+  /** The microphone stream is open (false while the permission prompt is up, or when it was refused). */
+  micReady: boolean;
   micError: string | null;
   sessionIdRef: RefObject<string>;
   /** The last thing Nani did on her own (e.g. a water reminder). G4 sets it; /api/turn reads it. */
@@ -42,12 +47,17 @@ export interface ToyCore {
   onToy: <E extends ToyEventName>(event: E, fn: (payload: ToyPayload<E>) => void) => () => void;
 }
 
-export function useToyCore(): ToyCore {
+export function useToyCore(opts: { bus?: WallBus } = {}): ToyCore {
+  const busRef = useRef<WallBus | undefined>(opts.bus);
+  useEffect(() => {
+    busRef.current = opts.bus;
+  });
   const [player] = useState(() => new NaniPlayer());
   const [eyes, setEyes] = useState<EyeState>("idle");
   const [mode, setMode] = useState<ToyMode>("talk");
   const [awake, setAwake] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
+  const [micReady, setMicReady] = useState(false);
   const micRef = useRef<MediaStream | null>(null);
   const sessionIdRef = useRef<string>("");
   const lastEventRef = useRef<NaniEvent | null>(null);
@@ -111,9 +121,13 @@ export function useToyCore(): ToyCore {
     };
   }, []);
 
-  // Built-in toy events: reset reloads, clock moves the demo clock.
+  // Built-in toy events: reset reloads, clock moves the demo clock. With a bus, the stage's wall hears the
+  // reset too (it clears today's stickers, then reloads), since it doesn't listen on wall:<child>.
   useEffect(() => {
-    const offReset = onToy("reset", () => location.reload());
+    const offReset = onToy("reset", () => {
+      busRef.current?.emit({ event: "reset" });
+      location.reload();
+    });
     const offClock = onToy("clock", (p) => {
       clockOffsetRef.current = p.offsetMs;
     });
@@ -137,6 +151,7 @@ export function useToyCore(): ToyCore {
   }, []);
 
   const sendWall = useCallback(<E extends WallEventName>(event: E, payload: WallPayload<E>) => {
+    busRef.current?.emit({ event, payload } as BusEvent);
     const ch = wallRef.current;
     if (!ch) return;
     if (ch.state === "joined") void ch.send({ type: "broadcast", event, payload });
@@ -155,6 +170,7 @@ export function useToyCore(): ToyCore {
           });
         }
         setMicError(null);
+        setMicReady(true);
       } catch (e) {
         setMicError((e as Error).name === "NotAllowedError" ? "Microphone blocked" : "No microphone");
       }
@@ -173,6 +189,7 @@ export function useToyCore(): ToyCore {
     awake,
     wake,
     micRef,
+    micReady,
     micError,
     sessionIdRef,
     lastEventRef,
