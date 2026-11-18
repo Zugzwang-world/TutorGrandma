@@ -5,13 +5,13 @@ A plush toy for Indian children aged 5 to 8. The child squeezes its paw and talk
 Buildathon prototype. Priorities, in order: low latency, high impact, demo reliability. No security hardening, auth, compliance or production checks.
 
 ## Stack so far
-- Voice: ElevenLabs. Scribe for hearing, Eleven v4 Turbo for live speech, Eleven v4 for pre-made lines, grandma's voice clone.
-- Live brain: kimi-k2.6, thinking off, through the switch in content/demo.config.json (`brain.provider`) until the buildathon (22 November). Then Claude Haiku 5.5 (claude-haiku-5-5), thinking off, low effort. Code reads provider and model from the switch, never hard-coded. Grandma fillers cover every wait.
-- Indian languages: ElevenLabs covers them for now. Sarvam is deferred to the buildathon day: do not build it.
-- Web: Next.js on Vercel. Parent website plus the /home-base projector page.
-- Supabase, kept light: Realtime for live cues, one table for the agent files. Nothing else.
-- Toy: ESP32-S3 running a fork of the ElatoAI firmware. Hardware and firmware are a separate track: do not build them until a hardware brief arrives. Software runs end to end without the toy. Relay host is decided in planning. No Fly.io.
-- All demo content lives in content/demo.config.json. Never hard-code it.
+- Voice: ElevenLabs. Scribe v3 for hearing (audio events tagged, so a roar counts as a sound), Eleven v4 Turbo for live speech, Eleven v4 for pre-made lines, sound effects v3 and music v2.5 for the sounds and the song. Nani's voice is a library stand-in ("Dulari Didi") until grandma's clone arrives. Model ids and the voice live in content/demo.config.json.
+- Live brain: kimi-k2.6, thinking off, no temperature sent (the API fixes it), through the switch in content/demo.config.json (`brain.provider`) until the buildathon (22 November). Then Claude Haiku 5.5 (claude-haiku-5-5), thinking off, low effort; that path is written in lib/brain.ts but untested end to end. Code reads provider and model from the switch, never hard-coded. Kimi stalls on some requests: cancel and retry one at a time, never parallel requests. Grandma fillers cover every wait.
+- Indian languages: ElevenLabs covers them for now. Sarvam is deferred to the buildathon day: do not build it. Nani writes Hindi in Roman letters.
+- Web: Next.js 16 on Vercel, functions in bom1 (Mumbai). `/` parents' group chat, `/toy` toy stand-in, `/home-base` projector wall, `/presenter` hidden controls. Shared code in apps/web/lib; contracts in docs/plan/CONTRACTS.md.
+- Supabase, kept light: four tables (agent_files, messages, turns, demo_state), one public bucket `audio`, and Realtime (postgres_changes plus the broadcast channels toy:, wall: and chat:). RLS is off for the prototype.
+- Toy: ESP32-S3 running a fork of the ElatoAI firmware. Hardware and firmware are a separate track: do not build them until a hardware brief arrives. Software runs end to end without the toy; the hardware builds against docs/toy-contract.md. No Fly.io.
+- All demo content lives in content/: demo.config.json (settings), seed.json (seed files and chat, restored by /api/reset), audio.json (pre-made audio). Never hard-code it.
 
 ## Who does what
 - Founder: decides, speaks by voice, does physical steps. Not a coder.
@@ -60,4 +60,4 @@ Keep HANDOFF.md current: state, open branches, running URLs, next actions in ord
 Keys live in .env.local (gitignored) and in Vercel env vars. Never commit them. The repo is public, and a pushed key gets blocked by GitHub or switched off by its provider, which breaks the demo.
 
 ## Credits
-/preflight checks that the Anthropic and ElevenLabs keys work and have credit. Run it at the start of every step brief.
+/preflight checks that the Kimi, ElevenLabs and Supabase keys work and reports the Kimi balance and the ElevenLabs characters left. Anthropic is checked only when `brain.provider` is "anthropic". Run it at the start of every step brief. Before any demo, also run `python3 -I scripts/selftest/selftest.py all`, then reset with `curl -X POST https://tutor-grandma.vercel.app/api/reset`.
