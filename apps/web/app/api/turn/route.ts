@@ -27,10 +27,10 @@ import { stt, tts } from "@/lib/eleven";
 import { getAllLatest } from "@/lib/files";
 import { parseMarkers, stripMarkers } from "@/lib/markers";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { FILE_NAMES, type BoardState, type Cue, type FileName, type NaniEvent, type Note, type Turn, type TurnEvent } from "@/lib/types";
+import { FILE_NAMES, type AgentFile, type BoardState, type Cue, type FileName, type NaniEvent, type Note, type Turn, type TurnEvent } from "@/lib/types";
 import { checkClip, cleanSpeech } from "@/lib/voice/speech";
 import { SentenceSplitter, isAudioMarker } from "@/lib/voice/split";
-import { buildTurnPrompt } from "./prompt";
+import { bridgeKeyterms, buildTurnPrompt } from "./prompt";
 
 export const maxDuration = 60;
 
@@ -50,6 +50,10 @@ const TTS_LANGUAGE: string | undefined = undefined;
 // Child speech is Hindi + English. Auto-detect heard "Aam!" as "Arm" and "Haan!" as "Huh";
 // "hi" got आम and हाँ, kept "Lion" and "Thank you" in English, and was ~80 ms faster.
 const STT_LANGUAGE = "hi";
+// Today's bridge words (planner.md) go to speech-to-text as keyterms (R6.2): with them "Chand!" came back
+// "Chand." instead of "चंड।", at no measurable STT cost. The files read starts with the request; past this wait
+// speech-to-text goes without keyterms rather than wait on the database.
+const KEYTERMS_WAIT_MS = 250;
 const UNUSED_MAX = 3; // earlier parent changes still listed as "not used yet"
 const UNUSED_TURNS = 5; // ... for at most this many talk turns after they arrived
 
@@ -152,7 +156,9 @@ async function runTurn(
   emit: (ev: TurnEvent) => void,
   ac: AbortController,
 ): Promise<TurnOutcomeInput | null> {
-  const ctxP = loadContext(CHILD_ID);
+  const filesP = getAllLatest(CHILD_ID); // shared: keyterms for speech-to-text, and the prompt
+  filesP.catch(() => {});
+  const ctxP = loadContext(CHILD_ID, filesP);
   ctxP.catch(() => {}); // handled below; avoid an unhandled rejection on the early exits
 
   const finish = (extra: Record<string, unknown> = {}) => {
@@ -170,10 +176,14 @@ async function runTurn(
     childText = input.text.trim();
     timings.stt = 0;
   } else if (input.audio instanceof Blob && input.audio.size > 0) {
+    const tk = performance.now();
+    const keyterms = await withinMs(filesP.then((f) => bridgeKeyterms(f.planner.content)), KEYTERMS_WAIT_MS, [] as string[]);
+    timings.keyterms = Math.round(performance.now() - tk);
+    timings.keytermCount = keyterms.length;
     const t = performance.now();
     try {
       const name = input.audio instanceof File && input.audio.name ? input.audio.name : "turn.webm";
-      const r = await stt(input.audio, { filename: name, languageCode: STT_LANGUAGE, signal: ac.signal });
+      const r = await stt(input.audio, { filename: name, languageCode: STT_LANGUAGE, keyterms, signal: ac.signal });
       // Audio events are tagged ([roar], (laughs)): a press with only a sound is a roar or a laugh, not silence.
       const words = r.text.replace(/\[[^\]]*\]|\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
       childText = /[\p{L}\p{N}]/u.test(words) ? words : /[\[(]/.test(r.text) && !NOISE_TAG.test(r.text) ? SOUND_ONLY : "";
@@ -429,7 +439,7 @@ async function runTurn(
 // a file version is new if it is newer than the one the previous talk turn used (turns.file_versions), so a
 // change that lands during a turn is still new for the next one.
 
-async function loadContext(child: string) {
+async function loadContext(child: string, filesP: Promise<Record<FileName, AgentFile>>) {
   const recent = supabaseAdmin()
     .from("turns")
     .select("*")
@@ -443,7 +453,7 @@ async function loadContext(child: string) {
     });
   // The change lists are extras: if they fail, the turn still runs on the latest files.
   const [files, recentTurns, rows, reported] = await Promise.all([
-    getAllLatest(child),
+    filesP,
     recent,
     soft(loadChangeRows(child), [] as ChangeRow[], "changes"),
     soft(loadReported(child), { versions: new Set(), events: new Set(), lastMomentAt: null } as Reported, "reported"),
@@ -469,6 +479,13 @@ function soft<T>(p: PromiseLike<T>, empty: T, what: string): Promise<T> {
 }
 
 // ---------- helpers ----------
+
+/** The promise's value if it settles within `ms`, else (or on error) `fallback`. */
+function withinMs<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<T>((r) => (timer = setTimeout(() => r(fallback), ms)));
+  return Promise.race([p.catch(() => fallback), late]).finally(() => clearTimeout(timer));
+}
 
 function str(v: FormDataEntryValue | null): string {
   return typeof v === "string" ? v : "";

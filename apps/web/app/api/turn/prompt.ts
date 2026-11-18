@@ -9,6 +9,7 @@
 import type { BrainMessage } from "@/lib/brain";
 import { clockParts, type ClockParts } from "@/lib/clock";
 import { config } from "@/lib/config";
+import { sectionLines } from "@/lib/files-pure";
 import { parseJobs, summarizeJobs } from "@/lib/jobs";
 import { cueToMarker } from "@/lib/markers";
 import type { ChangeGroup } from "@/lib/agents/changes";
@@ -57,16 +58,36 @@ export function fileSection(f: AgentFile): string {
   return `<${f.name}.md version="${f.version}">\n${f.content.trim()}\n</${f.name}.md>`;
 }
 
+/**
+ * Today's bridge words as speech-to-text keyterms (R6.2), English and Hindi: planner.md's "## Today" line
+ * "- Bridge words: Moon (chand), Mango (aam), …, Mummy" -> ["Moon", "chand", "Mango", "aam", …, "Mummy"].
+ * No such line: no keyterms.
+ */
+export function bridgeKeyterms(plannerMd: string): string[] {
+  const head = /^-?\s*bridge words\s*:/i;
+  const line = sectionLines(plannerMd, "## Today").find((l) => head.test(l));
+  if (!line) return [];
+  const out = new Set<string>();
+  for (const item of line.replace(head, "").split(",")) {
+    const m = item.trim().match(/^([^()]*?)\s*(?:\(([^)]*)\))?$/);
+    for (const w of m ? [m[1], ...(m[2] ?? "").split("/")] : []) {
+      const t = w.trim();
+      if (t && t.length < 50) out.add(t);
+    }
+  }
+  return [...out].slice(0, 50);
+}
+
 export function heartbeatSection(f: AgentFile): string {
   return `<routine summary="heartbeat.md v${f.version}">\n${summarizeJobs(parseJobs(f.content))}\n</routine>`;
 }
 
 export const MARKER_TABLE = `<wall_markers>
-Markers drive the wall (a projector). They are never spoken. Put a marker right after the words it goes with.
-[[show 🥭 Mango]]               a big emoji with the English word under it
-[[spell MANGO 1 M S T]]         the word with a gap at letter 1, and three letter tiles to pick from
+Markers drive the wall (a projector). They are never spoken. Put each marker right after the sentence it goes with.
+[[show 🌙 Moon | chand | ⭐]]    a big emoji, the English word in letter tiles, the Hindi word under it, up to two small emojis nearby (after the first | all optional: [[show 🥭 Mango]])
+[[spell MOON 1 M S T]]          the word with a gap at letter 1, and three letter tiles to pick from
 [[tile M right]] / [[tile S wrong]]   after ${CHILD} picks a tile: right flies into the gap, wrong wobbles
-[[count 🥭 3]] or [[count 🥭 1+1]]    items appear one by one with numbers; sums show "1 + 1 = 2"
+[[count 🥭 3]] or [[count 🥭 1+1]]    items appear one by one with numbers; sums show "1 + 1 = 2". Add "both" ([[count 🥭 3 both]]) to show each number in Hindi and English
 [[choices 🎵 Song, 🔤 Letters, 🔢 Count, 🦁 Animals]]   three or four big "What next?" cards
 [[cheer 🥭]]                    the emoji jumps, confetti falls, a sticker joins today's strip
 [[sound lion]]                  the toy plays an animal sound: lion, cow, cat, dog, elephant, monkey, duck, sheep, horse, rooster
@@ -77,11 +98,12 @@ Markers drive the wall (a projector). They are never spoken. Put a marker right 
 
 export const REPLY_RULES = `<reply_rules>
 - One or two short sentences, then one simple question. At most 35 words.
-- At most two wall markers. Most replies have no note: add one only for the cases in persona.md's "Telling the parents".
+- Every reply puts one thing on the wall: one or two wall markers, each after its own sentence. Most replies have no note: add one only for the cases in persona.md's "Telling the parents".
 - Plain spoken words only: no emoji, asterisks, lists or stage directions outside markers. No "${NANI}:" label.
 - Write the way the examples in persona.md are written.
+- A question: answer it first, plainly and truly (a sum gets its answer). Never guess a fact or a meaning.
 - If ${CHILD} says he is scared, sad or hurt: comfort him first, then in the SAME reply suggest telling Mumma or Papa ("Mumma ko bataoge?"). No call, no cheer, no confetti.
-- If asked whether you are a robot or real: say you are an AI ${NANI}, warmly.
+- If asked whether you are ChatGPT, a robot or real: "I'm an AI ${NANI}", warmly. Never say yes to ChatGPT.
 - Answer what ${CHILD} just said. Never repeat one of your earlier replies word for word.
 </reply_rules>`;
 

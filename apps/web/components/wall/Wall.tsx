@@ -106,7 +106,9 @@ const DEMO_STEPS: (string | "idle" | "thinking")[] = [
   "[[tile S wrong]]",
   "[[tile M right]]",
   "[[show 🌙 Moon | chand | ⭐]]",
+  "[[show 🐒 Monkey | bandar | 🍌 🌳]]",
   "[[count 🥭 3 both]]",
+  "[[count ⭐ 5+3 both]]",
   "[[count 🥭 1+1]]",
   "[[choices 🎵 Song, 🔤 Letters, 🔢 Count, 🦁 Animals]]",
   "[[cheer 🥭]]",
@@ -116,6 +118,7 @@ const DEMO_STEPS: (string | "idle" | "thinking")[] = [
 ];
 
 const IDLE_AFTER_MS = 120_000;
+const MIN_VIEW_MS = 1400; // a tile's fly and landing take ~1.4 s
 const SOUND_MS = 2500;
 const STRIP_MAX = 12;
 const stickerKey = () => `wall:stickers:${clockParts(new Date()).dateKey}`;
@@ -184,7 +187,7 @@ export default function Wall({ bus, contained = false }: { bus?: WallBus; contai
   const rootRef = useRef<HTMLElement>(null);
   const stickersRef = useRef<string[]>([]);
 
-  const onCue = useCallback((cue: Cue) => {
+  const applyCue = useCallback((cue: Cue) => {
     if (cue.type === "cheer") {
       const next = [...stickersRef.current, cue.emoji];
       stickersRef.current = next;
@@ -197,6 +200,43 @@ export default function Wall({ bus, contained = false }: { bus?: WallBus; contai
       }
     }
     dispatch({ t: "cue", cue });
+  }, []);
+
+  // Cues of one sentence arrive together. Each view gets at least MIN_VIEW_MS on the wall before the next
+  // replaces it, so the moon card is seen before its spelling board, and the tile lands before the cheer.
+  const freeAt = useRef(0);
+  const pending = useRef<{ timer: ReturnType<typeof setTimeout>; cue: Cue }[]>([]);
+  const onCue = useCallback(
+    (cue: Cue) => {
+      if (cue.type === "sound" || demoRef.current) return applyCue(cue);
+      const now = performance.now();
+      const at = Math.max(now, freeAt.current);
+      freeAt.current = at + MIN_VIEW_MS;
+      if (at <= now) return applyCue(cue);
+      const entry = {
+        cue,
+        timer: setTimeout(() => {
+          pending.current = pending.current.filter((p) => p !== entry);
+          applyCue(cue);
+        }, at - now),
+      };
+      pending.current.push(entry);
+    },
+    [applyCue],
+  );
+  // A new turn starting (thinking) shows every held cue at once, in order, then the thinking scene.
+  const flushCues = useCallback(() => {
+    const held = pending.current;
+    pending.current = [];
+    freeAt.current = 0;
+    for (const p of held) {
+      clearTimeout(p.timer);
+      applyCue(p.cue);
+    }
+  }, [applyCue]);
+  useEffect(() => {
+    const held = pending;
+    return () => held.current.forEach((p) => clearTimeout(p.timer));
   }, []);
 
   // The new sticker flies from the middle of the stage down into its place in the strip.
@@ -240,7 +280,10 @@ export default function Wall({ bus, contained = false }: { bus?: WallBus; contai
     const handle = (event: string, payload: { cue?: Cue; on?: boolean; show?: boolean; ms?: unknown } | undefined) => {
       if (event === "cue") {
         if (payload?.cue?.type) onCue(payload.cue);
-      } else if (event === "thinking") dispatch({ t: "thinking", on: !!payload?.on });
+      } else if (event === "thinking") {
+        if (payload?.on) flushCues();
+        dispatch({ t: "thinking", on: !!payload?.on });
+      }
       else if (event === "speaking") dispatch({ t: "speaking", on: !!payload?.on });
       else if (event === "timings") {
         if (typeof payload?.show === "boolean") setShowTimings(payload.show);
@@ -264,7 +307,7 @@ export default function Wall({ bus, contained = false }: { bus?: WallBus; contai
     return () => {
       sb.removeChannel(ch);
     };
-  }, [onCue, bus]);
+  }, [onCue, flushCues, bus]);
 
   // Live: demo_state.show_timings and the latest turn's timings.
   useEffect(() => {
@@ -365,7 +408,7 @@ export default function Wall({ bus, contained = false }: { bus?: WallBus; contai
     else if (v.kind === "letter") scene = <LetterScene letter={v.letter} result={v.result} />;
     else {
       const c = v.cue;
-      if (c.type === "show") scene = <ShowScene emoji={c.emoji} word={c.word} />;
+      if (c.type === "show") scene = <ShowScene emoji={c.emoji} word={c.word} hindi={c.hindi} extras={c.extras} />;
       else if (c.type === "count") scene = <CountScene cue={c} />;
       else if (c.type === "choices") scene = <ChoicesScene items={c.items} />;
       else if (c.type === "cheer") scene = <CheerScene emoji={c.emoji} />;

@@ -90,11 +90,89 @@
   animation: wall-float-big 3.2s 0.75s ease-in-out infinite;
 }
 
-/* show: one letter at a time */
-.wall-ch {
-  display: inline-block;
-  white-space: pre;
-  animation: wall-ch 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.5) both;
+/* ---------- show card (R6.4): emoji, word in letter tiles (first lit), Hindi under, extras drifting ---------- */
+.wall-show {
+  gap: 3cqmin;
+}
+
+.wall-show-art {
+  position: relative;
+  line-height: 1;
+}
+
+.wall-extra {
+  position: absolute;
+  font-size: 12cqmin;
+  line-height: 1;
+  opacity: 0;
+  filter: drop-shadow(0 0.6cqmin 0 rgba(0, 0, 0, 0.35));
+}
+
+.wall-extra-0 {
+  right: 92%;
+  top: 6%;
+  animation: wall-fade 0.6s 0.8s ease-out both, wall-drift-a 6s 1.4s ease-in-out infinite;
+}
+
+.wall-extra-1 {
+  left: 92%;
+  top: 30%;
+  animation: wall-fade 0.6s 1s ease-out both, wall-drift-b 7s 1.6s ease-in-out infinite;
+}
+
+/* one tile per letter, sized so long words still fit the width */
+.wall-show-word {
+  display: flex;
+  gap: 1.2cqmin;
+  margin: 0;
+  font-size: min(12cqmin, calc(80cqw / var(--len)));
+  font-weight: 900;
+  line-height: 1;
+}
+
+.wall-show-tile {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.92em;
+  height: 1.12em;
+  border-radius: 0.16em;
+  background: rgba(255, 248, 238, 0.1);
+  box-shadow: 0 0.07em 0 rgba(0, 0, 0, 0.4);
+  color: #fff8ee;
+  animation: wall-ch 0.36s cubic-bezier(0.2, 0.9, 0.3, 1.5) both;
+}
+
+.wall-show-space {
+  width: 0.4em;
+}
+
+.wall-show-lit {
+  background: #f29a0e;
+  color: #fff;
+}
+
+/* the lit letter's halo pulses behind it (opacity and transform only) */
+.wall-show-lit::after {
+  content: "";
+  position: absolute;
+  inset: -0.32em;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 120, 0.85) 0%, rgba(255, 214, 120, 0.35) 42%, rgba(255, 214, 120, 0) 70%);
+  opacity: 0;
+  animation: wall-halo 0.9s var(--glow-at, 1s) ease-in-out infinite alternate;
+}
+
+.wall-show-hindi {
+  margin: 0;
+  font-size: 7.5cqmin;
+  font-weight: 800;
+  line-height: 1;
+  color: #f6c47a;
+  animation: wall-rise 0.5s ease-out both;
 }
 
 .wall-rise {
@@ -326,6 +404,51 @@
   font-weight: 900;
   line-height: 1;
   animation: wall-num 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.6) both;
+}
+
+/* count with "both" (R6.5): "ek · one" under every number */
+.wall-count-names {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  font-size: var(--names, 4cqmin);
+  font-weight: 800;
+  line-height: 1.05;
+  white-space: nowrap;
+  animation: wall-num 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.6) both;
+}
+
+.wall-count-names b {
+  font-weight: 900;
+  color: #f6c47a;
+}
+
+.wall-count-names i {
+  font-style: normal;
+  color: rgba(255, 248, 238, 0.45);
+}
+
+.wall-count-names span {
+  color: #fff8ee;
+}
+
+/* five or more items: Hindi over English, no dot, so ten still fit */
+.wall-count-many .wall-count-row .wall-count-names {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15em;
+}
+
+.wall-count-many .wall-count-row .wall-count-names i {
+  display: none;
+}
+
+.wall-count-both .wall-sum {
+  margin-top: 1cqmin;
+}
+
+.wall-sum-names {
+  --names: 6cqmin;
 }
 
 .wall-plus {
@@ -632,6 +755,16 @@
   0% { opacity: 0; transform: translateY(5cqmin) scale(0.5); }
   70% { opacity: 1; transform: translateY(-0.8cqmin) scale(1.12); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes wall-drift-a {
+  0%, 100% { transform: translate(0, 0) rotate(-6deg); }
+  50% { transform: translate(-2.5cqmin, -3cqmin) rotate(6deg); }
+}
+
+@keyframes wall-drift-b {
+  0%, 100% { transform: translate(0, 0) rotate(5deg); }
+  50% { transform: translate(2.5cqmin, 2.5cqmin) rotate(-5deg); }
 }
 
 @keyframes wall-aura {
