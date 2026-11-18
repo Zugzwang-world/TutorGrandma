@@ -1,5 +1,5 @@
 "use client";
-// Sticky input: "Try saying…" chips, a growing text box, and a hold-to-record mic (slide off to cancel).
+// Sticky input: "Try saying…" chips (phones only; wide containers get idea bubbles), a growing text box, and a hold-to-record mic (slide off to cancel).
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { BUBBLES } from "@/lib/config";
 
@@ -308,7 +308,7 @@ export function Composer({
   const showChips = !hasText && !recording && !disabled;
 
   return (
-    <div className="tg-safe-bottom relative border-t border-line/80 bg-cream/95 backdrop-blur-md">
+    <div data-tg-composer className="tg-safe-bottom relative border-t border-line/80 bg-cream/95 backdrop-blur-md">
       {/* hint toast */}
       <div
         className={`pointer-events-none absolute inset-x-0 -top-11 flex justify-center transition-[opacity,transform] duration-200 ${
@@ -321,7 +321,7 @@ export function Composer({
 
       <div className="mx-auto max-w-[640px]">
         {/* Try saying… */}
-        <div className="tg-collapse" data-open={showChips}>
+        <div className="tg-collapse tg-chips" data-open={showChips}>
           <div>
             <div className="tg-noscrollbar flex gap-2 overflow-x-auto px-3 pt-2.5 pb-0.5">
               <span className="shrink-0 self-center pl-1 text-[12px] font-extrabold tracking-wide text-muted uppercase">Try saying</span>
