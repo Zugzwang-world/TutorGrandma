@@ -1,49 +1,43 @@
-# Now · 2026-11-17 · overnight beta report
+# Now · 2026-11-19 · refinement run report
 
-**The overnight beta is live on production. Every wave and the whole polish list (A10) is merged, and the ★ done checks (B11 1–5) pass on production. Run window: 01:08 to 05:35 IST. Production was reset to the seed at the end.** Details: docs/plan/RUNLOG.md, docs/plan/SELFTEST.md, docs/plan/STAR-CHECKS.md.
+**The refinement run (docs/plan/REFINE.md) is live on production: R1 to R9 are merged, and the stage script runs on one screen at /stage. The script check (★1) passes on production (4 full runs, every step in at least 3 of 4). The latency check (★9) and, on the final prompt, the off-script check (★5) fall short; see below. Run window 01:28 to about 05:00 IST, usage 64% → 70% weekly. Production was reset to the seed at the end.** Details: docs/plan/RUNLOG.md (refinement run), docs/plan/SELFTEST.md.
 
 ## Links
-- Parents' group chat: https://tutor-grandma.vercel.app/
-- Toy stand-in: https://tutor-grandma.vercel.app/toy (`?type` adds a text box for typed turns)
-- Projector wall: https://tutor-grandma.vercel.app/home-base (`?demo=1` cycles every cue)
-- Presenter (hidden): https://tutor-grandma.vercel.app/presenter
-- Toy contract for the hardware track: docs/toy-contract.md
-- How to test it, step by step: [DEMO.md](DEMO.md)
-- Tech pitch page (11-section deck, hardware first): https://tutor-grandma.vercel.app/pitch.html (brief and Blueprint in docs/pitch/)
+- **Stage (the demo):** https://tutor-grandma.vercel.app/stage · presenter drawer Alt+P (Option+P), Reset, wait for "Ready"
+- Parents' group chat (phones): https://tutor-grandma.vercel.app/
+- Toy stand-in: https://tutor-grandma.vercel.app/toy (`?type` adds a text box)
+- Projector wall: https://tutor-grandma.vercel.app/home-base (`?demo=1` cycles the cues)
+- Presenter page: https://tutor-grandma.vercel.app/presenter · Tech pitch: https://tutor-grandma.vercel.app/pitch.html
+- The stage script, step by step: [DEMO.md](DEMO.md) · Screenshots: docs/plan/shots/stage-1920x1080.png and stage-1440x900.png
 
-## What works
-- ✓ Group chat with Nani's five agents: text and voice notes, live on two phones, one typing bubble at a time, "what changed" sheet with versions.
-- ✓ Sorter: 10/10 on the plan's chat script on production. Each agent edits only its own file, in its own voice; edits never overwrite each other.
-- ✓ Live sync: the next turn uses the new files; Nani follows changes at once (shells, mangoes) and keeps surprises secret.
-- ✓ Outcome reports: Routine `Reminded Aarav at 12. He said "Pee liya abhi." 💧`, House rules "Nani just counted shells with Aarav 🐚", Lessons on the mango play; each reported once.
-- ✓ Memory answers "What did he learn today?" from today's turns (3.2 s in the final run; at most about 7 s), in the parent's language.
-- ✓ Evening brief: three lines, three bedtime starters, a dated line in brain.md; a quiet day says so honestly.
-- ✓ Toy: hold the paw or space; reaction at ~0 ms; topic-matched learning fillers; barge-in; Nani's voice (Dulari Didi, eleven_v4_turbo).
-- ✓ Wall: every marker cue animated, thinking state, sticker strip, timings corner; driven live by the toy.
-- ✓ Routine clock: jobs from heartbeat.md fire once per due time on the demo clock (water at 12:00, call and brief at 19:00).
-- ✓ Presenter: reset, clock jumps, fire next job, brief, timings toggle, turns table.
-- ✓ Call with Mumma: walkie-talkie between /toy and the chat (start, join, clips both ways about 1 s, end, 2-minute idle end). Starts only after Aarav says yes.
-- ✓ 64 pre-made sounds and the song "Ek Do Teen, Count With Me".
-- ✗ Not checked on real devices: phone microphone, iPhone Safari audio, the Android projector.
+## What changed
+- **One screen (R1):** /stage puts Nani's world (the wall, her face, tap to talk, a caption, a typed-line box) on the left and the parents' world on the right. The right half holds the file strip, the jobs board, the chat and the idea bubbles. A hidden presenter drawer has Reset with a warm-up, +30 min, +2 h, Real time, Fire next job, Evening brief, Timings and the turns table.
+- **Tap to talk (R1):** on /stage and /toy, one tap starts listening and the next sends. It sends by itself at 15 s, and a tap while Nani speaks stops her. The toy contract's messages are unchanged.
+- **Idea bubbles (R2):** 14 illustrated bubbles float beside the chat on wide screens; phones keep the chip row. Each bubble posts as its own parent.
+- **Agent profiles (R5):** tap an agent's avatar or name, or a file chip on the stage, for a full-screen profile: who I am, how I work, examples, my file now, versions with diffs. Profiles update live.
+- **The game inside anything (R6):** Nani bridges what Aarav says to today's letter ("Raat ko Papa aayenge" → "Raat ko aasmaan mein aur kaun aata hai?" → "Chand!" → Moon card and the MOON board). She answers any question with one true fact. New show cards carry the Hindi and extra emojis, and counts show Hindi and English. Today's bridge words go to speech-to-text as keyterms ("Chand" is now heard right).
+- **Progress report (R7):** Today, This week, This month and All time, as a word garden, a letter garland, counting diyas, a calendar, a mood strip, tricky spots, routine rows and highlights. It opens from a 📈 card under Memory's answers, the 📈 header button or the stage's 📈 chip. The earlier weeks are 36 days of sample history; today fills in live.
+- **Waiting (R3):** the spoken fillers are gone, and only calm reactions remain at the send tap. A soft marimba loop (`wait_music`) plays only when Nani has no first sentence 2.5 s after the tap, and fades within 300 ms of her first sentence. The 8 s give-up now asks him to say it again.
+- **Reminders on the real clock (R4):** "now, and then every 2 hours" fires within about 2 s of Routine's reply, and +2 h fires exactly one more. One-off jobs are written to the second with a date, and reminders wait until Nani is idle.
+- **Clean-up (R8):** shells and money are gone; "count in Hindi and English both" is the House rules example. Reset warms up the brain, the voice and the database, then shows "Ready". Preflight treats a 404 on agent_files as broken.
 
-## Timings (final self-test, production, 51 voice turns, 3 test voices, 05:31 IST)
-- Median per step: speech-to-text 592 ms · brain first word 1,594 ms · voice first audio 2,002 ms · total 3,208 ms.
-- At the client: Nani's first sentence arrives at a median of 2.30 s after paw release. Kimi stalls ended 3 of 51 turns with the fallback line (6%; earlier runs 7–15).
-- Perceived: the reaction sound plays at about 0 ms after release. When a learning filler plays, Nani's voice now starts at its next sentence end (p50 about 3.5 s, down from 4.3 s).
-- Parents' chat: first agent reply median 2.7 s; 10/10 right agents and files. Memory's "What did he learn today?" took 3.2 s (8.6 s once earlier tonight; capped at 7 s, then the sorter's own reply is used).
-
-## Speech check
-- Final run: 202/209 sentences pass (97%); 49/51 child lines heard correctly. The misses are scoring quirks: a roar spelled "ROAARRR!", and "2+2" heard as "do plus do".
-- Worst: single letters spoken alone ("M" heard as "N"; now fixed in the spelling game), "Bye Nani" heard as "Bhai Nani", one "Chaar!" garbled.
-- Hindi in Roman letters sounds the same as Devanagari in Nani's voice (0.81 vs 0.80), so persona.md keeps Roman.
-
-## Usage
-- Weekly usage was 8% at 05:10 IST (started at 4%). About 4.5M fresh Opus tokens and 0.6M Sonnet tokens were summed from local transcripts.
-- Credits: ElevenLabs about 17% of 100k characters used (resets 17 Nov 21:01 UTC); Kimi about 14.3 USD left.
+## Self-test on production (R9, docs/plan/SELFTEST.md)
+| ★ | Check | Result |
+|---|---|---|
+| 1 | Script, steps 1–15, 4 full runs, each step ≥ 3/4 | ✅ Final prompt: 13 steps 4/4; steps 1 and 5 3/4. |
+| 2 | Bridge: chand, then Moon and the board | ✅ Steps 2 and 3: 4/4 in every round. |
+| 3 | Reminders: now within ~2 s, +2 h exactly one more | ✅ Steps 6 and 8: 4/4. R4 measured 1.31 s from Routine's reply to the reminder. |
+| 4 | Every bubble reaches exactly the agents it shows | ✅ 14/14 after the fixes. The first pass was 11/14: talk-about pulled in Nani, rainbow pulled in Memory, and the cars label now shows Memory. |
+| 5 | Off-script round ≥ 27/30 | ⚠️ 27/30 on one round, 24/30 on the final prompt; it varies with Kimi. On my read, the final answers have no wrong facts and nothing unsafe. The misses are 3 sentences instead of 2, a missing wall card, and one Kimi stall. |
+| 6 | Stage at 1920×1080 and 1440×900 | ✅ No overlap, no page errors. At 1440 the chat header's title truncates ("A…"). |
+| 7 | Report: four views; today shows the run's words | ✅ Step 15: 4/4. |
+| 8 | Tap to talk on /stage and /toy | ✅ The reviewer checked it live: 15.0 s auto-send and barge-in work. Two reviewer fixes are in: waking on a bare Alt or Cmd press, and the double tap. |
+| 9 | Waiting: no filler, music only when late, first sentence ≤ 2.3 s | ⚠️ No filler plays, and the music fades in 256–279 ms. The median first sentence over voice turns was 2.44–2.73 s across rounds (last self-test 2.3 s), so the music would play on 50–77% of voice turns. Typed turns: 1.82 s. |
 
 ## Known issues and next steps
-1. **Kimi k2.6 stalls** on 10–15% of turns for 7–10 s, worse in some periods. The loop cancels and retries one at a time (up to 3 tries) and fillers cover the wait, but about 1 turn in 7 can still end with the "Chalo, ek naya khel" line. K3 models can't turn thinking off. Best fix: move the brain to Claude Haiku 5.5 once Anthropic credit is fixed. The switch is one value in demo.config.json, but the Anthropic path in lib/brain.ts is written and untested end to end (the key still says "credit balance is too low" at 05:15), and the sorter's streamed JSON has only ever run on Kimi.
-2. Test on real devices: phone mic, iPhone Safari, the projector browser.
-3. Single-letter answers: while a spelling is on the wall, a one-letter answer now snaps to the board's tiles ("M" heard as "N" → M; checked 3/3 voices). Outside the spelling game, single letters can still be misheard.
-4. A "once at 19:00" job with no date repeats daily; a clock jump only catches jobs from the last 30 minutes.
-5. Agent replies sometimes add a small extra ("shells and stones").
+1. **Latency (★9):** speech-to-text takes about 0.8 s and Kimi's first sentence about 1.5–2 s, and Kimi was slower tonight. Kimi still stalls on about 1 turn in 5 to 7, which the retry, the music and "Ek baar phir bolo" cover. The real fix is the brain switch, but test the Claude path first (OPEN.md).
+2. **Off-script (★5)** varies between 24 and 27 of 30 with Kimi. The misses are length overruns and an occasional missing wall card, not facts.
+3. The stage's chat header title truncates at 1440×900.
+4. The wait music has never been listened to by a person; its join measures clean.
+5. The idle hold on reminders is only unit-tested.
+6. On demo day (22 Nov) the seed's "last few days" (14–16 Nov) will be 6 days old (OPEN.md).

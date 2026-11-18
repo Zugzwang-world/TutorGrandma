@@ -48,3 +48,7 @@ One line each: date · decision · why.
 - 2026-11-19 · /stage feeds its wall through an in-page bus (lib/wall-bus.ts) · one page can't hold two channel objects for one topic, and never hears its own broadcasts.
 - 2026-11-19 · R9's self-test harness is written by Sonnet 5.5 (high) and R1 is reviewed after merge · usage: 3 points left of the 6-point budget at Wave 2; the Coordinator runs and reads the full suite.
 - 2026-11-19 · R3 merged without the reviewer · 2 points of budget left; its own measurements cover the timing checks, and the R9 script runs exercise it 4 times.
+- 2026-11-19 · R1 was merged before its review, and the review's fixes went forward into R3 and R4 · so Wave 2 didn't wait about 15 minutes; the one bug that broke the demo was fixed on main.
+- 2026-11-19 · The final turn prompt keeps a short reminder after Aarav's words (the parents' changes first, cheer a roar, two sentences and a question) · the script check passes with it (★1); off-script varies 24–27 of 30 either way.
+- 2026-11-19 · "Last turns" in the turn prompt stays across sessions for the day · the stage keeps one session per page load; each script run resets first.
+- 2026-11-19 · Questions about Aarav go to Memory only, and teaching requests go to Lessons only (sorter rules) · so each bubble reaches exactly the agents it shows (★4).
