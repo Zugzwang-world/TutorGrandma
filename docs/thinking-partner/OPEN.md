@@ -14,3 +14,4 @@
 - 2026-11-19 · Usage stop set at 70% weekly · the run started at 64%, so REFINE's "15% weekly" cap was already passed; I used the "start + 6 points" rule instead.
 - 2026-11-19 · On demo day (22 Nov) the seed's "last few days" in brain.md (14 to 16 Nov) and the progress history (ends 18 Nov) will be 4 to 6 days old, so "This week" will look thin and Nani's "yesterday" will be a week back. Shift the seed dates to the demo date before 22 Nov? (Not done tonight: it changes the seed story.)
 - 2026-11-19 · The progress report's "today" brain call can run in parallel across Vercel instances if several phones open the report at once (cached 60 s per instance). Fine for one stage; watch it with many phones.
+- 2026-11-19 · docs/toy-contract.md still describes press-and-hold for the paw; tap to talk maps the first tap to the press (ptt_start) and the second to the release (ptt_end). Update the wording for the hardware track (the message format is unchanged).
