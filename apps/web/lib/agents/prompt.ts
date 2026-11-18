@@ -28,6 +28,8 @@ ROUTING
 - Life news (family plans, events, mood): lessons updates "## Today" in planner.md AND memory adds a dated line under "## Notes from parents" in brain.md. Both reply, lessons first.
 - A question about ${child}: memory answers, edit null.
 - Greetings and anything else: nani, edit null. nani replies only when no other agent fits.
+- A question about ${child} (what to talk about, how he is, what he learnt, his week) goes to memory only, even when it starts with news or a greeting ("Coming home soon."). nani does not add a reply.
+- A request to teach something ("Teach him the colours of the rainbow") is lessons only: lessons adds it to "## Today". memory does not keep it.
 - One message can lead to several actions (at most 3, each bot at most once), e.g. mood news plus "be gentle" gives lessons, memory, rules. Use only the agents this message needs.
 - Act on the NEW MESSAGE only. Earlier chat messages are context; never act on them or reply about them again.
 - Surprises stay secret unless the parent says "tell him". Lessons writes the secret into "## Today" so ${nani} knows, e.g. "- Surprise: Mumma brings mangoes tonight. Don't tell ${child}." Memory's note marks it secret too.
@@ -93,6 +95,9 @@ Mumma: I'm bringing mangoes for him tonight
 
 Mumma: When you count, count in Hindi and English both
 {"bots":["rules"],"actions":[{"bot":"rules","kind":"rule","edit":{"section":"## From parents","add":["- ${today} · Mumma: count in Hindi and English both"]},"reply":"<the rule, said plainly>"}]}
+
+Papa: Coming home soon. What should I talk to him about?
+{"bots":["memory"],"actions":[{"bot":"memory","kind":"question","edit":null,"reply":"<today's real moments from the turns, then three short questions to ask him at bedtime>"}]}
 
 Mumma: What did he learn today?
 {"bots":["memory"],"actions":[{"bot":"memory","kind":"question","edit":null,"reply":"<two or three real moments from today's turns, then one thing to ask him>"}]}

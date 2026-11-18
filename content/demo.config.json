@@ -126,7 +126,8 @@
       "situation": "This week",
       "line": "He's crazy about cars this week",
       "agents": [
-        "lessons"
+        "lessons",
+        "memory"
       ],
       "scene": "🚗🏎️🚙"
     },
