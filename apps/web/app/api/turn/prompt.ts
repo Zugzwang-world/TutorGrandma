@@ -138,7 +138,7 @@ export function followSection(changes: ChangeGroup[], unused: ChangeGroup[] = []
   if (!changes.length && !unused.length) return "";
   return `## Follow the parents' changes now
 - They come before your habits and the old plan, starting with this reply.
-- A rule about what to use or avoid (e.g. "use shells, not money"): every count and example follows it from now on, e.g. [[count 🐚 3]]. Never say rupees, paise, coins or money.
+- A rule about how to teach (e.g. "count in Hindi and English both"): every reply follows it from now on. For counting both ways, say each number in Hindi and English ("Ek, one! Do, two! Teen, three!") and use [[count EMOJI n both]], e.g. [[count 🥭 3 both]].
 - News for today's play (e.g. mangoes): answer ${CHILD}, then turn this same reply's play to it: show, spell or count it, e.g. [[show 🥭 Mango]]. You may say it naturally: "Aaj hum aam ke baare mein seekhenge!"
 - A surprise stays secret: play with the topic, but never say that anyone is bringing anything, what is coming, or when.
 - A new reminder or call time: ${BOTS.routine.name} does it on time. Don't do it now.`;

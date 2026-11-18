@@ -5,6 +5,7 @@ import type { SorterInput } from "@/lib/agents/prompt";
 import { answerMemoryQuestion } from "@/lib/agents/memory-answer";
 import { broadcastSafe } from "@/lib/broadcast";
 import { clockParts, demoNow } from "@/lib/clock";
+import { stampOnceDate } from "@/lib/jobs";
 import { CHILD_ID } from "@/lib/config";
 import { getDemoState } from "@/lib/demo-state";
 import { getAllLatest, type WriteResult } from "@/lib/files";
@@ -84,6 +85,8 @@ export async function POST(req: Request) {
     const earlyAnswer = looksLikeQuestion ? answerMemoryQuestion(text, sender).catch(() => null) : null;
     const fileChain = new Map<string, Promise<unknown>>();
     const startEdit = (a: SorterAction): Promise<WriteResult | null> => {
+      // "once at HH:MM" means today only (R4.1): stamp the demo clock's date on new one-off job lines.
+      if (a.bot === "routine" && a.edit?.add?.length) a.edit = { ...a.edit, add: a.edit.add.map((l) => stampOnceDate(l, input.now.dayLabel)) };
       const g = guardEdit(a.bot, a.edit, files);
       if (!g) return Promise.resolve(null);
       const p = (fileChain.get(g.file) ?? Promise.resolve())

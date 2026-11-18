@@ -1,7 +1,7 @@
 "use client";
 // Sticky input: "Try saying…" chips, a growing text box, and a hold-to-record mic (slide off to cancel).
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
-import { config } from "@/lib/config";
+import { BUBBLES } from "@/lib/config";
 
 type RecState = "idle" | "starting" | "recording";
 
@@ -325,7 +325,7 @@ export function Composer({
           <div>
             <div className="tg-noscrollbar flex gap-2 overflow-x-auto px-3 pt-2.5 pb-0.5">
               <span className="shrink-0 self-center pl-1 text-[12px] font-extrabold tracking-wide text-muted uppercase">Try saying</span>
-              {config.trySaying.map((s) => (
+              {BUBBLES.map((b) => b.line).map((s) => (
                 <button
                   key={s}
                   type="button"

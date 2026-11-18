@@ -264,7 +264,7 @@ def voice(voices, lines):
 
 CHAT = [
     ("Remind him to drink water every 2 hours", {"routine"}, {"heartbeat"}),
-    ("Don't use real money in examples, use shells", {"rules"}, {"parent"}),
+    ("When you count, count in Hindi and English both", {"rules"}, {"parent"}),
     ("I'm bringing mangoes for him tonight", {"lessons", "memory"}, {"planner", "brain"}),
     ("What did he learn today?", {"memory"}, set()),
     ("Call him at 7, Papa wants to say hi", {"routine"}, {"heartbeat"}),
@@ -313,10 +313,10 @@ def chat():
         ok_files = want_files is None or changed == want_files
         row = {"n": i, "msg": msg, "bots": sorted(bots), "changed": sorted(changed), "replies": [f"{m['sender']}: {m['text']}" for m in replies],
                "ms": r.get("ms"), "clientMs": ms, "ok": bool(ok_bots and ok_files)}
-        # B7/B8: after shells and mangoes, a child turn must use the new version and follow it
+        # B7/B8: after the counting rule and mangoes, a child turn must use the new version and follow it
         if i in (2, 3):
             vers = latest_versions()
-            said, cues = text_turn("Ek aur khel khelo na!" if i == 2 else "Aaj kya khelenge?", session)
+            said, cues = text_turn("Nani, ginti karein!" if i == 2 else "Aaj kya khelenge?", session)
             turn = (sb(f"turns?select=file_versions,nani_text&session_id=eq.{session}&order=id.desc&limit=1") or [{}])[0]
             row["turn"] = {"said": said, "cues": [c["type"] + ":" + c.get("emoji", c.get("word", "")) for c in cues],
                            "usedLatest": turn.get("file_versions") == vers}

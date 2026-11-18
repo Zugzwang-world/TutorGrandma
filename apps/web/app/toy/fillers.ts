@@ -38,7 +38,7 @@ export interface Today {
 const THEME_WORDS: Record<string, RegExp> = {
   animals: /\b(animals?|jaanwar|lion|cow|cat|dog|elephant|monkey|bandar|duck|sheep|horse|rooster|billi|gaay|haathi|ullu|owl|sher)\b/i,
   fruits: /\b(fruits?|phal|mango(es)?|aam|banana|kela|apple|seb|orange|santra|grapes?|angoor)\b/i,
-  numbers: /\b(numbers?|count(ing)?|gino|gin|ginti|shells?|seepiyan)\b/i,
+  numbers: /\b(numbers?|count(ing)?|gino|gin|ginti)\b/i,
   letters: /\b(letters?|alphabets?|abc|akshar)\b/i,
   colours: /\b(colou?rs?|rang)\b/i,
   shapes: /\b(shapes?|circle|square|triangle)\b/i,

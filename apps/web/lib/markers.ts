@@ -3,6 +3,16 @@ import { BOT_KEYS, type BotKey, type Cue, type Note } from "./types";
 
 const MARKER_RE = /\[\[([^\[\]]*?)\]\]/g;
 
+/** Emojis in a string: split on spaces, then on grapheme clusters ("⭐🌟" -> ["⭐", "🌟"]). */
+function emojisIn(s: string): string[] {
+  const seg = typeof Intl !== "undefined" && "Segmenter" in Intl ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
+  return s
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((t) => (seg ? [...seg.segment(t)].map((x) => x.segment) : [t]))
+    .filter((t) => /\p{Extended_Pictographic}/u.test(t));
+}
+
 /** Parse one marker body (the text between [[ and ]]). Returns a cue, a note, or null if invalid. */
 export function parseMarker(body: string): { cue?: Cue; note?: Note } | null {
   const s = body.trim();
@@ -14,8 +24,15 @@ export function parseMarker(body: string): { cue?: Cue; note?: Note } | null {
 
   switch (kind) {
     case "show": {
-      if (parts.length < 2) return null;
-      return { cue: { type: "show", emoji: parts[0], word: parts.slice(1).join(" ") } };
+      // [[show 🌙 Moon]] or [[show 🌙 Moon | chand | ⭐ 🌟]]: everything after the first | is optional (R6.4)
+      const [head, hindi, extras] = rest.split("|").map((x) => x.trim());
+      const hp = head.split(/\s+/).filter(Boolean);
+      if (hp.length < 2) return null;
+      const cue: Cue = { type: "show", emoji: hp[0], word: hp.slice(1).join(" ") };
+      if (hindi) cue.hindi = hindi;
+      const ex = extras ? emojisIn(extras).slice(0, 2) : [];
+      if (ex.length) cue.extras = ex;
+      return { cue };
     }
     case "spell": {
       // [[spell MANGO 1 M S T]]
@@ -33,14 +50,16 @@ export function parseMarker(body: string): { cue?: Cue; note?: Note } | null {
       return { cue: { type: "tile", letter: parts[0].toUpperCase(), result } };
     }
     case "count": {
-      // [[count 🥭 1+1]] or [[count 🐚 3]]
+      // [[count 🥭 1+1]] or [[count ⭐ 3]]; a trailing "both" counts in Hindi and English (R6.5)
       if (parts.length < 2) return null;
-      const expr = parts.slice(1).join("");
+      const both = parts.length > 2 && parts[parts.length - 1].toLowerCase() === "both";
+      const expr = (both ? parts.slice(1, -1) : parts.slice(1)).join("");
       const sum = expr.match(/^(\d+)\+(\d+)$/);
-      if (sum) return { cue: { type: "count", emoji: parts[0], a: +sum[1], b: +sum[2] } };
       const n = expr.match(/^(\d+)$/);
-      if (n) return { cue: { type: "count", emoji: parts[0], a: +n[1] } };
-      return null;
+      if (!sum && !n) return null;
+      const cue: Cue = sum ? { type: "count", emoji: parts[0], a: +sum[1], b: +sum[2] } : { type: "count", emoji: parts[0], a: +n![1] };
+      if (both) cue.both = true;
+      return { cue };
     }
     case "choices": {
       // [[choices 🎵 Song, 🔤 Letters, 🔢 Count]]
@@ -115,10 +134,13 @@ export function hasOpenMarker(text: string): boolean {
 /** Render a cue back to marker text (for prompts and logs). */
 export function cueToMarker(c: Cue): string {
   switch (c.type) {
-    case "show": return `[[show ${c.emoji} ${c.word}]]`;
+    case "show": {
+      const tail = c.hindi || c.extras?.length ? ` | ${c.hindi ?? ""}${c.extras?.length ? ` | ${c.extras.join(" ")}` : ""}` : "";
+      return `[[show ${c.emoji} ${c.word}${tail}]]`;
+    }
     case "spell": return `[[spell ${c.word} ${c.gap} ${c.tiles.join(" ")}]]`;
     case "tile": return `[[tile ${c.letter} ${c.result}]]`;
-    case "count": return `[[count ${c.emoji} ${c.b !== undefined ? `${c.a}+${c.b}` : c.a}]]`;
+    case "count": return `[[count ${c.emoji} ${c.b !== undefined ? `${c.a}+${c.b}` : c.a}${c.both ? " both" : ""}]]`;
     case "choices": return `[[choices ${c.items.map((i) => `${i.emoji} ${i.label}`).join(", ")}]]`;
     case "cheer": return `[[cheer ${c.emoji}]]`;
     case "sound": return `[[sound ${c.name}]]`;

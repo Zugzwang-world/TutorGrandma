@@ -1,7 +1,7 @@
 // Run with node --test after compiling (see the PR). Covers the PLAN C10 due-time logic.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseJobs } from "../jobs";
+import { formatJob, jobSecondsOn, jobTimesOn, parseJobLine, parseJobs, parseWhen, stampOnceDate } from "../jobs";
 import { dueJobs, fireId, nextJob, startWindow, upcomingJobs, windowStart, type ClockReading } from "./index";
 
 const at = (hhmm: string, dateKey = "2026-11-17", dayLabel = "17 Nov"): ClockReading => {
@@ -69,4 +69,55 @@ test("clock jumps: forward catches recent skips, backward and first check only t
   assert.deepEqual(c.map((d) => d.dueAt), ["2026-11-17T12:00"]);
   // first check
   assert.equal(dueJobs(jobs, windowStart(null, at("19:30")), at("19:30")).length, 0);
+});
+
+// ---------- REFINE R4.1: job lines with no end, seconds, and dated one-offs ----------
+
+test("every 2 hours from HH:MM:SS has no end: due at the start, then every 2 hours to the end of the day", () => {
+  const w = parseWhen("every 2 hours from 01:16:05");
+  assert.deepEqual(w, { kind: "every", everyMinutes: 120, from: "01:16:05" });
+  const job = parseJobLine("- every 2 hours from 01:16:05 | say | Aarav beta, paani pi lo! | set by Mumma")!;
+  const secs = jobSecondsOn(job, "19 Nov");
+  assert.equal(secs[0], 1 * 3600 + 16 * 60 + 5);
+  assert.equal(secs[1], 3 * 3600 + 16 * 60 + 5);
+  assert.equal(secs.at(-1), 23 * 3600 + 16 * 60 + 5);
+  assert.equal(secs.length, 12);
+  assert.deepEqual(jobTimesOn(job, "19 Nov").slice(0, 2), [76, 196]);
+});
+
+test("every N minutes from HH:MM with no end, and the old window form still parse", () => {
+  assert.deepEqual(parseWhen("every 30 minutes from 7:05"), { kind: "every", everyMinutes: 30, from: "07:05" });
+  assert.deepEqual(parseWhen("every 2 hours from 10:00 to 18:00"), { kind: "every", everyMinutes: 120, from: "10:00", to: "18:00" });
+  assert.deepEqual(parseWhen("daily at 19:00"), { kind: "daily", at: "19:00" });
+  assert.equal(parseWhen("every 0 minutes from 10:00"), null);
+  assert.equal(parseWhen("every 2 hours from 25:00"), null);
+});
+
+test("seconds in one-off times", () => {
+  assert.deepEqual(parseWhen("once on 19 Nov at 01:16:35"), { kind: "once", at: "01:16:35", date: "19 Nov" });
+  const job = parseJobLine("- once on 19 Nov at 01:18:00 | call | Papa | set by Papa")!;
+  assert.deepEqual(jobSecondsOn(job, "19 Nov"), [4680]);
+  assert.deepEqual(jobSecondsOn(job, "20 Nov"), []);
+  assert.equal(parseWhen("once on 19 Nov at 01:16:60"), null);
+});
+
+test("formatJob round-trips every form", () => {
+  for (const line of [
+    "- every 2 hours from 01:16:05 | say | Paani pi lo! | set by Mumma",
+    "- every 45 minutes from 09:00 | say | Stretch! | set by Papa",
+    "- every 2 hours from 10:00 to 18:00 | say | Paani pi lo! | set by Mumma",
+    "- once on 19 Nov at 01:18:00 | call | Papa | set by Papa",
+    "- once at 19:00 | call | Papa | set by Papa",
+    "- daily at 20:30 | say | Good night! | set by Nani",
+  ]) {
+    assert.equal(formatJob(parseJobLine(line)!), line);
+  }
+});
+
+test("a dateless one-off gets today's date stamped; other lines are unchanged", () => {
+  assert.equal(stampOnceDate("- once at 19:00 | call | Papa | set by Mumma", "19 Nov"), "- once on 19 Nov at 19:00 | call | Papa | set by Mumma");
+  assert.equal(stampOnceDate("- once at 7:05:30 | say | Hi | set by Papa", "19 Nov"), "- once on 19 Nov at 07:05:30 | say | Hi | set by Papa");
+  for (const l of ["- once on 20 Nov at 19:00 | call | Papa | set by Mumma", "- daily at 19:00 | brief | Brief | set by Nani", "- every 2 hours from 01:00 | say | x | set by Mumma"]) {
+    assert.equal(stampOnceDate(l, "19 Nov"), l);
+  }
 });

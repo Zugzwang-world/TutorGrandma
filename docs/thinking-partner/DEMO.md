@@ -34,9 +34,9 @@ Tap the **Try saying** chips on your phone:
    - Routine replies, and **what changed** shows the new job line.
    - On the presenter, press **Jump to 12:00**. The toy says the water reminder.
    - On the toy, say "Pee liya abhi". Routine posts what Aarav said.
-2. **"Don't use real money in examples, use shells"**
+2. **"When you count, count in Hindi and English both"**
    - House rules replies.
-   - On the toy, say "Chalo ginti karte hain!". Nani counts with shells 🐚, and House rules posts that it happened.
+   - On the toy, say "Nani, ginti karein!". Nani counts "Ek, one! Do, two!", and House rules posts that it happened.
 3. **"I'm bringing mangoes for him tonight"**
    - Lessons and Memory reply.
    - On the toy, say "Nani, aaj kya khelenge?". Nani plays about mangoes but doesn't reveal the surprise.

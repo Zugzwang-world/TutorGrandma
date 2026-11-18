@@ -31,6 +31,50 @@ export const BOT_OF_FILE: Record<FileName, BotKey> = {
   brain: "memory",
 };
 
+// ---------- Progress report (REFINE R7.2): table progress_days, primary key (child_id, day) ----------
+
+export type ProgressArea = "language" | "numbers" | "feelings" | "culture"; // the four areas in planner.md
+export type ProgressFeeling = "happy" | "excited" | "calm" | "tired" | "upset" | "scared" | "sad";
+
+export interface ProgressDayData {
+  words: { en: string; hi?: string; emoji: string; area: ProgressArea; quote?: string; firstSaid?: string }[]; // firstSaid: ISO time
+  letters: { learnt: string[]; working: string[] }; // upper-case letters
+  counting: { upTo: number }; // how far he counts, 1 to 10
+  areas: Record<ProgressArea, number>; // moments in each area that day (drives the radial chart; never shown as a score)
+  moods: { time: string; feeling: ProgressFeeling; what: string; helped?: string }[]; // time: "HH:MM"
+  tricky: { what: string; tip: string }[];
+  routine: { water: { asked: number; done: number }; calls: number; stories: number };
+  highlights: { text: string; quote?: string }[];
+  starters: string[]; // three conversation starters
+  summary?: string[]; // "In three lines" for that day
+}
+
+export interface ProgressDay {
+  child_id: string;
+  day: string; // "2026-11-19"
+  data: ProgressDayData;
+  updated_at?: string;
+}
+
+/** content/progress-seed.json: sample history written once by scripts/progress/seed.mjs, restored by /api/reset. */
+export interface ProgressSeed {
+  childId: string;
+  days: { day: string; data: ProgressDayData }[];
+}
+
+// ---------- Idea bubbles (REFINE R2.4): content/demo.config.json "bubbles" ----------
+
+export interface Bubble {
+  id: string;
+  parent: string; // "Mumma" | "Papa": the bubble always sends as this parent
+  situation: string; // two to four words: "On the way home"
+  line: string; // what it posts in the chat
+  agents: BotKey[]; // the agents it reaches (avatars + their files)
+  scene: string; // emoji composition for the scene, e.g. "👨‍💼🚗🏠"
+  step?: number; // Part C stage-script step, if any (glows when it is next)
+  image?: string; // optional drawn art that replaces the scene
+}
+
 // ---------- Database rows ----------
 
 export interface AgentFile {
@@ -108,10 +152,10 @@ export interface DemoState {
 // ---------- Nani's markers (C4) ----------
 
 export type Cue =
-  | { type: "show"; emoji: string; word: string }
+  | { type: "show"; emoji: string; word: string; hindi?: string; extras?: string[] } // hindi: "chand"; extras: up to 2 small emojis
   | { type: "spell"; word: string; gap: number; tiles: string[] } // gap is 1-based
   | { type: "tile"; letter: string; result: "right" | "wrong" }
-  | { type: "count"; emoji: string; a: number; b?: number } // b set for sums: a + b
+  | { type: "count"; emoji: string; a: number; b?: number; both?: boolean } // b set for sums: a + b; both: Hindi and English names
   | { type: "choices"; items: { emoji: string; label: string }[] }
   | { type: "cheer"; emoji: string }
   | { type: "sound"; name: string }
@@ -127,10 +171,11 @@ export interface Note {
 
 export type JobAction = "say" | "call" | "brief" | "song";
 
+// Times are "HH:MM" or "HH:MM:SS" (India time). See lib/jobs.ts for the line formats (REFINE R4.1).
 export type JobWhen =
-  | { kind: "daily"; at: string } // "HH:MM"
-  | { kind: "every"; everyMinutes: number; from: string; to: string }
-  | { kind: "once"; at: string; date?: string }; // date like "17 Nov"
+  | { kind: "daily"; at: string }
+  | { kind: "every"; everyMinutes: number; from: string; to?: string } // no `to`: runs to the end of each day, until removed
+  | { kind: "once"; at: string; date?: string }; // date like "17 Nov"; no date = today only (new lines get stamped)
 
 export interface Job {
   key: string; // stable id from the line text, used to record fires

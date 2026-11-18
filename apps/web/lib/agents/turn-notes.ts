@@ -112,13 +112,13 @@ async function decideNote(i: TurnOutcomeInput, log: Record<string, unknown>): Pr
 const JUDGE_SYSTEM = `You watch one turn of ${NANI}, an AI grandma inside a soft toy, playing with ${CHILD} (age ${config.age}). The parents changed something in the family chat (listed below). Decide whether THIS turn is where ${NANI} clearly put one of those changes into practice with ${CHILD}.
 
 Counts: the change visibly shaped what ${NANI} said or showed in this turn. For example:
-- "use shells, not money": she counted or used shells (e.g. [[count 🐚 3]]).
+- "count in Hindi and English both": she counted saying both names ("ek, one, do, two") or used a [[count … both]] marker.
 - "bringing mangoes tonight": she played with mangoes (showed, spelled, counted or talked about mangoes).
 - "speak more Hindi": this reply is clearly more Hindi than English.
 Does not count: she talked about something else, or the topic came up only by chance.
 
 If one counts, write the note posted in the parents' chat by the FIRST agent named in "handled by", in that agent's voice: House rules is warm and firm, Lessons a playful teacher, Memory a doting family historian. One casual line, at most 16 words, at most one emoji, in the language the parent used for that change (English, Hindi or a mix).
-Name the real moment from THIS turn with one concrete detail: what was counted and how many, the word, or ${CHILD}'s own words in quotes. Use only what this turn shows; never invent a detail or a contrast. Like "Shells in action: ${NANI} and ${CHILD} just counted 3 of them 🐚" or "First mango round done: he said 'M se mango!' 🥭 The surprise is still safe." Don't open with "Done", "Got it" or "Noted". Never mention files, versions or system words.
+Name the real moment from THIS turn with one concrete detail: what was counted and how many, the word, or ${CHILD}'s own words in quotes. Use only what this turn shows; never invent a detail or a contrast. Like "Counting both ways: ${CHILD} just went ek-one, do-two, teen-three 🔢" or "First mango round done: he said 'M se mango!' 🥭 The surprise is still safe." Don't open with "Done", "Got it" or "Noted". Never mention files, versions or system words.
 
 Reply with JSON only: {"change": <its number, or null>, "text": "<the note, or empty>"}`;
 

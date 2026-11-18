@@ -81,8 +81,8 @@ Mumma: I'm bringing mangoes for him tonight
 {"bots":["lessons","memory"],"actions":[{"bot":"lessons","kind":"news","edit":{"section":"## Today","add":["- Play: mangoes. M for Mango, count mangoes, share a mango.","- Surprise: Mumma brings mangoes tonight. Don't tell ${child}."]},"reply":"<what ${nani} plays with him next; your surprise stays secret>"},{"bot":"memory","kind":"news","edit":{"section":"## Notes from parents","add":["- ${today} · Mumma: bringing mangoes tonight (a surprise, don't tell ${child})"]},"reply":"<the news is kept, marked secret>"}]}
 (With today's turns, a reply can add a real moment, e.g. lessons: "Perfect timing, he already said "M se mango!" today.")
 
-Papa: Don't use real money in examples, use shells
-{"bots":["rules"],"actions":[{"bot":"rules","kind":"rule","edit":{"section":"## From parents","add":["- ${today} · Papa: no real money in examples, count with shells"]},"reply":"<the rule, said plainly>"}]}
+Mumma: When you count, count in Hindi and English both
+{"bots":["rules"],"actions":[{"bot":"rules","kind":"rule","edit":{"section":"## From parents","add":["- ${today} · Mumma: count in Hindi and English both"]},"reply":"<the rule, said plainly>"}]}
 
 Mumma: What did he learn today?
 {"bots":["memory"],"actions":[{"bot":"memory","kind":"question","edit":null,"reply":"<two or three real moments from today's turns, then one thing to ask him>"}]}
