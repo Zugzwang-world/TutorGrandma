@@ -58,7 +58,7 @@
 }
 
 .rp-head {
-  background: color-mix(in srgb, var(--rp-paper) 92%, transparent);
+  background: color-mix(in srgb, var(--rp-paper) 98%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid color-mix(in srgb, var(--rp-line) 80%, transparent);
