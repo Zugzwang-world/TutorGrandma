@@ -1,7 +1,8 @@
 "use client";
 // Call mode on /toy (PLAN.md C11, N2). start(who) rings Mumma or Papa: eyes "calling", core.mode "call",
 // Nani's call bubble in the chat (POST /api/call start). While the call is on, the paw records a clip for
-// the call instead of talking to Nani, and the parent's clips play through the toy's speaker at once.
+// the call instead of talking to Nani (tap to start, tap to send), and the parent's clips play through the
+// toy's speaker at once.
 // It ends on the End button, the parent's End, or CALL_IDLE_MS with no clip either way.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { callApi, ClipRecorder, sendClip } from "@/lib/call/client";
@@ -27,6 +28,9 @@ export interface CallControls {
   end: (reason?: string) => void;
   press: () => void;
   release: () => void;
+  /** Read at tap time (refs, never stale): a call is on / the paw is recording a clip. */
+  active: () => boolean;
+  recording: () => boolean;
 }
 
 export function useCall(core: ToyCore): CallControls {
@@ -202,5 +206,8 @@ export function useCall(core: ToyCore): CallControls {
     [],
   );
 
-  return { call, start, end, press, release };
+  const active = useCallback(() => !!ref.current, []);
+  const recording = useCallback(() => recRef.current.active, []);
+
+  return { call, start, end, press, release, active, recording };
 }

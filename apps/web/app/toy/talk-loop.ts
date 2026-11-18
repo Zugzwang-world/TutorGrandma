@@ -1,4 +1,4 @@
-// The talking loop on /toy (PLAN.md C2, C5), as a plain class: press to record, release to send, cover
+// The talking loop on /toy and /stage (PLAN.md C2, C5), as a plain class: press to record, release to send, cover
 // the wait with pre-made clips, then play Nani's sentences in order and drive the wall with their cues.
 // No React here; use-talk.ts wraps it.
 import type { BoardState, Cue, FallbackId, NaniEvent, TurnEvent } from "@/lib/types";
@@ -40,10 +40,13 @@ export interface TalkDeps {
   onRecording: (on: boolean) => void;
   /** N2: Nani's reply had [[call mumma]] / [[call papa]]; called once the reply has finished playing. */
   onCall?: (who: "mumma" | "papa") => void;
+  /** R1: a sentence of Nani's reply started playing (the stage's caption). */
+  onSaying?: (text: string) => void;
 }
 
 interface Item {
   i: number;
+  text: string;
   cues: Cue[];
   buffer: Promise<AudioBuffer | null>; // decoded on arrival, played in queue order
 }
@@ -94,6 +97,11 @@ export class TalkLoop {
     return !!this.turn || !!this.rec;
   }
 
+  /** The microphone is recording a turn (tap to talk: the next tap sends). */
+  get recording(): boolean {
+    return !!this.rec;
+  }
+
   // ---------- paw ----------
 
   press(): void {
@@ -134,6 +142,17 @@ export class TalkLoop {
       return;
     }
     void this.run({ audio: blob, filename: `turn.${extOf(r.mime)}` });
+  }
+
+  /** Drop the recording without sending it (a call took over the paw; the call sets the eyes). */
+  cancel(): void {
+    const r = this.rec;
+    if (!r) return;
+    this.rec = null;
+    this.d.onRecording(false);
+    try {
+      r.rec.stop();
+    } catch {}
   }
 
   /** A typed turn (no microphone, or testing): the same path as a spoken one. */
@@ -239,7 +258,7 @@ export class TalkLoop {
           this.stats(t);
         }
         for (const c of ev.cues) if (c.type === "call") t.call = c.who;
-        t.queue.push({ i: ev.i, cues: ev.cues, buffer: ev.audio ? this.d.player.decode(b64ToBuffer(ev.audio)) : Promise.resolve(null) });
+        t.queue.push({ i: ev.i, text: ev.text, cues: ev.cues, buffer: ev.audio ? this.d.player.decode(b64ToBuffer(ev.audio)) : Promise.resolve(null) });
         if (!t.voiceStarted) void this.startVoice(t);
         else this.playNext(t);
         break;
@@ -329,6 +348,7 @@ export class TalkLoop {
       }
       if (buffer) {
         const clip = this.d.player.play(buffer, `say_${item.i}`);
+        if (clip && item.text) this.d.onSaying?.(item.text);
         if (clip && t.stats.firstVoiceMs === undefined) {
           t.stats.firstVoiceMs = Math.round(performance.now() - t.t0);
           this.stats(t);

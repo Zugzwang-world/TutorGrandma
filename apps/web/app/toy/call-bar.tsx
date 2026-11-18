@@ -1,5 +1,5 @@
 "use client";
-// What /toy shows during a call (N2): the status line and a big, clear End button.
+// What /toy and /stage show during a call (N2): the status line and a big, clear End button.
 import { whoLabel } from "@/lib/call/shared";
 import type { ToyCall } from "./use-call";
 
@@ -14,7 +14,7 @@ export function callLabel(c: ToyCall): string {
 export function CallBar({ call, onEnd }: { call: ToyCall; onEnd: () => void }) {
   return (
     <>
-      <p className="text-sm text-muted">Hold the paw to talk to {whoLabel(call.who)}</p>
+      <p className="text-sm text-muted">{call.recording ? "Listening… tap to send" : `Tap the paw to talk to ${whoLabel(call.who)}`}</p>
       <button
         type="button"
         onClick={onEnd}

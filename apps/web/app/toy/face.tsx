@@ -1,6 +1,6 @@
 // Nani's face: an SVG grandma with round glasses. Eye states: idle, listening, thinking, speaking, calling, offline.
 import type { EyeState } from "./use-toy-core";
-import s from "./toy.module.css";
+import "./toy.css";
 
 const INK = "#2b2118";
 const SKIN = "#f3c49c";
@@ -28,7 +28,7 @@ function Eyes({ eyes }: { eyes: EyeState }) {
   return (
     <g>
       {[72, 128].map((cx) => (
-        <g key={cx} className={s.eye}>
+        <g key={cx} className="toy-eye">
           <ellipse cx={cx} cy={104} rx={7.5} ry={9.5} fill={INK} />
           <circle cx={cx + 2.5} cy={100} r={2.6} fill="#fff" />
         </g>
@@ -38,17 +38,18 @@ function Eyes({ eyes }: { eyes: EyeState }) {
 }
 
 function Mouth({ eyes }: { eyes: EyeState }) {
-  if (eyes === "speaking") return <ellipse className={s.mouthTalk} cx={100} cy={146} rx={13} ry={9} fill="#9b3b2f" />;
+  if (eyes === "speaking") return <ellipse className="toy-mouth-talk" cx={100} cy={146} rx={13} ry={9} fill="#9b3b2f" />;
   if (eyes === "listening") return <ellipse cx={100} cy={146} rx={6} ry={6.5} fill="#9b3b2f" />;
   if (eyes === "thinking") return <path d="M89 146 q11 4 22 -2" stroke={INK} strokeWidth={4} strokeLinecap="round" fill="none" />;
   if (eyes === "offline") return <path d="M92 146 q8 3 16 0" stroke={INK} strokeWidth={3.5} strokeLinecap="round" fill="none" />;
   return <path d="M82 140 q18 18 36 0" stroke={INK} strokeWidth={4.5} strokeLinecap="round" fill="none" />;
 }
 
-export function NaniFace({ eyes }: { eyes: EyeState }) {
+/** `fill`: fill the parent box (the stage's dock) instead of the /toy size. */
+export function NaniFace({ eyes, fill = false }: { eyes: EyeState; fill?: boolean }) {
   return (
-    <svg viewBox="0 0 200 200" className={s.face} data-eyes={eyes} role="img" aria-label={`Nani is ${eyes}`}>
-      {eyes === "listening" && <circle className={s.ring} cx={100} cy={108} r={84} fill="none" stroke="#f29a0e" strokeWidth={6} />}
+    <svg viewBox="0 0 200 200" className={fill ? `toy-face toy-face-fill` : "toy-face"} data-eyes={eyes} role="img" aria-label={`Nani is ${eyes}`}>
+      {eyes === "listening" && <circle className="toy-ring" cx={100} cy={108} r={84} fill="none" stroke="#f29a0e" strokeWidth={6} />}
 
       {/* hair and bun */}
       <circle cx={100} cy={30} r={22} fill={HAIR_SHADE} />
@@ -83,19 +84,19 @@ export function NaniFace({ eyes }: { eyes: EyeState }) {
 
       {eyes === "thinking" && (
         <g fill="#8a7a6a">
-          <circle className={s.dot} cx={150} cy={22} r={6} />
-          <circle className={s.dot} cx={168} cy={14} r={6} />
-          <circle className={s.dot} cx={186} cy={6} r={6} />
+          <circle className="toy-dot" cx={150} cy={22} r={6} />
+          <circle className="toy-dot" cx={168} cy={14} r={6} />
+          <circle className="toy-dot" cx={186} cy={6} r={6} />
         </g>
       )}
       {eyes === "offline" && (
         <g fill="#8a7a6a" fontFamily="var(--font-nunito), sans-serif" fontWeight={800}>
-          <text className={s.zz} x={152} y={50} fontSize={20}>z</text>
-          <text className={s.zz} x={166} y={34} fontSize={14} style={{ animationDelay: "0.8s" }}>z</text>
+          <text className="toy-zz" x={152} y={50} fontSize={20}>z</text>
+          <text className="toy-zz" x={166} y={34} fontSize={14} style={{ animationDelay: "0.8s" }}>z</text>
         </g>
       )}
       {eyes === "calling" && (
-        <text className={`${s.phone} emoji`} x={150} y={44} fontSize={34}>
+        <text className={`toy-phone emoji`} x={150} y={44} fontSize={34}>
           📞
         </text>
       )}

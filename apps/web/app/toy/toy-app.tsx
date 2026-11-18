@@ -1,21 +1,17 @@
 "use client";
-// /toy, the toy stand-in (PLAN.md C1, C2): Nani's face, a big paw (hold to talk, or hold space), and the
-// speaker for everything Nani says. Plug-in points:
-//   G4: const routine = useRoutine(core)  (app/toy/use-routine.ts) — reminders via core.player, core.lastEventRef
-//   N2: core.mode === "call" routes the paw to the call instead of talk.press/release
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+// /toy, the toy stand-in (PLAN.md C1, C2; R1): Nani's face, a big paw (tap to talk, tap again to send, or the
+// space bar), and the speaker for everything Nani says. The wiring (talk, call, routine, taps) is useToy, shared
+// with /stage.
+import { useState, useSyncExternalStore } from "react";
 import { NaniFace } from "./face";
-import s from "./toy.module.css";
-import { AUDIO } from "@/lib/audio";
 import { CallBar, callLabel } from "./call-bar";
-import { useCall } from "./use-call";
-import { useRoutine } from "./use-routine";
-import { useTalk } from "./use-talk";
-import { useToyCore, type EyeState } from "./use-toy-core";
+import { PawButton } from "./paw";
+import { useToy } from "./use-toy";
+import type { EyeState } from "./use-toy-core";
 
 const LABEL: Record<EyeState, string> = {
-  idle: "Hold the paw and talk to Nani",
-  listening: "Nani is listening…",
+  idle: "Tap the paw and talk to Nani",
+  listening: "Listening… tap to send",
   thinking: "Nani is thinking…",
   speaking: "Nani is talking",
   calling: "Calling…",
@@ -25,70 +21,9 @@ const LABEL: Record<EyeState, string> = {
 const noSubscribe = () => () => {};
 
 export function ToyApp() {
-  const core = useToyCore();
-  const call = useCall(core);
-  // N2: a [[call mumma]] cue starts the call once Nani has finished that reply.
-  const { talk: loop, stats: st } = useTalk(core, { onCall: (who) => call.start(who, true) });
-
-  // G4: routine jobs (reminders, calls, brief, song) fire on the demo clock through the toy's speaker.
-  useRoutine({
-    enabled: core.awake && core.mode === "talk",
-    onCall: (who) => call.start(who, false), // the routine has already played line_call_<who>
-    play: async (url) => {
-      const pre = AUDIO.find((a) => a.file === url);
-      const clip = pre ? core.player.playId(pre.id) : await core.player.load(url).then((b) => (b ? core.player.play(b, "routine") : null));
-      if (!clip) return;
-      core.setEyes("speaking");
-      await clip.ended;
-      core.setEyes("idle");
-    },
-    setLastEvent: (e) => {
-      core.lastEventRef.current = e;
-    },
-  });
-  const [down, setDown] = useState(false);
+  const toy = useToy();
+  const { core, call, stats: st } = toy;
   const [draft, setDraft] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // The paw: talk mode today; N2 switches core.mode to "call" and handles presses itself.
-  const press = () => {
-    if (!core.awake) return;
-    setDown(true);
-    if (core.mode === "talk") loop.press();
-    else call.press();
-  };
-  const release = () => {
-    setDown(false);
-    if (core.mode === "talk") loop.release();
-    else call.release();
-  };
-  const pressRef = useRef(press);
-  const releaseRef = useRef(release);
-  useEffect(() => {
-    pressRef.current = press;
-    releaseRef.current = release;
-  });
-
-  // Hold the space bar to talk (not while typing).
-  useEffect(() => {
-    const isTyping = (e: KeyboardEvent) => e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
-    const kd = (e: KeyboardEvent) => {
-      if (e.code !== "Space" || isTyping(e)) return;
-      e.preventDefault();
-      if (!e.repeat) pressRef.current();
-    };
-    const ku = (e: KeyboardEvent) => {
-      if (e.code !== "Space" || isTyping(e)) return;
-      e.preventDefault();
-      releaseRef.current();
-    };
-    window.addEventListener("keydown", kd);
-    window.addEventListener("keyup", ku);
-    return () => {
-      window.removeEventListener("keydown", kd);
-      window.removeEventListener("keyup", ku);
-    };
-  }, []);
 
   // ?type shows a text box (testing, or a backup if the microphone fails on stage).
   const typeParam = useSyncExternalStore(
@@ -110,7 +45,7 @@ export function ToyApp() {
   return (
     <main className="fixed inset-0 flex select-none flex-col items-center justify-between bg-cream px-4 pb-6 pt-8 text-ink">
       <p className="rounded-full bg-paper/80 px-5 py-2 text-lg font-semibold text-muted shadow-sm" aria-live="polite">
-        {call.call ? callLabel(call.call) : LABEL[core.eyes]}
+        {call.call ? callLabel(call.call) : toy.listening ? LABEL.listening : LABEL[core.eyes]}
       </p>
 
       <NaniFace eyes={core.eyes} />
@@ -121,13 +56,12 @@ export function ToyApp() {
             className="flex w-full gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!core.awake || core.mode !== "talk") return;
-              loop.say(draft);
+              if (core.mode !== "talk") return;
+              toy.say(draft);
               setDraft("");
             }}
           >
             <input
-              ref={inputRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={core.micError ? `${core.micError}: type to Nani` : "Type what Aarav says"}
@@ -137,33 +71,17 @@ export function ToyApp() {
           </form>
         )}
 
-        <button
-          type="button"
-          aria-label="Hold to talk to Nani"
-          data-down={down}
-          className={`${s.paw} flex h-44 w-44 items-center justify-center rounded-full bg-marigold shadow-lg sm:h-52 sm:w-52`}
-          onPointerDown={(e) => {
-            e.currentTarget.setPointerCapture(e.pointerId);
-            press();
-          }}
-          onPointerUp={release}
-          onPointerCancel={release}
-          onContextMenu={(e) => e.preventDefault()}
-        >
-          <svg viewBox="0 0 100 100" className="h-3/5 w-3/5" aria-hidden>
-            <g fill="#fff8ee">
-              <ellipse cx={50} cy={64} rx={22} ry={18} />
-              <ellipse cx={24} cy={40} rx={9} ry={11} />
-              <ellipse cx={40} cy={26} rx={9} ry={11} />
-              <ellipse cx={60} cy={26} rx={9} ry={11} />
-              <ellipse cx={76} cy={40} rx={9} ry={11} />
-            </g>
-          </svg>
-        </button>
+        <PawButton listening={toy.listening} onTap={toy.tap} className="h-44 w-44 sm:h-52 sm:w-52" />
         {call.call ? (
           <CallBar call={call.call} onEnd={() => call.end("tap")} />
         ) : (
-          <p className="text-sm text-muted">Hold the paw to talk, or hold the space bar</p>
+          <p className="text-sm text-muted">
+            {toy.listening
+              ? "Listening… tap to send"
+              : core.awake && toy.mic === "pending"
+                ? "Allow the microphone…"
+                : "Tap to talk, or press the space bar"}
+          </p>
         )}
         <p className="min-h-5 text-center text-xs text-muted/80">
           {st.heard !== undefined && <span>heard “{st.heard}”  ·  </span>}
@@ -174,7 +92,7 @@ export function ToyApp() {
       {!core.awake && (
         <button
           type="button"
-          onClick={() => void core.wake()}
+          onClick={() => toy.wake()}
           className="fixed inset-0 z-10 flex flex-col items-center justify-center gap-6 bg-marigold-soft/95 text-ink"
         >
           <NaniFace eyes="offline" />
