@@ -95,3 +95,43 @@ Worst speech-check sentences:
 | 10 | He's a bit sad today, be extra gentle | lessons, memory, rules | brain, parent, planner | ✓ | lessons: A bit sad today, so we'll keep it soft. M for Mango still, but slow and cosy, no rush. Nani will follow his lead 🥭 / memory: Noted in his story, gentle day today. He was so eager at 5:30 though — "Ek aur khel khelo na!" 💛 / rules: Extra gentle today. Nani will keep her voice soft and her patience full 🌙 |
 - After #2: Nani said "Achha, ek aur khel! Aaj M wala din hai, beta. M for Mango, tumhara favourite! Aam English mein Mango! Bolo, Mango?" cues ['show:🥭']; used latest files: True; notes: []
 - After #3: Nani said "Aaj M wala din hai, beta! M for Mango, tumhara favourite aam! Mango bolo, achha se? Fir hum M se spell karenge!" cues ['show:🥭']; used latest files: True; notes: ["lessons: Mango moment landed: Aarav's eyes lit up at 'M for Mango' 🥭 His favourite fruit is safe with us."]
+
+## R3 waiting · 2026-11-19 03:00 IST · local `next start` (port 3106) against production Kimi, ElevenLabs and Supabase
+
+How: R3 build of /stage in headless Chromium, one turn at a time. "Ready" is the first `say` reaching the page; "heard" is the moment her first sentence starts playing; both are timed from the send tap (talk-loop stats, `[toy] turn N end` in the console). Typed turns skip speech-to-text, so the voice turns are the like-for-like comparison with the 2.3 s baseline.
+
+- **Wait music:** it played in 2 of the 10 typed turns (#4 Kimi slow, brain first word 6.9 s; #8 voice slow, first audio 3.1 s) and 2 of the 5 voice turns. It always started at 2.50 s.
+- **Fade-out lag** (first sentence ready to music silent, measured to the clip's `ended`, which includes the player's 20 ms stop pad): 269 and 271 ms (typed), 279 ms (voice), 256 and 272 ms (8 s give-ups). All within 300 ms.
+- **Time to first sentence heard, typed (10 turns):** median **1.82 s**. Ready median is 1.80 s; the gap from ready to heard is 4 to 30 ms (median 11), down from 470 ms in R1, where a filler had to finish first.
+- **Voice (5 turns, child test voice through a test mic stream):**
+  - 4 answered, median **2.40 s**; the client adds 27 to 29 ms over the server's first audio.
+  - Over 2.3 s because of the server today: speech-to-text took 0.78 to 0.83 s (0.59 s on 17 Nov) and the brain's first word 1.8 to 2.2 s (1.6 s).
+  - 1 turn was a Kimi stall: the music played, the 8 s give-up played the new `slow_brain` line, and the music faded in 256 ms.
+- **No spoken filler:** every turn played exactly one calm reaction (hmm, achha, achha-achha or haanji), plus `wait_music` when Nani was late. No filler, chashma line or song snippet played: the talk loop no longer has a path that plays them.
+- **Taps** (silent test mic, speech-to-text only, no brain calls): a second tap 200 ms after a send was ignored, and the turn went on. A tap 1.8 s after a send barged in: Nani stopped and the paw went to "Listening".
+
+| # | Typed line | Ready ms | Heard ms | Music at ms | Fade lag ms | Reaction |
+|---|---|---|---|---|---|---|
+| 1 | Nani, raat ko Papa aayenge! | 1792 | 1803 | | | achha_achha |
+| 2 | Chand! | 1390 | 1397 | | | achha |
+| 3 | M! | 1855 | 1874 | | | achha_achha |
+| 4 | Lion kaise roar karta hai? | 7343 | 7352 | 2503 | 269 | achha |
+| 5 | Nani, ginti karein! | 1911 | 1922 | | | achha_achha |
+| 6 | Nani, ab kya khelenge? | 1769 | 1799 | | | achha |
+| 7 | Mujhe neend aa rahi hai | 1804 | 1827 | | | haanji |
+| 8 | Aasmaan neela kyun hai? | 3103 | 3113 | 2503 | 271 | achha_achha |
+| 9 | Mera dost Riya hai | 1700 | 1704 | | | haanji |
+| 10 | Mujhe pizza pasand hai | 1536 | 1547 | | | hmm |
+
+| # | Voice line (heard as) | Ready ms | Heard ms | Speech-to-text ms | Music at ms | Fade lag ms |
+|---|---|---|---|---|---|---|
+| 1 | Hello, Nani. | 2314 | 2318 | 814 | | |
+| 2 | Chand. | 2522 | 2526 | 776 | 2503 | 279 |
+| 3 | नहीं, गिनती करें। | 2283 | 2288 | 777 | | |
+| 4 | Lion कैसे roar करता है? | (Kimi stall, slow_brain at 8 s) | | | 2502 | 256 |
+| 5 | मुझे नींद आ रही है। | 2485 | 2488 | 833 | | |
+
+The loop: `wait_music` is sound effects v3 with `loop: true`, requested as PCM, 10.0 s, stereo, levelled to -31 LUFS (about 12 dB under Nani's live voice at -19.4 LUFS). Speech-to-text hears no words in it.
+- **Join, last sample to first:** a 0.0044 jump against a 0.0058 99th-percentile step inside the loop, so no click.
+- **Phrases:** the loop is four 2.5 s phrases, each ending in a decay before a new mallet note, and the join looks the same as the joins between phrases.
+- **Fade-in:** 300 ms, written into the page's copy of the samples, not into the file.

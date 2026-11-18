@@ -4,8 +4,9 @@
 //   node scripts/audio/generate.mjs [--force <id>]... [--check]
 //
 // Makes Nani's lines (TTS), animal sounds and effects (sound effects), the song and its chorus snippet
-// (music), trims silence, normalises loudness, checks every new Nani line with speech-to-text and
-// rewrites content/audio.json. Files that already exist are skipped.
+// (music), the waiting music loop (sound effects with loop: true), trims silence, normalises loudness,
+// checks every new Nani line with speech-to-text and rewrites content/audio.json. Files that already
+// exist are skipped.
 //   --force <id>  redo one id (repeatable). Forcing `song` also recuts `song_snippet`.
 //   --check       re-run the speech-to-text check on every Nani line, not only the new ones.
 // Needs Node 24, ffmpeg and ffprobe. Reads ELEVENLABS_API_KEY from the environment or apps/web/.env.local.
@@ -48,7 +49,8 @@ for (let i = 0; i < argv.length; i++) {
 const VOICE = SPEC.voice.map((v) => ({ ...v, text: v.text.replaceAll("{childName}", CONFIG.childName) }));
 const SFX = SPEC.sfx;
 const SONG = SPEC.song;
-const ALL_IDS = [...VOICE.map((v) => v.id), ...SFX.map((s) => s.id), "song", "song_snippet"];
+const LOOPS = SPEC.music ?? [];
+const ALL_IDS = [...VOICE.map((v) => v.id), ...SFX.map((s) => s.id), ...LOOPS.map((s) => s.id), "song", "song_snippet"];
 for (const id of force) if (!ALL_IDS.includes(id)) die(`--force: unknown id ${id}`);
 if (force.has("song")) force.add("song_snippet");
 
@@ -322,6 +324,66 @@ async function makeSfx(s) {
   console.log(`  ${s.id}: ${r2(duration(out(s.id)))} s`);
 }
 
+// ---------- music loops (R3: wait_music) ----------
+// One seamless cycle from sound effects v3 with loop: true. No silence trims, fades or limiter (each would
+// break the join): one linear gain to the entry's `lufs`, encoded once. PCM is asked for first, so no mp3
+// encoder padding sits in the source. The join (last sample -> first sample) is then checked on the
+// decoded file, and speech-to-text must hear no words.
+async function loopRaw(s) {
+  const body = { text: s.prompt, duration_seconds: s.seconds, prompt_influence: s.promptInfluence ?? 0.5, loop: true, model_id: SPEC.models.sfx };
+  try {
+    const pcm = await bytes(await postJson(`/v1/sound-generation?output_format=pcm_44100`, body, `${s.id} (pcm)`));
+    const ch = Math.max(1, Math.round(pcm.length / (2 * 44100 * s.seconds))); // s16le: the length gives the channels
+    const raw = tmp(`${s.id}.raw.pcm`);
+    writeFileSync(raw, pcm);
+    const wav = tmp(`${s.id}.raw.wav`);
+    ff(["-f", "s16le", "-ar", "44100", "-ac", String(ch), "-i", raw, wav]);
+    return { file: wav, how: `pcm_44100, ${ch} ch` };
+  } catch (e) {
+    console.log(`  ${s.id}: PCM not available (${e.message.slice(0, 120)}), using mp3`);
+    const raw = tmp(`${s.id}.raw.mp3`);
+    writeFileSync(raw, await bytes(await postJson(`/v1/sound-generation?output_format=mp3_44100_192`, body, `${s.id} (mp3)`)));
+    return { file: raw, how: "mp3_44100_192" };
+  }
+}
+function samples(file) {
+  const ch = Number(spawnSync("ffprobe", ["-v", "error", "-select_streams", "a:0", "-show_entries", "stream=channels", "-of", "csv=p=0", file], { encoding: "utf8" }).stdout.trim()) || 1;
+  const r = spawnSync("ffmpeg", ["-v", "error", "-i", file, "-f", "f32le", "-acodec", "pcm_f32le", "-"], { maxBuffer: 256 << 20 });
+  if (r.status !== 0) throw new Error(`decode failed: ${file}`);
+  const b = Buffer.from(r.stdout);
+  return { x: new Float32Array(b.buffer, b.byteOffset, b.length >> 2), ch };
+}
+/** The loop's join: the jump from its last sample to its first against the 99th percentile step inside it. */
+function joinCheck(file) {
+  const { x, ch } = samples(file);
+  const n = x.length / ch;
+  const step = (i, j) => { let m = 0; for (let c = 0; c < ch; c++) m = Math.max(m, Math.abs(x[i * ch + c] - x[j * ch + c])); return m; };
+  const steps = new Float32Array(n - 1);
+  for (let i = 1; i < n; i++) steps[i - 1] = step(i, i - 1);
+  steps.sort();
+  const p99 = steps[Math.floor(steps.length * 0.99)];
+  const jump = step(0, n - 1);
+  const w = Math.round(0.02 * 44100);
+  const rms = (a, b) => { let e = 0; for (let i = a * ch; i < b * ch; i++) e += x[i] * x[i]; return Math.sqrt(e / ((b - a) * ch)) || 1e-9; };
+  const levelStepDb = 20 * Math.log10(rms(0, w) / rms(n - w, n));
+  return { seconds: r2(n / 44100), jump: Number(jump.toFixed(4)), p99: Number(p99.toFixed(4)), ratio: r2(jump / p99), levelStepDb: r2(levelStepDb), clean: jump <= p99 };
+}
+const loopInfo = {};
+async function makeLoop(s) {
+  guard(EST.sfx, s.id);
+  const { file: raw, how } = await loopRaw(s);
+  const rawJoin = joinCheck(raw);
+  const m = loudness(raw);
+  if (!Number.isFinite(m.i)) throw new Error(`silent audio: ${raw}`);
+  ff(["-i", raw, "-af", `volume=${(s.lufs - m.i).toFixed(2)}dB`, "-ar", "44100", "-c:a", "libmp3lame", "-b:a", "128k", "-map_metadata", "-1", out(s.id)]);
+  const fileJoin = joinCheck(out(s.id));
+  const heard = ((await stt(out(s.id))).text ?? "").trim();
+  const lv = loudness(out(s.id));
+  levels.push({ id: s.id, dur: r2(duration(out(s.id))), i: r2(lv.i), tp: r2(lv.tp) });
+  Object.assign(loopInfo, { [s.id]: { source: how, rawJoin, fileJoin, heard } });
+  console.log(`  ${s.id}: ${fileJoin.seconds} s (${how}), join ${fileJoin.clean ? "clean" : "CHECK"}: jump ${fileJoin.jump} vs p99 step ${fileJoin.p99}; heard "${heard}"`);
+}
+
 // ---------- song and snippet ----------
 const songInfo = {};
 const lyricsText = () => [...SONG.verse, ...SONG.chorus].join(" ");
@@ -389,6 +451,7 @@ function writeManifest() {
   const defs = [
     ...VOICE.map((v) => ({ id: v.id, kind: v.kind, area: v.area, text: v.text })),
     ...SFX.map((s) => ({ id: s.id, kind: "sfx", area: s.area })),
+    ...LOOPS.map((s) => ({ id: s.id, kind: "music" })),
     { id: "song", kind: "song", text: SONG.title },
     { id: "song_snippet", kind: "snippet", text: SONG.snippetText },
   ];
@@ -426,6 +489,7 @@ function printReport() {
     for (const r of levels) console.log(`| ${r.id} | ${r.dur} | ${r.i} | ${r.tp} |`);
   }
   if (Object.keys(songInfo).length) console.log(`\n### Song\n\n${JSON.stringify(songInfo, null, 2)}`);
+  if (Object.keys(loopInfo).length) console.log(`\n### Music loops\n\n${JSON.stringify(loopInfo, null, 2)}`);
   console.log("\n### Credits\n");
   for (const r of readings) console.log(`- ${r.label} (${r.at}): used ${r.used} of ${r.limit}, ${r.limit - r.used} left`);
   console.log(`- reported by character-cost headers this run: ${spent}`);
@@ -442,6 +506,9 @@ try {
   const sfx = SFX.filter((s) => needs(s.id));
   if (sfx.length) console.log(`sounds (${sfx.length}):`);
   await pool(sfx, POOL, makeSfx);
+  const loops = LOOPS.filter((s) => needs(s.id));
+  if (loops.length) console.log(`music loops (${loops.length}):`);
+  for (const s of loops) await makeLoop(s);
   if (needs("song")) {
     await reading("before the song");
     console.log("song:");

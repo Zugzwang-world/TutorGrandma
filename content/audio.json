@@ -450,8 +450,8 @@
     "id": "slow_brain",
     "file": "/audio/slow_brain.mp3",
     "kind": "fallback",
-    "text": "Chalo, ek naya khel khelte hain!",
-    "duration": 2.52
+    "text": "Arre, Nani ka dhyaan bhatak gaya! Ek baar phir bolo, beta?",
+    "duration": 4.74
   },
   {
     "id": "song",
@@ -473,5 +473,11 @@
     "kind": "fallback",
     "text": "Arre, Nani ki awaaz atak gayi! Ek baar phir poochho?",
     "duration": 4.2
+  },
+  {
+    "id": "wait_music",
+    "file": "/audio/wait_music.mp3",
+    "kind": "music",
+    "duration": 10
   }
 ]
