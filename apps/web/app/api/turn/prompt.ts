@@ -118,7 +118,7 @@ export function userTurn(i: TurnPromptInput): string {
     timeSection(i.clock),
     followSection(i.changes, i.unused),
     `${CHILD} said: "${i.childText.trim()}"`,
-    "(Reply to what he just said: at most two short sentences, then one question. Bring up an earlier day only if he says hello or asks.)",
+    "(Follow the parents' changes and today's plan first. If he roared or made a sound, cheer it: [[cheer EMOJI]]. Then at most two short sentences and one question. Bring up an earlier day only if he says hello or asks.)",
   ]
     .filter(Boolean)
     .join("\n\n");
