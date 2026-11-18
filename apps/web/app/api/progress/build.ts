@@ -276,6 +276,13 @@ const letterWordOf = (letter: string | null, words: { en: string }[]) => (letter
 
 type Lines = Pick<ProgressDayData, "summary" | "moods" | "starters">;
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "Said 'Thank you, Nani!' all by himself": the best moment of a past day. */
+function lastMoment(r: Row): string {
+  return (r.data.highlights?.[0]?.text ?? r.data.summary?.[0] ?? `A day with ${NANI}`).replace(/\s*[.!]+$/, "");
+}
+
 /** The quiet-day lines: honest, no invented activity. */
 function quietLines(f: Facts, rows: Row[]): Lines {
   const last = [...rows].reverse().find((r) => r.data.summary?.length);
@@ -283,10 +290,11 @@ function quietLines(f: Facts, rows: Row[]): Lines {
     summary: [
       `No playtime with ${NANI} yet today.`,
       f.letter ? `${f.letter} is waiting for him whenever he's ready.` : `${NANI} is ready whenever he is.`,
-      last ? `Last time: ${last.data.summary![0].replace(/\.$/, "")}.` : "That's okay: some days are quiet.",
+      last ? `Last played on ${+last.day.slice(8)} ${MONTHS[+last.day.slice(5, 7) - 1]}. ${lastMoment(last)}.` : "That's okay: some days are quiet.",
     ],
     moods: [],
-    starters: last?.data.starters?.slice(0, 3) ?? [`What would you like to play with ${NANI} tomorrow?`],
+    // the last play day's questions, minus any that say "today"
+    starters: [...(last?.data.starters ?? []).filter((s) => !/\b(today|aaj)\b/i.test(s)), `What would you like to play with ${NANI} tomorrow?`].slice(0, 3),
   };
 }
 

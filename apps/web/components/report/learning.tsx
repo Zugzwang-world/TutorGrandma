@@ -194,7 +194,9 @@ export function Learning({ r }: { r: ReportData }) {
       </div>
       <div className="mt-6">
         <h3 className="text-[17px] font-extrabold">What he explored {PERIOD_WORD[r.view]}</h3>
-        <p className="rp-sub">The bigger the petal, the more moments in that area.</p>
+        <p className="rp-sub">
+          {ORDER.some((a) => r.areas[a] > 0) ? "The bigger the petal, the more moments in that area." : `Nothing yet ${PERIOD_WORD[r.view]}: the petals grow as he plays.`}
+        </p>
         <div className="mt-3">
           <Petals r={r} />
         </div>

@@ -437,7 +437,17 @@ export function Routine({ r }: { r: ReportData }) {
           on={water.done}
           off={Math.max(0, water.asked - water.done)}
           label="Water when Nani reminded him"
-          text={water.asked ? `Drank up after ${water.done} of ${water.asked} reminders` : `No water reminders ${p}`}
+          text={
+            !water.asked
+              ? `No water reminders ${p}`
+              : water.done >= water.asked
+                ? "Drank up every time Nani reminded him"
+                : water.done * 2 >= water.asked
+                  ? "Drank up most times Nani reminded him"
+                  : water.done
+                    ? "Drank up some of the times"
+                    : "Not yet: try a cup together tonight"
+          }
         />
         <IconRow emoji="📞" on={calls} label="Calls with Mumma and Papa" text={calls ? `${calls} call${calls > 1 ? "s" : ""} ${p}` : `No calls ${p}`} />
         <IconRow emoji="📖" on={stories} label="Stories and songs" text={stories ? `${stories} ${stories > 1 ? "times" : "time"} ${p}` : `None ${p} yet`} />
