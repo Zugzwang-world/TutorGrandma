@@ -7,6 +7,7 @@ import { CHILD_ID } from "@/lib/config";
 import { clockParts } from "@/lib/clock";
 import { parseMarkers } from "@/lib/markers";
 import { channelName, type Cue, type TurnTimings } from "@/lib/types";
+import type { WallBus } from "@/lib/wall-bus";
 import {
   CallScene,
   CheerScene,
@@ -167,7 +168,8 @@ function Stage({ k, children }: { k: string; children: ReactNode }) {
   );
 }
 
-export default function Wall() {
+/** `bus`: on /stage, wall events come from the page's own toy core instead of the wall:<child> channel. */
+export default function Wall({ bus }: { bus?: WallBus } = {}) {
   const [s, dispatch] = useReducer(reduce, initial);
   const [stickers, setStickers] = useState<string[]>([]);
   const [newest, setNewest] = useState(-1);
@@ -230,31 +232,36 @@ export default function Wall() {
     return () => clearInterval(id);
   }, [onCue]);
 
-  // Live: broadcast events on wall:<child>.
+  // Live: broadcast events on wall:<child>, or the stage's in-page bus.
   useEffect(() => {
-    const sb = supabaseBrowser();
-    const ch = sb
-      .channel(channelName.wall(CHILD_ID))
-      .on("broadcast", { event: "cue" }, ({ payload }) => {
-        if (payload?.cue?.type) onCue(payload.cue as Cue);
-      })
-      .on("broadcast", { event: "thinking" }, ({ payload }) => dispatch({ t: "thinking", on: !!payload?.on }))
-      .on("broadcast", { event: "speaking" }, ({ payload }) => dispatch({ t: "speaking", on: !!payload?.on }))
-      .on("broadcast", { event: "timings" }, ({ payload }) => {
+    const handle = (event: string, payload: { cue?: Cue; on?: boolean; show?: boolean; ms?: unknown } | undefined) => {
+      if (event === "cue") {
+        if (payload?.cue?.type) onCue(payload.cue);
+      } else if (event === "thinking") dispatch({ t: "thinking", on: !!payload?.on });
+      else if (event === "speaking") dispatch({ t: "speaking", on: !!payload?.on });
+      else if (event === "timings") {
         if (typeof payload?.show === "boolean") setShowTimings(payload.show);
         if (hasTimings(payload?.ms)) setTimings(payload.ms);
-      })
-      .on("broadcast", { event: "reset" }, () => {
+      } else if (event === "reset") {
         try {
           localStorage.removeItem(stickerKey());
         } catch {}
         location.reload();
-      })
-      .subscribe((status) => setLive(status === "SUBSCRIBED"));
+      }
+    };
+    if (bus) {
+      return bus.subscribe((e) => handle(e.event, e.payload as Parameters<typeof handle>[1]));
+    }
+    const sb = supabaseBrowser();
+    let ch = sb.channel(channelName.wall(CHILD_ID));
+    for (const ev of ["cue", "thinking", "speaking", "timings", "reset"]) {
+      ch = ch.on("broadcast", { event: ev }, ({ payload }) => handle(ev, payload));
+    }
+    ch.subscribe((status) => setLive(status === "SUBSCRIBED"));
     return () => {
       sb.removeChannel(ch);
     };
-  }, [onCue]);
+  }, [onCue, bus]);
 
   // Live: demo_state.show_timings and the latest turn's timings.
   useEffect(() => {
@@ -408,7 +415,7 @@ export default function Wall() {
         )}
       </div>
 
-      <span className={`wall-live ${live ? "on" : ""}`} title={live ? "Connected" : "Connecting"} />
+      <span className={`wall-live ${bus || live ? "on" : ""}`} title={bus || live ? "Connected" : "Connecting"} />
       {!tapped && <p className="wall-hint">Tap for full screen</p>}
     </main>
   );

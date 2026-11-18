@@ -208,11 +208,13 @@ export function useChat(sender: string | null) {
     [patch, postChat],
   );
 
+  /** Sends as this device's parent, or as `as` (an idea bubble always sends as its own parent). */
   const sendText = useCallback(
-    (text: string) => {
+    (text: string, as?: string) => {
       const t = text.trim();
-      if (!t || !sender) return;
-      const p: Pending = { clientId: uid(), sender, kind: "text", text: t, status: "sending", createdAt: new Date().toISOString() };
+      const who = as ?? sender;
+      if (!t || !who) return;
+      const p: Pending = { clientId: uid(), sender: who, kind: "text", text: t, status: "sending", createdAt: new Date().toISOString() };
       setPending((prev) => [...prev, p]);
       void postChat(p);
     },

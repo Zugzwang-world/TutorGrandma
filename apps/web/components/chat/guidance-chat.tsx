@@ -26,11 +26,15 @@ function subscribeSender(cb: () => void) {
 const senderSnapshot = () => readSender() ?? memSender ?? "";
 const serverSnapshot = () => SERVER;
 
-export function GuidanceChat() {
+/**
+ * `sender`: a fixed sender (the stage's Mumma/Papa switch). It skips "Who's this?" and localStorage.
+ * `fill`: fill the parent's height instead of the window's (the stage's right half).
+ */
+export function GuidanceChat({ sender: fixedSender, fill = false }: { sender?: string; fill?: boolean } = {}) {
   // Everything that reads the device (localStorage, time) happens after hydration, so the prerendered shell is static.
   const stored = useSyncExternalStore(subscribeSender, senderSnapshot, serverSnapshot);
-  const ready = stored !== SERVER;
-  const sender = ready && stored ? stored : null;
+  const ready = fixedSender ? true : stored !== SERVER;
+  const sender = fixedSender ?? (ready && stored ? stored : null);
   const { rows, pending, working, loaded, localAudio, sendText, sendVoice, retry } = useChat(sender);
   const { typing, landedId } = useTyping(working, rows);
   const [sheet, setSheet] = useState<WhatChangedTarget | null>(null);
@@ -95,7 +99,7 @@ export function GuidanceChat() {
   const askWho = ready && loaded && !sender;
 
   return (
-    <div className="flex h-dvh w-full flex-col bg-cream">
+    <div className={`flex ${fill ? "h-full min-h-0" : "h-dvh"} w-full flex-col bg-cream`}>
       <ChatHeader sender={sender} working={working} />
 
       <div
