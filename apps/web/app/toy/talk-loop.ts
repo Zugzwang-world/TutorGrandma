@@ -10,6 +10,7 @@ import { WAIT_MUSIC_ID, WaitPicker, type Today } from "./fillers";
 import type { EyeState, WallPayload } from "./use-toy-core";
 
 const MIN_PRESS_MS = 250; // shorter presses are accidental taps (they still stop Nani)
+const AFTER_SEND_MS = 400; // a tap this soon after a send is a double tap: ignored, the turn just sent goes on
 const MUSIC_AT_MS = 2500; // no first sentence by then: Nani is really late, the wait music starts
 const MUSIC_FADE_IN_MS = 300;
 const MUSIC_FADE_OUT_MS = 250; // from the moment her first sentence is ready, wherever the music is
@@ -84,6 +85,7 @@ export class TalkLoop {
   private rec: Recording | null = null;
   private turn: Turn | null = null;
   private turnNo = 0;
+  private sentAt = -Infinity; // when the last spoken turn was sent (performance.now())
   private musicLoad: Promise<AudioBuffer | null> | null = null;
   private musicBuffer: AudioBuffer | null = null;
   /** What the wall shows now; sent with every turn. */
@@ -110,6 +112,13 @@ export class TalkLoop {
 
   press(): void {
     if (this.rec) return;
+    const sinceSend = performance.now() - this.sentAt;
+    if (sinceSend < AFTER_SEND_MS) {
+      // A double tap on send would abort the turn just sent and open a recording the 15 s cap then sends.
+      // Nani can't be speaking her reply yet, so no barge-in is lost; later taps barge in as before.
+      console.log(`[toy] tap ignored: ${Math.round(sinceSend)} ms after a send`);
+      return;
+    }
     this.stop(); // barge-in: stop Nani at once and abort the request
     const mic = this.d.mic();
     if (!mic) return;
@@ -145,10 +154,15 @@ export class TalkLoop {
       this.d.setEyes("idle");
       return;
     }
+    this.sentAt = performance.now();
     void this.run({ audio: blob, filename: `turn.${extOf(r.mime)}` });
   }
 
-  /** Drop the recording without sending it (a call took over the paw; the call sets the eyes). */
+  /**
+   * Drop the recording without sending it: a call took over the paw. The eyes go through the same setEyes as
+   * every other path, so the talk state leaves "listening" ("calling" is talk state "idle", and R4's reminder
+   * gate opens again), while the face keeps showing the call that has just set it.
+   */
   cancel(): void {
     const r = this.rec;
     if (!r) return;
@@ -157,6 +171,7 @@ export class TalkLoop {
     try {
       r.rec.stop();
     } catch {}
+    this.d.setEyes("calling");
   }
 
   /** A typed turn (no microphone, or testing): the same path as a spoken one. */
