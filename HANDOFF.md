@@ -1,30 +1,36 @@
-# Handoff · overnight beta · 2026-11-17, 05:15 IST
+# Handoff · 2026-11-19
 
 ## State
-The overnight beta is done and live. Waves 0–3 and the whole A10 polish list are merged; the ★ B11 checks pass on production (docs/plan/STAR-CHECKS.md); the final self-test is in docs/plan/SELFTEST.md; the report is in docs/thinking-partner/NOW.md. Production was reset to the seed at the end.
-
-**Resume:** re-read docs/thinking-partner/NOW.md (report), OPEN.md (questions for the founder) and docs/plan/RUNLOG.md. Usage: `mcp__ccd_session_mgmt__get_usage`.
+The overnight beta (17 Nov) is done and live on production: the parents' group chat with Nani's five agents, the toy stand-in, the projector wall, the presenter page, routine jobs, the evening brief, calls and the pre-made sounds. The ★ B11 checks pass on production. A tech pitch page has been added at /pitch.html (PR #16).
+- Report: docs/thinking-partner/NOW.md
+- How to test it: docs/thinking-partner/DEMO.md
+- Questions for the founder: docs/thinking-partner/OPEN.md
+- Night log: docs/plan/RUNLOG.md
 
 ## Branches and PRs
-None open. All 15 PRs are merged; branches are deleted.
+None open. All PRs (#2 to #16) are merged; branches are deleted.
 
 ## Running
-- Production: https://tutor-grandma.vercel.app: `/` (parents' chat), `/toy` (`?type` adds a text box), `/home-base` (`?demo=1` cycles the cues), `/presenter` (hidden).
-- Functions run in bom1. Supabase project kojmjmxnpaiuhswavarm has the tables agent_files, messages, turns and demo_state, plus the `audio` bucket.
+- Production: https://tutor-grandma.vercel.app with `/` (parents' chat), `/toy` (`?type` adds a text box), `/home-base` (`?demo=1` cycles the cues), `/presenter` (hidden) and `/pitch.html`.
+- Vercel: project tutor-grandma, team hrizzup (`--scope hrizzup`), root apps/web, functions in bom1. main deploys to production; preview URLs return 401.
+- Supabase: project tutor-grandma (ref kojmjmxnpaiuhswavarm, ap-south-1). Tables agent_files, messages, turns and demo_state, the public bucket `audio`, and realtime on all four tables. Migrations are in supabase/migrations: `supabase db push --remote --yes -p "$SUPABASE_DB_PASSWORD"`.
 - Seed and reset: `curl -X POST https://tutor-grandma.vercel.app/api/reset` restores content/seed.json.
-- Self-test: `python3 -I scripts/selftest/selftest.py all|voice|chat [--voices 0,1,2] [--lines 1-17] [--no-reset] [--no-report]`.
-- Contracts: docs/plan/CONTRACTS.md. Toy contract for hardware: docs/toy-contract.md.
+- Self-test on production: `python3 -I scripts/selftest/selftest.py all|voice|chat [--voices 0,1,2] [--lines 1-17] [--no-reset] [--no-report]`. It writes docs/plan/SELFTEST.md.
+- Contracts: docs/plan/CONTRACTS.md (between parts of the app) and docs/toy-contract.md (for the hardware track).
+- Env, in .env.local and in Vercel: ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, KIMI_API_KEY, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY.
 
 ## Next actions, in order
-1. Founder: the questions in OPEN.md ("From the overnight beta"): Kimi stalls → Claude Haiku switch, real-device checks, the voice clone.
-2. Before any demo: `python3 -I scripts/selftest/selftest.py all`, then `curl -X POST https://tutor-grandma.vercel.app/api/reset`.
-3. Next build steps: real-device fixes, the voice clone, then the hardware track against docs/toy-contract.md.
+1. Founder: answer OPEN.md ("From the overnight beta"): the Kimi stalls and the Haiku switch, real-device checks, and the voice clone.
+2. Before any demo: run /preflight, then the self-test, then reset.
+3. Once Anthropic credit is fixed: test the Claude Haiku 5.5 path end to end (lib/brain.ts, the sorter's streamed JSON) before switching `brain.provider`.
+4. Then: fixes from real devices, grandma's voice clone, and the hardware track against docs/toy-contract.md.
 
 ## Gotchas
-- The Coordinator commits in `.claude/worktrees/overnight-beta-execution-10a681` and runs `git push origin HEAD:main`. After every merge: `git pull --ff-only origin main` there AND `git -C /Users/hrishikesh/Tutor-Grandma pull --ff-only`.
-- Wait for a deploy with: `gh api repos/Zugzwang-world/TutorGrandma/commits/<sha>/status --jq .state` until it reads `success`.
-- Kimi k2.6: never send temperature. It stalls on 10–15% of requests; /api/turn and the sorter cancel and retry one at a time (`brainStreamRetry`). Never send parallel requests: Kimi throttles bursts.
-- Commit `pnpm-lock.yaml` with any package change.
+- After every squash-merge, run `git pull --ff-only` on local main, or the next S commit diverges.
+- To wait for a deploy: `gh api repos/Zugzwang-world/TutorGrandma/commits/<sha>/status --jq .state` until it says `success`.
+- Kimi k2.6: never send temperature. It stalls on some requests; /api/turn and the sorter cancel and retry one at a time (`brainStreamRetry`). Never send parallel requests: Kimi throttles bursts.
+- Commit `pnpm-lock.yaml` with any package change, or Vercel's frozen install fails.
 - Builders share the Playwright browser: tell them to open their own context.
-- Preview URLs return 401: check production.
-- Never touch hrizzup-staging or Zugzwang-world's Org in Supabase.
+- GitHub blocks pushes that use the founder's private email; the repo config uses the noreply address.
+- Never touch hrizzup-staging or anything in Zugzwang-world's Org in Supabase.
+- If a key arrives in chat, write it to .env.local and never echo it. The repo is public.
