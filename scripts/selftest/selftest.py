@@ -471,6 +471,11 @@ def file_now(name):
     return r[0] if r else {"version": 0, "content": ""}
 
 
+def is_water(j):
+    """The job turn is the water reminder (the demo's other jobs, e.g. a daily good night, are not scored)."""
+    return bool(re.search(r"paani|pani|water", str((j.get("meta") or {}).get("text", "")), re.I))
+
+
 def poll(fn, timeout, every=0.5):
     t0 = time.time()
     while True:
@@ -559,11 +564,11 @@ class ToyPage:
         self.proc.stdin.flush()
         return self._wait("status", 15)
 
-    def wait_awake(self, timeout=30):
+    def wait_awake(self, timeout=30, wakes_above=0):
         end = time.time() + timeout
         while time.time() < end:
             s = self.status()
-            if s["awake"] and s["wakes"] >= 1:
+            if s["awake"] and s["wakes"] > wakes_above:
                 return s
             time.sleep(1)
         raise RuntimeError("toy page did not wake")
@@ -576,8 +581,9 @@ class ToyPage:
     def after_reset(self):
         """The server's reset broadcast reloads the page; reload once more to be sure, then wake and let Realtime connect."""
         time.sleep(1.5)
+        before = self.status()["wakes"]
         self.reload()
-        s = self.wait_awake(30)
+        s = self.wait_awake(30, before)
         time.sleep(3.0)
         return s
 
@@ -732,7 +738,7 @@ def step6(ctx):
     if ctx.page is None:
         checks.append(chk("reminder fires within 3 s of Routine's reply", False, "no toy page (script mode ran with --no-page)"))
     else:
-        job = poll(lambda: (job_turns_since(tid) or [None])[0], 25)
+        job = poll(lambda: ([j for j in job_turns_since(tid) if is_water(j)] or [None])[0], 25)
         ctx.state["job"] = job
         if job and rr:
             delay = ts(job["created_at"]) - ts(rr[-1]["created_at"])
@@ -761,13 +767,15 @@ def step8(ctx):
     jpost("/api/presenter", {"action": "clock", "addMs": 7_200_000})
     ctx.offset += 7_200_000
     if ctx.page is None:
-        return [chk("+2 h fires exactly one more job turn", False, "no toy page (script mode ran with --no-page)")]
-    first = poll(lambda: job_turns_since(tid), 20)
+        return [chk("exactly one more water reminder after +2 h, no burst", False, "no toy page (script mode ran with --no-page)")]
+    first = poll(lambda: [j for j in job_turns_since(tid) if is_water(j)], 20)
     if first:
         time.sleep(8)  # a burst would show up here
-    jobs = job_turns_since(tid)
+    alljobs = job_turns_since(tid)
+    jobs = [j for j in alljobs if is_water(j)]
     keys = [f"{j['meta'].get('jobKey')}@{j['meta'].get('dueAt')}" for j in jobs]
-    checks = [chk("exactly one more job turn after +2 h, no burst", len(jobs) == 1, f"{len(jobs)}: {keys}")]
+    other = [f"{j['meta'].get('jobKey')}@{j['meta'].get('dueAt')}" for j in alljobs if not is_water(j)]
+    checks = [chk("exactly one more water reminder after +2 h, no burst", len(jobs) == 1, f"{len(jobs)}: {keys}" + (f"; other jobs fired too: {other}" if other else ""))]
     if jobs and old.get("jobKey"):
         checks.append(chk("it is the same job with a new due time", jobs[0]["meta"].get("jobKey") == old.get("jobKey") and jobs[0]["meta"].get("dueAt") != old.get("dueAt"), keys))
     return checks
@@ -963,6 +971,9 @@ def script_report(runs, steps, args):
             for c in s["checks"]:
                 if not c["ok"]:
                     L.append(f"- run {run} step {s['n']} · {c['name']} · {esc(c['detail'])}")
+    for r in runs:
+        if r.get("error"):
+            L.append(f"- run {r['run']} crashed: {esc(r['error'])}")
     return L
 
 
@@ -989,14 +1000,18 @@ def script_mode(args):
     t0 = time.time()
     try:
         for i in range(args.runs):
-            runs.append(script_run(i, steps, args, page))
+            try:
+                runs.append(script_run(i, steps, args, page))
+            except Exception as e:
+                print(f"RUN {i + 1} CRASHED: {type(e).__name__}: {e}", flush=True)
+                runs.append({"run": i + 1, "voice": "(crashed)", "session": "", "secs": 0, "steps": {}, "turns": [], "log": [], "error": f"{type(e).__name__}: {e}"})
             json.dump({"runs": runs}, open(os.path.join(OUT, "script.json"), "w"), ensure_ascii=False, indent=1)
     finally:
-        if 8 in steps and args.no_reset:
+        if 8 in steps:
             try:
-                jpost("/api/presenter", {"action": "real"})  # step 8 moved the demo clock
-            except Exception:
-                pass
+                jpost("/api/presenter", {"action": "real"})  # step 8 moved the demo clock: leave production on real time
+            except Exception as e:
+                print("WARNING: could not put the demo clock back to real time:", e, flush=True)
         if page:
             page.close()
     lines = script_report(runs, steps, args)
