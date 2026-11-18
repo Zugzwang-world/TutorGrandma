@@ -82,7 +82,12 @@ export function Stage() {
   });
   useEffect(() => {
     if (core.awake) return;
-    const w = () => wakeRef.current();
+    const w = () => {
+      // A bare Alt, Ctrl or Cmd press is not a user gesture: waking then leaves the AudioContext suspended
+      // and every later tap stuck behind the "waking" guard. Wait for a real gesture (a click, or Alt+P's P).
+      if (navigator.userActivation && !navigator.userActivation.isActive) return;
+      wakeRef.current();
+    };
     window.addEventListener("pointerdown", w, true);
     window.addEventListener("keydown", w, true);
     return () => {
