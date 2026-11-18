@@ -2,7 +2,7 @@
 import { applyEdit, changeNote, guardEdit } from "@/lib/agents/apply";
 import { sortStream, todaysTurns, tomorrowLabel, type SorterAction } from "@/lib/agents/sorter";
 import type { SorterInput } from "@/lib/agents/prompt";
-import { answerMemoryQuestion } from "@/lib/agents/memory-answer";
+import { answerMemoryQuestion, progressViewFor } from "@/lib/agents/memory-answer";
 import { broadcastSafe } from "@/lib/broadcast";
 import { clockParts, demoNow } from "@/lib/clock";
 import { stampOnceDate } from "@/lib/jobs";
@@ -117,6 +117,7 @@ export async function POST(req: Request) {
       if (lastPost) await sleep(Math.max(0, gapFor(a.reply) - (Date.now() - lastPost)));
       const w = await write;
       const m: MessageMeta = {};
+      if (a.bot === "memory") { const v = progressViewFor(text); if (v) m.progress = { view: v }; }
       if (w?.changed) {
         Object.assign(m, {
           file: w.file.name,

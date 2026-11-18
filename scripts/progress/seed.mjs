@@ -193,7 +193,7 @@ const DAYS = [
     starters: ["How many diyas did we light?", "Who did you share your sweets with?", "What colours were in our rangoli?"] },
   { day: "2026-11-11", t: "17:35", working: ["K"], count: 5,
     w: [["kite", "Patang upar!"]], r: [2, 2, 0, 0],
-    tricky: ["K and C sound the same to him (kite, cat)", "Say 'K-k-kangaroo' and 'C-c-cat' and let him jump only on the K one."] },
+    tricky: ["Taking turns: wants to go first every time", "Play one quick game tonight where you go first, and cheer when he waits."] },
   { day: "2026-11-12", t: "18:00", working: ["K"], count: 5,
     w: [["key", "Chaabi! Key!"]], r: [3, 2, 0, 1],
     tricky: ["Counting past 5: six and seven get swapped", "Count the stairs together tonight, slowly, one step for each number up to seven."] },
