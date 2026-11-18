@@ -34,3 +34,12 @@ Usage mode: LIVE via the desktop app's get_usage tool (mcp__ccd_session_mgmt__ge
 | 05:08 | 4:02 | report | final self-test run 5 (7/51 slow_brain, chat 10/10, speech 99%); scared/robot prompt rules | 8% weekly | A11 report drafted (NOW, OPEN, DECISIONS); no new builders (8% threshold) |
 | 05:12 | 4:04 | end | letter snap for the spelling game (M heard as N → M, 3/3 voices); report, HANDOFF, OPEN final; production reset to seed | 8% weekly | stop: everything merged and checked; no new work below the 6.5 h mark because the A10 list is done and usage is at the 8% threshold |
 | 05:32 | 4:27 | stop | final self-test run 6: 3/51 slow_brain, 49/51 heard, speech 97%, chat 10/10 (2.7 s); report numbers updated; production reset; heartbeat cron deleted | 8% weekly (live) | stopped. Founder: docs/thinking-partner/NOW.md and OPEN.md |
+
+# Refinement run
+
+Plan: docs/plan/REFINE.md. T0: 2026-11-19 01:28 IST. Starting usage: 64% weekly (live, get_usage).
+Usage stop: 70% weekly (start + 6 points). REFINE's "15% weekly" cap was already passed at the start, so the +6 rule is the one that applies (logged in OPEN.md).
+
+| Time (IST) | Wave | Merged | Usage | Next |
+|---|---|---|---|---|
+| 01:28 | 0 | REFINE.md saved | 64% weekly | preflight, R8.1, contracts |
