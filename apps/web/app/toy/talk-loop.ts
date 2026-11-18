@@ -1,28 +1,31 @@
-// The talking loop on /toy and /stage (PLAN.md C2, C5), as a plain class: press to record, release to send, cover
-// the wait with pre-made clips, then play Nani's sentences in order and drive the wall with their cues.
+// The talking loop on /toy and /stage (PLAN.md C2, REFINE R3), as a plain class: press to record, release to
+// send, cover the wait, then play Nani's sentences in order and drive the wall with their cues.
+// Waiting (R3): a calm reaction at the send tap; the wordless wait_music only when Nani is really late; her
+// first sentence plays the moment it is ready, with the music fading out under it. No spoken fillers.
 // No React here; use-talk.ts wraps it.
+import { audioById } from "@/lib/audio";
 import type { BoardState, Cue, FallbackId, NaniEvent, TurnEvent } from "@/lib/types";
-import { stopTime } from "@/lib/voice/pauses";
 import type { Clip, NaniPlayer } from "@/lib/voice/player";
-import { WaitPicker, areaOfCue, isLongWait, type Today } from "./fillers";
+import { WAIT_MUSIC_ID, WaitPicker, type Today } from "./fillers";
 import type { EyeState, WallPayload } from "./use-toy-core";
 
 const MIN_PRESS_MS = 250; // shorter presses are accidental taps (they still stop Nani)
-const FILLER_AT_MS = 1200; // no voice yet: one learning filler
-const LONG_WAIT_AT_MS = 4000; // song snippet or the chashma line
-const SLOW_BRAIN_AT_MS = 8000; // give up: slow_brain line, abort the request
-const SHORT_CLIP_S = 0.7; // a long-wait clip with less than this left finishes anyway
-const FILLER_MIN_PLAYED_S = 1.0; // a learning filler stops early only at a sentence end at least this far in
+const MUSIC_AT_MS = 2500; // no first sentence by then: Nani is really late, the wait music starts
+const MUSIC_FADE_IN_MS = 300;
+const MUSIC_FADE_OUT_MS = 250; // from the moment her first sentence is ready, wherever the music is
+const SLOW_BRAIN_AT_MS = 8000; // give up: slow_brain line ("Ek baar phir bolo"), abort the request
 const SFX_GAIN = 0.6;
+// The music's level (about 12 dB under Nani's live voice) is in the file itself: it plays at gain 1.
 
 export interface TalkStats {
   turn: number;
   heard?: string;
-  reactionMs?: number; // release -> reaction clip started
-  firstSayMs?: number; // release -> first `say` line arrived
-  firstVoiceMs?: number; // release -> Nani's first sentence started playing
-  filler?: string; // the learning filler (layer 2) that played this turn, if any
-  fillerCutMs?: number; // ms of that filler skipped by stopping at its next pause once Nani's voice was ready
+  reaction?: string; // the reaction clip played at the send tap
+  reactionMs?: number; // send tap -> reaction clip started
+  firstSayMs?: number; // send tap -> first `say` line arrived (her first sentence is ready)
+  firstVoiceMs?: number; // send tap -> Nani's first sentence started playing (heard)
+  musicAtMs?: number; // send tap -> wait music started (only when she was late)
+  musicFadeLagMs?: number; // first sentence ready (or the fallback) -> the wait music silent
   server?: { stt: number; brainFirst: number; voiceFirst: number; total: number };
   fallback?: FallbackId;
 }
@@ -56,9 +59,10 @@ interface Turn {
   ac: AbortController;
   t0: number;
   timers: ReturnType<typeof setTimeout>[];
-  fx: Clip | null; // the current wait clip
+  reaction: Clip | null; // the reaction at the send tap (under 1 s)
+  music: Clip | null; // the wait music, if Nani was late
   voiceStarted: boolean; // Nani's reply (or a fallback) has arrived: no more wait clips
-  speaking: boolean; // the wait clip has settled: sentences may play
+  speaking: boolean; // the reaction has finished: sentences may play
   ending: boolean; // a fallback line will close the turn
   queue: Item[];
   playing: boolean;
@@ -80,17 +84,17 @@ export class TalkLoop {
   private rec: Recording | null = null;
   private turn: Turn | null = null;
   private turnNo = 0;
-  private area: string | null = null;
+  private musicLoad: Promise<AudioBuffer | null> | null = null;
+  private musicBuffer: AudioBuffer | null = null;
   /** What the wall shows now; sent with every turn. */
   readonly board: BoardState = { spell: null, showing: null };
+  /** Today's letter and theme (planner.md). Kept for use-talk.ts; since R3 no waiting clip depends on it. */
+  today: Today | null = null;
 
-  constructor(private d: TalkDeps) {
-    this.picker.setCanCut((id) => d.player.cutPoints(id).some((p) => p.start >= FILLER_MIN_PLAYED_S));
-  }
+  constructor(private d: TalkDeps) {}
 
-  /** Today's letter and theme (planner.md), so waiting fillers match what Nani is teaching. */
   setToday(t: Today | null): void {
-    this.picker.setToday(t);
+    this.today = t;
   }
 
   get busy(): boolean {
@@ -179,7 +183,8 @@ export class TalkLoop {
       ac: new AbortController(),
       t0: performance.now(),
       timers: [],
-      fx: null,
+      reaction: null,
+      music: null,
       voiceStarted: false,
       speaking: false,
       ending: false,
@@ -191,17 +196,20 @@ export class TalkLoop {
     };
     this.turn = t;
 
-    // Layer 1: a reaction, at once.
+    // A calm reaction, at once.
     const reaction = this.picker.reaction();
-    t.fx = reaction ? this.d.player.playId(reaction.id) : null;
-    if (t.fx) t.stats.reactionMs = Math.round(performance.now() - t.t0);
+    t.reaction = reaction ? this.d.player.playId(reaction.id) : null;
+    if (reaction && t.reaction) {
+      t.stats.reaction = reaction.id;
+      t.stats.reactionMs = Math.round(performance.now() - t.t0);
+    }
     this.stats(t);
     this.d.setEyes("thinking");
     this.d.sendWall("thinking", { on: true });
+    this.loadMusic();
 
     t.timers.push(
-      setTimeout(() => this.playWait(t, this.picker.filler(t.n, this.area)?.id), FILLER_AT_MS),
-      setTimeout(() => this.playWait(t, this.picker.longWait()?.id), LONG_WAIT_AT_MS),
+      setTimeout(() => this.startMusic(t), MUSIC_AT_MS),
       setTimeout(() => {
         if (t.over || t.voiceStarted) return;
         t.ac.abort();
@@ -280,40 +288,64 @@ export class TalkLoop {
     if (t.speaking && !t.ending && !t.playing && t.queue.length === 0) this.finish(t);
   }
 
-  /** Layers 2 and 3: a wait clip, never on top of another one. */
-  private playWait(t: Turn, id: string | undefined): void {
-    if (!id || t.over || t.voiceStarted) return;
-    const go = () => {
-      if (t.over || t.voiceStarted) return;
-      t.fx = this.d.player.playId(id);
-      if (t.fx && !isLongWait(id)) t.stats.filler = id;
-    };
-    if (t.fx?.playing()) void t.fx.ended.then(go);
-    else go();
+  // ---------- waiting ----------
+
+  /**
+   * Once per page, after the wake tap: a copy of wait_music with a 300 ms fade-in written into its first
+   * samples. The file itself is one seamless loop, so the fade lives here, not in the file.
+   */
+  private loadMusic(): void {
+    if (this.musicLoad) return;
+    const e = audioById(WAIT_MUSIC_ID);
+    if (!e) return;
+    this.musicLoad = this.d.player.load(e.file).then((b) => {
+      if (!b) {
+        this.musicLoad = null; // no audio context yet, or offline: try again next turn
+        return null;
+      }
+      const n = Math.min(b.length, Math.round((b.sampleRate * MUSIC_FADE_IN_MS) / 1000));
+      for (let c = 0; c < b.numberOfChannels; c++) {
+        const x = b.getChannelData(c);
+        for (let i = 0; i < n; i++) x[i] *= i / n;
+      }
+      this.musicBuffer = b;
+      return b;
+    });
+  }
+
+  /** Nani is really late: the wait music fades in. The wall keeps its thinking scene. */
+  private startMusic(t: Turn): void {
+    if (t.over || t.voiceStarted) return;
+    // Without the faded copy (still loading), the plain file: same level, no fade-in.
+    t.music = this.musicBuffer ? this.d.player.play(this.musicBuffer, WAIT_MUSIC_ID) : this.d.player.playId(WAIT_MUSIC_ID);
+    if (!t.music) return;
+    t.stats.musicAtMs = Math.round(performance.now() - t.t0);
+    this.stats(t);
+    console.log(`[toy] turn ${t.n} wait music at ${t.stats.musicAtMs} ms`);
+  }
+
+  /** Fade the wait music out (250 ms) from wherever it is. Resolves when it is silent. */
+  private fadeMusic(t: Turn): Promise<void> {
+    const m = t.music;
+    if (!m?.playing()) return Promise.resolve();
+    const from = performance.now();
+    return m.fade(MUSIC_FADE_OUT_MS).then(() => {
+      t.stats.musicFadeLagMs = Math.round(performance.now() - from);
+      this.stats(t);
+    });
   }
 
   /**
-   * Nani's first sentence arrived. A reaction finishes. A learning filler stops at its next sentence end
-   * ("Tab tak teen baar taali bajao! | Ek, do, teen!"), in the pause, never mid-word or mid-count; with
-   * no sentence end ahead it finishes. The long wait (song snippet, chashma line) fades. Then play the queue.
+   * Nani's first sentence is ready: it plays now, with the wait music fading out under it. Only a reaction
+   * still playing (under 1 s, from the send tap) finishes first. Then play the queue.
    */
   private async startVoice(t: Turn): Promise<void> {
     if (t.voiceStarted || t.over) return;
     t.voiceStarted = true;
     this.clearTimers(t);
     this.d.sendWall("thinking", { on: false });
-    const fx = t.fx;
-    if (fx?.playing()) {
-      if (isLongWait(fx.id) && fx.remaining() > SHORT_CLIP_S) await fx.fade(250);
-      else {
-        const at = fx.id === t.stats.filler ? stopTime(this.d.player.cutPoints(fx.id), fx.position(), fx.duration, FILLER_MIN_PLAYED_S) : null;
-        if (at === null) await fx.ended;
-        else {
-          t.stats.fillerCutMs = Math.round((fx.duration - at) * 1000);
-          await fx.stopAt(at);
-        }
-      }
-    }
+    void this.fadeMusic(t);
+    if (t.reaction?.playing()) await t.reaction.ended;
     if (t.over) return;
     t.speaking = true;
     this.d.setEyes("speaking");
@@ -379,7 +411,7 @@ export class TalkLoop {
       t.voiceStarted = true;
       this.d.sendWall("thinking", { on: false });
     }
-    if (t.fx?.playing()) await t.fx.fade(200);
+    await Promise.all([this.fadeMusic(t), t.reaction?.playing() ? t.reaction.fade(200) : undefined]);
     while (t.playing && !t.over) await new Promise((r) => setTimeout(r, 50));
     if (t.over) return;
     t.playing = true;
@@ -394,6 +426,7 @@ export class TalkLoop {
     if (t.over) return;
     t.over = true;
     this.clearTimers(t);
+    void this.fadeMusic(t); // never left running (a barge-in has already stopped it)
     console.log(`[toy] turn ${t.n} end`, { ...t.stats, aborted: t.ac.signal.aborted });
     this.d.sendWall("thinking", { on: false });
     this.d.sendWall("speaking", { on: false });
@@ -412,8 +445,6 @@ export class TalkLoop {
     if (c.type === "spell") b.spell = { word: c.word, gap: c.gap, tiles: c.tiles, filled: false };
     else if (c.type === "tile" && c.result === "right" && b.spell) b.spell = { ...b.spell, filled: true };
     if (c.type === "show" || c.type === "count" || c.type === "choices" || c.type === "cheer" || c.type === "spell") b.showing = c;
-    const area = areaOfCue(c);
-    if (area) this.area = area;
   }
 
   private stats(t: Turn): void {

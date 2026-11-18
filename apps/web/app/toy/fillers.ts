@@ -1,40 +1,28 @@
-// Waiting moments (PLAN.md C5): which pre-made clip to play while Nani thinks. Pure picking logic.
-//   Layer 1: a reaction at release, never the same twice in a row.
-//   Layer 2: a learning filler at 1.2 s, at most one every two turns, never the same twice.
-//            Preference: today's letter and theme (planner.md "## Today"), then the area of the last cue;
-//            within that, a filler that can stop at a sentence end once Nani's reply is ready (pauses.ts).
-//   Layer 3: at 4 s, the song snippet or the chashma line (alternating).
-import { audioById, audioByKind } from "@/lib/audio";
+// Waiting moments (REFINE R3): what plays while Nani thinks. Pure picking logic; talk-loop.ts does the timing.
+//   At the send tap: one calm reaction, never the same twice in a row.
+//   Only when Nani is really late (no first sentence 2.5 s after the tap): the wordless wait_music loop.
+// The spoken learning fillers (filler_*, filler_numbers_5 included), the chashma line and the song snippet are
+// no longer picked while waiting. Their files stay in content/audio.json.
+import { audioById } from "@/lib/audio";
 import { CHILD_ID } from "@/lib/config";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import type { AudioEntry, Cue } from "@/lib/types";
+import type { AudioEntry } from "@/lib/types";
 
-export const REACTION_IDS = ["reaction_ooh", "reaction_achha", "reaction_hmm", "reaction_haanji", "reaction_oho", "reaction_achha_achha"];
-export const LONG_WAIT_IDS = ["song_snippet", "filler_wait_chashma"];
-
-/** The learning area a cue belongs to, if any (letters for spell/tile, numbers for count, animals for sound). */
-export function areaOfCue(c: Cue): string | null {
-  if (c.type === "spell" || c.type === "tile") return "letters";
-  if (c.type === "count") return "numbers";
-  if (c.type === "sound") return "animals";
-  return null;
-}
-
-/** Layer 3 clips fade when Nani's reply arrives; reactions and learning fillers play to the end. */
-export function isLongWait(id: string): boolean {
-  return LONG_WAIT_IDS.includes(id);
-}
+/** Calm reactions only: "Ooh!" and "Oho!" sound wrong after a sad or scared line. */
+export const REACTION_IDS = ["reaction_hmm", "reaction_achha", "reaction_achha_achha", "reaction_haanji"];
+/** The soft instrumental loop (kind "music") under a late reply. */
+export const WAIT_MUSIC_ID = "wait_music";
 
 // ---------- today's topic (planner.md "## Today") ----------
+// use-talk.ts still hands this to the talk loop; since R3 no waiting clip depends on it.
 
-/** What Nani is teaching today: a letter (upper case) and the theme areas (the fillers' `area` names). */
+/** What Nani is teaching today: a letter (upper case) and the theme areas. */
 export interface Today {
   letter: string | null;
   themes: string[];
 }
 
-// Words that put a line or a theme in an area. Used on the planner's theme text ("animals and fruits", or a
-// parent's "mangoes") and on the words inside a filler, so "M se Mango!" also counts as a fruits filler.
+// Words that put a theme in an area. Used on the planner's theme text ("animals and fruits", or a parent's "mangoes").
 const THEME_WORDS: Record<string, RegExp> = {
   animals: /\b(animals?|jaanwar|lion|cow|cat|dog|elephant|monkey|bandar|duck|sheep|horse|rooster|billi|gaay|haathi|ullu|owl|sher)\b/i,
   fruits: /\b(fruits?|phal|mango(es)?|aam|banana|kela|apple|seb|orange|santra|grapes?|angoor)\b/i,
@@ -47,11 +35,6 @@ const THEME_WORDS: Record<string, RegExp> = {
 
 export function themesIn(text: string): string[] {
   return Object.entries(THEME_WORDS).filter(([, re]) => re.test(text)).map(([k]) => k);
-}
-
-/** A filler's letter, read from its words: "M se Monkey", "A for Apple", "M ki awaaz". */
-export function letterOfFiller(e: AudioEntry): string | null {
-  return e.text?.match(/\b([A-Z]) (?:se|for|ki)\b/)?.[1] ?? null;
 }
 
 /** Reads "- Letter: M" and "- Theme: animals and fruits" under "## Today" in planner.md. */
@@ -85,7 +68,7 @@ export function watchToday(onChange: (t: Today | null) => void): () => void {
         .maybeSingle();
       if (!dead && data?.content) onChange(parseToday(data.content));
     } catch {
-      // no topic: fillers fall back to the current area
+      // no topic: keep the last one
     }
   })();
   const ch = sb
@@ -107,70 +90,11 @@ function pick<T>(xs: T[]): T | undefined {
 
 export class WaitPicker {
   private lastReaction: string | null = null;
-  private usedFillers = new Set<string>();
-  private lastFiller: string | null = null;
-  private lastFillerTurn = -99;
-  private longIndex = 0;
-  private today: Today | null = null;
-  private canCut: (id: string) => boolean = () => false;
-
-  setToday(t: Today | null): void {
-    this.today = t;
-  }
-
-  /** Which fillers can stop early at a sentence end (the player knows, once clips are decoded). */
-  setCanCut(f: (id: string) => boolean): void {
-    this.canCut = f;
-  }
-
-  /** Does this filler belong to today's letter or theme? */
-  private isToday(e: AudioEntry): boolean {
-    const t = this.today;
-    if (!t) return false;
-    if (t.letter && letterOfFiller(e) === t.letter) return true;
-    if (!t.themes.length) return false;
-    return [e.area ?? "", ...themesIn(e.text ?? "")].some((a) => t.themes.includes(a));
-  }
 
   reaction(): AudioEntry | undefined {
     const all = REACTION_IDS.map(audioById).filter((e): e is AudioEntry => !!e);
     const e = pick(all.filter((x) => x.id !== this.lastReaction)) ?? all[0];
     if (e) this.lastReaction = e.id;
     return e;
-  }
-
-  /** A learning filler for turn number `turn`, or undefined if one played on the previous turn. */
-  filler(turn: number, area: string | null): AudioEntry | undefined {
-    if (turn - this.lastFillerTurn < 2) return undefined;
-    const all = audioByKind("filler").filter((e) => e.area !== "wait");
-    if (!all.length) return undefined;
-    let fresh = all.filter((e) => !this.usedFillers.has(e.id));
-    if (!fresh.length) {
-      this.usedFillers.clear(); // all used once: start over, but never repeat the last one
-      fresh = all.filter((e) => e.id !== this.lastFiller);
-    }
-    // Today's topic first (best: also in the current area), then the current area, then anything.
-    const today = fresh.filter((e) => this.isToday(e));
-    const inArea = area ? fresh.filter((e) => e.area === area) : [];
-    const both = today.filter((e) => inArea.includes(e));
-    const pickCut = (xs: AudioEntry[]) => pick(xs.filter((x) => this.canCut(x.id))) ?? pick(xs);
-    const e = pickCut(both) ?? pickCut(today) ?? pickCut(inArea) ?? pickCut(fresh);
-    if (e) {
-      this.usedFillers.add(e.id);
-      this.lastFiller = e.id;
-      this.lastFillerTurn = turn;
-    }
-    return e;
-  }
-
-  longWait(): AudioEntry | undefined {
-    for (let k = 0; k < LONG_WAIT_IDS.length; k++) {
-      const e = audioById(LONG_WAIT_IDS[(this.longIndex + k) % LONG_WAIT_IDS.length]);
-      if (e) {
-        this.longIndex += k + 1;
-        return e;
-      }
-    }
-    return undefined;
   }
 }

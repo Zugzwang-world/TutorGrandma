@@ -49,7 +49,7 @@
 
     { "id": "not_heard", "kind": "fallback", "text": "Nani ko theek se sunai nahi diya. Paw dabakar phir se bolo?" },
     { "id": "voice_failed", "kind": "fallback", "text": "Arre, Nani ki awaaz atak gayi! Ek baar phir poochho?" },
-    { "id": "slow_brain", "kind": "fallback", "text": "Chalo, ek naya khel khelte hain!" },
+    { "id": "slow_brain", "kind": "fallback", "text": "Arre, Nani ka dhyaan bhatak gaya! Ek baar phir bolo, beta?" },
     { "id": "offline", "kind": "fallback", "text": "Nani thoda aaram kar rahi hai. Thodi der mein baat karte hain!" },
 
     { "id": "line_call_mumma", "kind": "line", "text": "Mumma ka call aa raha hai!" },
@@ -73,6 +73,16 @@
     { "id": "sfx_whoosh", "seconds": 1, "prompt": "A quick soft whoosh of something flying across the screen, light cartoon swish" },
     { "id": "sfx_cheer", "seconds": 2.5, "prompt": "A small group of happy young children cheering yay and clapping, short and joyful" },
     { "id": "sfx_oops", "seconds": 1, "prompt": "A soft gentle funny oops sound for a wrong answer in a kids' game, short descending cartoon boing, kind, not harsh" }
+  ],
+  "music": [
+    {
+      "id": "wait_music",
+      "_about": "R3: plays only when Nani is late (no first sentence 2.5 s after the send tap). One seamless cycle, no trims or fades. lufs: about 12 dB under Nani's live voice (eleven_v4_turbo measured at -19.4 LUFS).",
+      "seconds": 10,
+      "lufs": -31,
+      "promptInfluence": 0.6,
+      "prompt": "Soft, warm, slow instrumental music loop for a five-year-old: a gentle marimba melody with light, soft tabla, cosy and calm like a lullaby, steady slow tempo, instrumental only"
+    }
   ],
   "song": {
     "title": "Ek Do Teen, Count With Me",
