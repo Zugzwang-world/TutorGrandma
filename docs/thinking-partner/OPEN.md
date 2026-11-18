@@ -10,7 +10,5 @@
 - **"Nani" pronunciation:** speech-to-text heard ननी in three pre-made lines (`not_heard`, `offline`, `filler_wait_chashma`). Worth a listen.
 - **Credits:** ElevenLabs about 17% of 100k characters used (resets 17 Nov 21:01 UTC); Kimi about 14.3 USD. Recheck before buildathon day.
 
-- .claude/commands/preflight.md still says a 404 (PGRST205) on agent_files is fine because the table doesn't exist; it exists now, so a 404 there means something is wrong.
-
 ## From the refinement run (19 Nov)
 - 2026-11-19 · Usage stop set at 70% weekly · the run started at 64%, so REFINE's "15% weekly" cap was already passed; I used the "start + 6 points" rule instead.
