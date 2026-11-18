@@ -2,6 +2,7 @@
 // The parent's group chat with Nani's five agents (PLAN.md B4).
 import "./chat.css";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { BubbleStage } from "./bubbles/bubble-stage";
 import { ChatHeader } from "./chat-header";
 import { Composer } from "./composer";
 import { MessageList, type WhatChangedTarget } from "./message-list";
@@ -31,11 +32,7 @@ const serverSnapshot = () => SERVER;
  * `fill`: fill the parent's height instead of the window's (the stage's right half).
  * `headerSlot`: extra controls at the right of the chat header (the stage's Mumma/Papa switch).
  */
-export function GuidanceChat({
-  sender: fixedSender,
-  fill = false,
-  headerSlot,
-}: { sender?: string; fill?: boolean; headerSlot?: ReactNode } = {}) {
+export function GuidanceChat({ sender: fixedSender, fill = false, headerSlot }: { sender?: string; fill?: boolean; headerSlot?: ReactNode } = {}) {
   // Everything that reads the device (localStorage, time) happens after hydration, so the prerendered shell is static.
   const stored = useSyncExternalStore(subscribeSender, senderSnapshot, serverSnapshot);
   const ready = fixedSender ? true : stored !== SERVER;
@@ -104,62 +101,66 @@ export function GuidanceChat({
   const askWho = ready && loaded && !sender;
 
   return (
-    <div className={`flex ${fill ? "h-full min-h-0" : "h-dvh"} w-full flex-col bg-cream`}>
-      <ChatHeader sender={sender} working={working} slot={headerSlot} />
+    <div className={`tg-gc flex ${fill ? "h-full min-h-0" : "h-dvh"} w-full flex-col bg-cream`}>
+      <BubbleStage rows={rows} pending={pending} loaded={loaded} onSend={sendText}>
+        <div className="tg-col">
+          <ChatHeader sender={sender} working={working} slot={headerSlot} />
 
-      <div
-        ref={scroller}
-        onScroll={onScroll}
-        onWheel={markUser}
-        onTouchMove={markUser}
-        onPointerDown={markUser}
-        onKeyDown={markUser}
-        className="relative flex-1 overflow-y-auto overscroll-contain"
-      >
-        <div ref={content}>
-          {!loaded && (
-            <div className="flex justify-center pt-16" aria-label="Loading chat">
-              <span className="tg-dots flex gap-1.5 text-muted">
-                <span />
-                <span />
-                <span />
-              </span>
-            </div>
-          )}
-          {loaded && (
-            <MessageList
-              rows={rows}
-              pending={pending}
-              typing={typing}
-              landedId={landedId}
-              me={sender}
-              localAudio={localAudio}
-              onWhatChanged={setSheet}
-              onRetry={retry}
-              footer={askWho ? <WhoIsThis onPick={pick} /> : null}
-            />
-          )}
-        </div>
-      </div>
-
-      <div className="relative">
-        <div className="pointer-events-none absolute -top-14 left-1/2 z-10 -translate-x-1/2">
-          <button
-            type="button"
-            onClick={() => toBottom(true)}
-            data-on={showNew}
-            className="tg-pill pointer-events-auto flex items-center gap-1.5 rounded-full border border-marigold/40 bg-paper py-2 pr-3 pl-3.5 text-[14px] font-extrabold whitespace-nowrap text-[#b86a00] shadow-[0_6px_20px_rgba(43,33,24,0.14)]"
-            tabIndex={showNew ? 0 : -1}
-            aria-hidden={!showNew}
+          <div
+            ref={scroller}
+            onScroll={onScroll}
+            onWheel={markUser}
+            onTouchMove={markUser}
+            onPointerDown={markUser}
+            onKeyDown={markUser}
+            className="relative flex-1 overflow-y-auto overscroll-contain"
           >
-            {newCount > 1 ? `${newCount} new messages` : "New message"}
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
-              <path d="M7 2.5v9M3 7.5l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+            <div ref={content}>
+              {!loaded && (
+                <div className="flex justify-center pt-16" aria-label="Loading chat">
+                  <span className="tg-dots flex gap-1.5 text-muted">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                </div>
+              )}
+              {loaded && (
+                <MessageList
+                  rows={rows}
+                  pending={pending}
+                  typing={typing}
+                  landedId={landedId}
+                  me={sender}
+                  localAudio={localAudio}
+                  onWhatChanged={setSheet}
+                  onRetry={retry}
+                  footer={askWho ? <WhoIsThis onPick={pick} /> : null}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="pointer-events-none absolute -top-14 left-1/2 z-10 -translate-x-1/2">
+              <button
+                type="button"
+                onClick={() => toBottom(true)}
+                data-on={showNew}
+                className="tg-pill pointer-events-auto flex items-center gap-1.5 rounded-full border border-marigold/40 bg-paper py-2 pr-3 pl-3.5 text-[14px] font-extrabold whitespace-nowrap text-[#b86a00] shadow-[0_6px_20px_rgba(43,33,24,0.14)]"
+                tabIndex={showNew ? 0 : -1}
+                aria-hidden={!showNew}
+              >
+                {newCount > 1 ? `${newCount} new messages` : "New message"}
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                  <path d="M7 2.5v9M3 7.5l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <Composer disabled={!sender} onSendText={sendText} onSendVoice={sendVoice} onSent={() => toBottom()} />
+          </div>
         </div>
-        <Composer disabled={!sender} onSendText={sendText} onSendVoice={sendVoice} onSent={() => toBottom()} />
-      </div>
+      </BubbleStage>
 
       {sheet && <WhatChangedSheet key={`${sheet.file}-${sheet.toVersion}`} target={sheet} onClose={() => setSheet(null)} />}
     </div>
