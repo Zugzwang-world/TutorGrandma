@@ -45,3 +45,4 @@ Usage stop: 70% weekly (start + 6 points). REFINE's "15% weekly" cap was already
 | 01:28 | 0 | REFINE.md saved | 64% weekly | preflight, R8.1, contracts |
 | 02:20 | 0 | preflight fix; R8.1 counting rule; contracts: job lines (+tests), markers, bubbles, progress_days (migration applied), reset warm-up; stage seams (wall bus, contained wall, chat sender and header slot, keyterms); scout lookups | 64% weekly | advisor seams done; launch wave 1 |
 | 01:46 | 1 | launched R1 (expert), R2 (Sonnet high), R5 (Sonnet high), R6 (expert), R7 (builder); ports 3101–3105 | 65% weekly | wait for PRs; R7 entry points after R5 merges |
+| 01:58 | 1 | R5 #17 profiles, R2 #18 bubbles; prod: bubbles at 1440, House rules profile opens | 65%+ | R7 entry points unblocked; watch: Nani wrap-up after Memory (★4 exact agents) |
