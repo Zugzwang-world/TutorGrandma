@@ -83,7 +83,9 @@ export function BubbleStage({
       const cs = getComputedStyle(el);
       const est = parseFloat(cs.getPropertyValue("--tg-bub-h")) || 250;
       const gap = parseFloat(cs.getPropertyValue("--tg-rail-gap")) || 14;
-      const h = el.clientHeight;
+      const rail = el.querySelector(".tg-rail");
+      const pad = rail ? parseFloat(getComputedStyle(rail).paddingTop) + parseFloat(getComputedStyle(rail).paddingBottom) : 0;
+      const h = el.clientHeight - pad;
       if (h < 100) return; // rails hidden (phone)
       setPerRail(Math.max(1, Math.min(MAX_PER_RAIL, Math.floor((h + gap) / (est + gap)))));
     };
