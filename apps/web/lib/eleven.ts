@@ -9,16 +9,21 @@ function key(): string {
 
 export const STT_MODEL = "scribe_v3";
 
-/** Batch speech-to-text. Hindi mixed with English; language auto-detected unless given. */
+/**
+ * Batch speech-to-text. Hindi mixed with English; language auto-detected unless given.
+ * `keyterms`: words to bias recognition towards (today's bridge words, English and Hindi, R6.2). Sent as one
+ * multipart `keyterms` field per term. Unverified on scribe_v3 at Wave 0: the first caller checks it on production.
+ */
 export async function stt(
   audio: Blob,
-  opts: { filename?: string; languageCode?: string; signal?: AbortSignal } = {},
+  opts: { filename?: string; languageCode?: string; keyterms?: string[]; signal?: AbortSignal } = {},
 ): Promise<{ text: string; languageCode: string | null; ms: number }> {
   const t0 = Date.now();
   const fd = new FormData();
   fd.append("model_id", STT_MODEL);
   fd.append("file", audio, opts.filename ?? "audio.webm");
   if (opts.languageCode) fd.append("language_code", opts.languageCode);
+  for (const k of opts.keyterms ?? []) if (k.trim()) fd.append("keyterms", k.trim());
   fd.append("tag_audio_events", "true"); // roars and laughs come back as [tags], not as silence
   const res = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
     method: "POST",

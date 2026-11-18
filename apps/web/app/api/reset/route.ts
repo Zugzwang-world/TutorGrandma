@@ -38,14 +38,15 @@ async function warmUp(): Promise<Record<string, number | string>> {
 }
 
 // Restores the seed (files at seed versions, seed chat, no turns, progress history, clock at real time),
-// tells /toy and /home-base to reload, then warms up the brain, the voice and the database.
-// `?warm=0` skips the warm-up. `ready: true` means the stage can show "Ready".
+// warms up the brain, the voice and the database, then tells /toy, /stage and /home-base to reload.
+// The warm-up comes first so a page that reloads on the broadcast never kills the caller's fetch early.
+// `?warm=0` skips the warm-up. `ready: true` means the stage can show "Ready" (after its reload).
 export async function POST(req: Request) {
   const r = await resetToSeed(CHILD_ID);
+  const warm = new URL(req.url).searchParams.get("warm") === "0" ? null : await warmUp();
   await Promise.all([
     broadcastSafe(channelName.toy(CHILD_ID), "reset", {}),
     broadcastSafe(channelName.wall(CHILD_ID), "reset", {}),
   ]);
-  const warm = new URL(req.url).searchParams.get("warm") === "0" ? null : await warmUp();
   return Response.json({ ok: true, ready: true, ...r, warm });
 }

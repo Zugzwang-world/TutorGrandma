@@ -1,7 +1,7 @@
 "use client";
 // The parent's group chat with Nani's five agents (PLAN.md B4).
 import "./chat.css";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { ChatHeader } from "./chat-header";
 import { Composer } from "./composer";
 import { MessageList, type WhatChangedTarget } from "./message-list";
@@ -29,8 +29,13 @@ const serverSnapshot = () => SERVER;
 /**
  * `sender`: a fixed sender (the stage's Mumma/Papa switch). It skips "Who's this?" and localStorage.
  * `fill`: fill the parent's height instead of the window's (the stage's right half).
+ * `headerSlot`: extra controls at the right of the chat header (the stage's Mumma/Papa switch).
  */
-export function GuidanceChat({ sender: fixedSender, fill = false }: { sender?: string; fill?: boolean } = {}) {
+export function GuidanceChat({
+  sender: fixedSender,
+  fill = false,
+  headerSlot,
+}: { sender?: string; fill?: boolean; headerSlot?: ReactNode } = {}) {
   // Everything that reads the device (localStorage, time) happens after hydration, so the prerendered shell is static.
   const stored = useSyncExternalStore(subscribeSender, senderSnapshot, serverSnapshot);
   const ready = fixedSender ? true : stored !== SERVER;
@@ -100,7 +105,7 @@ export function GuidanceChat({ sender: fixedSender, fill = false }: { sender?: s
 
   return (
     <div className={`flex ${fill ? "h-full min-h-0" : "h-dvh"} w-full flex-col bg-cream`}>
-      <ChatHeader sender={sender} working={working} />
+      <ChatHeader sender={sender} working={working} slot={headerSlot} />
 
       <div
         ref={scroller}

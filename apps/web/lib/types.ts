@@ -104,6 +104,9 @@ export interface MessageMeta {
   // calls (N2)
   callId?: string;
   callState?: "ringing" | "open" | "ended";
+  // progress card (R7.5): set by the server on Memory's replies to "What should I talk to him about?",
+  // "How was his week?" and "What did he learn today?"; the chat shows a "📈 Aarav's progress" card under it
+  progress?: { view: "today" | "week" | "month" | "all" };
   [key: string]: unknown;
 }
 

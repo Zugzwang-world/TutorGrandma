@@ -41,3 +41,8 @@ One line each: date · decision · why.
 - 2026-11-17 · A call cue is dropped unless Aarav's words contain a yes · a call starts at once and must never surprise anyone.
 - 2026-11-17 · Learning fillers stop at their next sentence end once Nani's answer is ready · saves about 1.2 s on filler turns without cutting a word.
 - 2026-11-17 · Memory answers start in parallel with the sorter and fall back to the sorter's reply after 7 s · "What did he learn today?" went from 18 s to 3–5 s.
+- 2026-11-19 · Usage stop for the refinement run is 70% weekly (start 64% + 6) · REFINE's 15% cap was already passed at the start.
+- 2026-11-19 · The progress report uses hand-made SVG and CSS, no chart package · nivo's calendar adds about 75 kB gzipped and needs an SSR wrapper.
+- 2026-11-19 · `wait_music` is made with sound effects v3 (`loop: true`) first · it is the only ElevenLabs model with a seamless-loop flag.
+- 2026-11-19 · "once at HH:MM" with no date gets today's date stamped by /api/chat · so a one-off never repeats daily (NOW.md issue 4).
+- 2026-11-19 · /stage feeds its wall through an in-page bus (lib/wall-bus.ts) · one page can't hold two channel objects for one topic, and never hears its own broadcasts.

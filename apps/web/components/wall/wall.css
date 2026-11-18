@@ -1,8 +1,10 @@
-/* The projector wall (PLAN C4). Dark, huge, one thing at a time. Sized in vmin: projector aspect is unknown. */
+/* The projector wall (PLAN C4). Dark, huge, one thing at a time. Sized in container units (cqmin) so it fills
+   the window on /home-base and its half of the screen on /stage (<Wall contained />). Projector aspect is unknown. */
 
 .wall-root {
   position: fixed;
   inset: 0;
+  container-type: size;
   overflow: hidden;
   background: radial-gradient(ellipse at 50% 42%, #1d1a2e 0%, #0b0b12 62%);
   color: #fff8ee;
@@ -11,9 +13,15 @@
   cursor: none;
 }
 
+/* On /stage the wall fills its parent (which must be position: relative) and keeps the cursor. */
+.wall-root.wall-contained {
+  position: absolute;
+  cursor: auto;
+}
+
 .wall-stage {
   position: absolute;
-  inset: 0 0 15vmin 0;
+  inset: 0 0 15cqmin 0;
   z-index: 0;
 }
 
@@ -37,25 +45,25 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2vmin;
+  gap: 2cqmin;
   animation: wall-enter 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
 }
 
 .wall-word {
   position: relative;
   margin: 0;
-  font-size: 13vmin;
+  font-size: 13cqmin;
   font-weight: 900;
   line-height: 1;
   letter-spacing: 0.02em;
   color: #fff8ee;
-  text-shadow: 0 0.6vmin 0 rgba(0, 0, 0, 0.45);
+  text-shadow: 0 0.6cqmin 0 rgba(0, 0, 0, 0.45);
 }
 
 .wall-caption {
   position: relative;
   margin: 0;
-  font-size: 8vmin;
+  font-size: 8cqmin;
   font-weight: 800;
   line-height: 1.1;
 }
@@ -65,8 +73,8 @@
 }
 
 .wall-title {
-  margin: 0 0 2vmin;
-  font-size: 9vmin;
+  margin: 0 0 2cqmin;
+  font-size: 9cqmin;
   font-weight: 900;
   color: #f29a0e;
 }
@@ -100,8 +108,8 @@
 
 .wall-aura {
   position: absolute;
-  width: 78vmin;
-  height: 78vmin;
+  width: 78cqmin;
+  height: 78cqmin;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(246, 196, 122, 0.22) 0%, rgba(246, 196, 122, 0) 66%);
   animation: wall-aura 5s ease-in-out infinite;
@@ -109,18 +117,18 @@
 
 .wall-star {
   position: absolute;
-  width: 1.1vmin;
-  height: 1.1vmin;
+  width: 1.1cqmin;
+  height: 1.1cqmin;
   border-radius: 50%;
   background: #fff3d6;
-  box-shadow: 0 0 1.5vmin #fff3d6;
+  box-shadow: 0 0 1.5cqmin #fff3d6;
   animation: wall-twinkle 3.2s ease-in-out infinite both;
 }
 
 /* ---------- thinking ---------- */
 .wall-think {
   position: relative;
-  margin-top: 16vmin;
+  margin-top: 16cqmin;
 }
 
 .wall-tilt {
@@ -132,22 +140,22 @@
   position: absolute;
   left: 66%;
   bottom: 92%;
-  width: 34vmin;
-  height: 17vmin;
-  border-radius: 9vmin;
+  width: 34cqmin;
+  height: 17cqmin;
+  border-radius: 9cqmin;
   background: #fff8ee;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3vmin;
-  box-shadow: 0 1vmin 0 rgba(0, 0, 0, 0.35);
+  gap: 3cqmin;
+  box-shadow: 0 1cqmin 0 rgba(0, 0, 0, 0.35);
   transform-origin: 8% 100%;
   animation: wall-bubble-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4) both, wall-float 2.6s 0.5s ease-in-out infinite;
 }
 
 .wall-dot {
-  width: 4.5vmin;
-  height: 4.5vmin;
+  width: 4.5cqmin;
+  height: 4.5cqmin;
   border-radius: 50%;
   background: #f29a0e;
   animation: wall-dot 1s ease-in-out infinite both;
@@ -161,16 +169,16 @@
 }
 
 .wall-puff-1 {
-  width: 3.5vmin;
-  height: 3.5vmin;
+  width: 3.5cqmin;
+  height: 3.5cqmin;
   left: 70%;
   bottom: 70%;
   animation-delay: 0.05s, 0.6s;
 }
 
 .wall-puff-2 {
-  width: 6vmin;
-  height: 6vmin;
+  width: 6cqmin;
+  height: 6cqmin;
   left: 76%;
   bottom: 80%;
   animation-delay: 0.12s, 0.7s;
@@ -178,13 +186,13 @@
 
 /* ---------- spell ---------- */
 .wall-spell {
-  gap: 9vmin;
+  gap: 9cqmin;
 }
 
 .wall-letters {
   display: flex;
-  gap: 1.6vmin;
-  font-size: min(17vmin, calc(84vw / var(--len)));
+  gap: 1.6cqmin;
+  font-size: min(17cqmin, calc(84cqw / var(--len)));
   font-weight: 900;
   line-height: 1;
 }
@@ -234,8 +242,8 @@
 
 .wall-tiles {
   display: flex;
-  gap: 6vmin;
-  font-size: 14vmin;
+  gap: 6cqmin;
+  font-size: 14cqmin;
 }
 
 .wall-tile {
@@ -291,7 +299,7 @@
 }
 
 .wall-tile-solo {
-  font-size: 30vmin;
+  font-size: 30cqmin;
 }
 
 /* ---------- count ---------- */
@@ -300,31 +308,31 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 2vmin 4vmin;
-  max-width: 94vw;
+  gap: 2cqmin 4cqmin;
+  max-width: 94cqw;
 }
 
 .wall-count-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1vmin;
+  gap: 1cqmin;
   animation: wall-drop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.6) both;
 }
 
 .wall-count-num {
   display: inline-block;
-  font-size: 8vmin;
+  font-size: 8cqmin;
   font-weight: 900;
   line-height: 1;
   animation: wall-num 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.6) both;
 }
 
 .wall-plus {
-  font-size: 14vmin;
+  font-size: 14cqmin;
   font-weight: 900;
   color: #fff8ee;
-  padding-bottom: 8vmin;
+  padding-bottom: 8cqmin;
   animation: wall-pop 0.4s both;
 }
 
@@ -334,13 +342,13 @@
   align-items: center;
   justify-content: center;
   gap: 0.28em;
-  margin: 2vmin 0 0;
+  margin: 2cqmin 0 0;
   min-height: 1em;
-  font-size: 13vmin;
+  font-size: 13cqmin;
   font-weight: 900;
   line-height: 1;
   color: #fff8ee;
-  text-shadow: 0 0.6vmin 0 rgba(0, 0, 0, 0.45);
+  text-shadow: 0 0.6cqmin 0 rgba(0, 0, 0, 0.45);
 }
 
 .wall-sum-p {
@@ -356,7 +364,7 @@
 /* ---------- choices ---------- */
 .wall-cards {
   display: flex;
-  gap: 4vmin;
+  gap: 4cqmin;
 }
 
 .wall-card {
@@ -364,27 +372,27 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2vmin;
-  width: min(27vmin, 28vw);
-  height: min(32vmin, 34vw);
-  border-radius: 4vmin;
+  gap: 2cqmin;
+  width: min(27cqmin, 28cqw);
+  height: min(32cqmin, 34cqw);
+  border-radius: 4cqmin;
   background: var(--c);
-  box-shadow: 0 1.2vmin 0 rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1.2cqmin 0 rgba(0, 0, 0, 0.4);
   animation: wall-card-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
 }
 
 .wall-cards-4 .wall-card {
-  width: min(23vmin, 22vw);
-  height: min(29vmin, 28vw);
+  width: min(23cqmin, 22cqw);
+  height: min(29cqmin, 28cqw);
 }
 
 .wall-card-emoji {
-  font-size: 15vmin;
+  font-size: 15cqmin;
   animation: wall-float 3s ease-in-out infinite;
 }
 
 .wall-card-label {
-  font-size: 5.5vmin;
+  font-size: 5.5cqmin;
   font-weight: 900;
   color: #fff;
   line-height: 1;
@@ -400,17 +408,17 @@
 
 .wall-confetti span {
   position: absolute;
-  top: -6vh;
-  height: 3.2vmin;
-  border-radius: 0.4vmin;
+  top: -6cqh;
+  height: 3.2cqmin;
+  border-radius: 0.4cqmin;
   will-change: transform;
   animation: wall-fall 2.2s linear 2 both;
 }
 
 .wall-burst {
   position: absolute;
-  width: 80vmin;
-  height: 80vmin;
+  width: 80cqmin;
+  height: 80cqmin;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(242, 154, 14, 0.55) 0%, rgba(242, 154, 14, 0) 62%);
   animation: wall-burst 1s ease-out both;
@@ -425,7 +433,7 @@
 .wall-dance-row {
   display: flex;
   align-items: flex-end;
-  gap: 4vmin;
+  gap: 4cqmin;
 }
 
 .wall-dance {
@@ -450,10 +458,10 @@
 
 .wall-ring {
   position: absolute;
-  width: 44vmin;
-  height: 44vmin;
+  width: 44cqmin;
+  height: 44cqmin;
   border-radius: 50%;
-  border: 1vmin solid #1f9d55;
+  border: 1cqmin solid #1f9d55;
   animation: wall-ring 1.4s ease-out infinite both;
 }
 
@@ -474,26 +482,26 @@
 /* ---------- chrome: speaking, timings, strip ---------- */
 .wall-speaking {
   position: absolute;
-  top: 3vmin;
-  left: 3vmin;
+  top: 3cqmin;
+  left: 3cqmin;
   display: flex;
   align-items: center;
-  gap: 1.5vmin;
-  font-size: 7vmin;
+  gap: 1.5cqmin;
+  font-size: 7cqmin;
 }
 
 .wall-bars {
   display: flex;
   align-items: center;
-  gap: 0.8vmin;
-  height: 6vmin;
+  gap: 0.8cqmin;
+  height: 6cqmin;
 }
 
 .wall-bars i {
   display: block;
-  width: 1.2vmin;
+  width: 1.2cqmin;
   height: 100%;
-  border-radius: 1vmin;
+  border-radius: 1cqmin;
   background: #f29a0e;
   animation: wall-bar 0.6s ease-in-out infinite alternate;
 }
@@ -508,23 +516,23 @@
 
 .wall-timings {
   position: absolute;
-  top: 2.5vmin;
-  right: 2.5vmin;
+  top: 2.5cqmin;
+  right: 2.5cqmin;
   display: grid;
   grid-template-columns: auto;
-  gap: 0.4vmin;
-  padding: 1.6vmin 2.2vmin;
-  border-radius: 2vmin;
+  gap: 0.4cqmin;
+  padding: 1.6cqmin 2.2cqmin;
+  border-radius: 2cqmin;
   background: rgba(255, 255, 255, 0.09);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 2.8vmin;
+  font-size: 2.8cqmin;
   line-height: 1.2;
 }
 
 .wall-timings div {
   display: flex;
   justify-content: space-between;
-  gap: 3vmin;
+  gap: 3cqmin;
 }
 
 .wall-timings span {
@@ -538,7 +546,7 @@
 .wall-timings small {
   justify-self: end;
   color: rgba(255, 248, 238, 0.45);
-  font-size: 2vmin;
+  font-size: 2cqmin;
 }
 
 .wall-strip {
@@ -546,24 +554,24 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 15vmin;
+  height: 15cqmin;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2.4vmin;
-  border-top: 0.35vmin dashed rgba(255, 248, 238, 0.14);
+  gap: 2.4cqmin;
+  border-top: 0.35cqmin dashed rgba(255, 248, 238, 0.14);
   background: linear-gradient(to top, rgba(255, 248, 238, 0.08), rgba(255, 248, 238, 0.02));
 }
 
 .wall-strip-empty {
-  font-size: 4vmin;
+  font-size: 4cqmin;
   font-weight: 800;
   color: rgba(255, 248, 238, 0.28);
 }
 
 .wall-sticker {
-  font-size: 9vmin;
-  filter: drop-shadow(0 0.5vmin 0 rgba(0, 0, 0, 0.5));
+  font-size: 9cqmin;
+  filter: drop-shadow(0 0.5cqmin 0 rgba(0, 0, 0, 0.5));
 }
 
 .wall-sticker-new {
@@ -574,10 +582,10 @@
 
 .wall-live {
   position: absolute;
-  right: 1.5vmin;
-  bottom: 1.5vmin;
-  width: 1.2vmin;
-  height: 1.2vmin;
+  right: 1.5cqmin;
+  bottom: 1.5cqmin;
+  width: 1.2cqmin;
+  height: 1.2cqmin;
   border-radius: 50%;
   background: #e0457b;
   opacity: 0.6;
@@ -590,18 +598,18 @@
 
 .wall-hint {
   position: absolute;
-  top: 2vmin;
+  top: 2cqmin;
   left: 50%;
   margin: 0;
   transform: translateX(-50%);
-  font-size: 2.6vmin;
+  font-size: 2.6cqmin;
   font-weight: 700;
   color: rgba(255, 248, 238, 0.35);
 }
 
 /* ---------- keyframes ---------- */
 @keyframes wall-enter {
-  from { opacity: 0; transform: translateY(2vmin) scale(0.96); }
+  from { opacity: 0; transform: translateY(2cqmin) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -617,12 +625,12 @@
 
 @keyframes wall-float-big {
   0%, 100% { transform: translateY(0) rotate(-1.5deg); }
-  50% { transform: translateY(-2.4vmin) rotate(1.5deg); }
+  50% { transform: translateY(-2.4cqmin) rotate(1.5deg); }
 }
 
 @keyframes wall-ch {
-  0% { opacity: 0; transform: translateY(5vmin) scale(0.5); }
-  70% { opacity: 1; transform: translateY(-0.8vmin) scale(1.12); }
+  0% { opacity: 0; transform: translateY(5cqmin) scale(0.5); }
+  70% { opacity: 1; transform: translateY(-0.8cqmin) scale(1.12); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -658,13 +666,13 @@
 }
 
 @keyframes wall-rise {
-  from { opacity: 0; transform: translateY(4vmin); }
+  from { opacity: 0; transform: translateY(4cqmin); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes wall-breathe {
   0%, 100% { transform: scale(1) translateY(0); }
-  50% { transform: scale(1.04) translateY(-1.2vmin); }
+  50% { transform: scale(1.04) translateY(-1.2cqmin); }
 }
 
 @keyframes wall-twinkle {
@@ -674,19 +682,19 @@
 
 @keyframes wall-tilt {
   0%, 100% { transform: translateY(0) rotate(-5deg); }
-  25% { transform: translateY(-2.5vmin) rotate(0deg); }
+  25% { transform: translateY(-2.5cqmin) rotate(0deg); }
   50% { transform: translateY(0) rotate(6deg); }
-  75% { transform: translateY(-2.5vmin) rotate(0deg); }
+  75% { transform: translateY(-2.5cqmin) rotate(0deg); }
 }
 
 @keyframes wall-float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-1.6vmin); }
+  50% { transform: translateY(-1.6cqmin); }
 }
 
 @keyframes wall-dot {
   0%, 100% { transform: translateY(0) scale(0.85); opacity: 0.45; }
-  40% { transform: translateY(-2.4vmin) scale(1.15); opacity: 1; }
+  40% { transform: translateY(-2.4cqmin) scale(1.15); opacity: 1; }
 }
 
 @keyframes wall-puff {
@@ -706,14 +714,14 @@
 
 @keyframes wall-shine {
   0% { transform: translateY(0); }
-  45% { transform: translateY(-1.6vmin); }
+  45% { transform: translateY(-1.6cqmin); }
   100% { transform: translateY(0); }
 }
 
 @keyframes wall-tile-in {
-  0% { opacity: 0; transform: translateY(-32vmin) scale(0.7); }
-  55% { opacity: 1; transform: translateY(1.5vmin) scale(1.04, 0.94); }
-  75% { transform: translateY(-1vmin) scale(0.98, 1.03); }
+  0% { opacity: 0; transform: translateY(-32cqmin) scale(0.7); }
+  55% { opacity: 1; transform: translateY(1.5cqmin) scale(1.04, 0.94); }
+  75% { transform: translateY(-1cqmin) scale(0.98, 1.03); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -737,36 +745,36 @@
 /* 0 to 30%: glow and swell in place. 30 to 85%: fly into the gap. */
 @keyframes wall-fly {
   0% { transform: translate(0, 0) scale(1); opacity: 1; }
-  30% { transform: translate(0, -1.5vmin) scale(1.18); opacity: 1; }
+  30% { transform: translate(0, -1.5cqmin) scale(1.18); opacity: 1; }
   85% { transform: translate(var(--dx), var(--dy)) scale(0.85); opacity: 1; }
   100% { transform: translate(var(--dx), var(--dy)) scale(0.8); opacity: 0; }
 }
 
 @keyframes wall-wrong {
   0% { transform: translateX(0) rotate(0); opacity: 1; }
-  8% { transform: translateX(-3vmin) rotate(-8deg); }
-  16% { transform: translateX(3vmin) rotate(8deg); }
-  24% { transform: translateX(-2.5vmin) rotate(-6deg); }
-  32% { transform: translateX(2.5vmin) rotate(6deg); }
+  8% { transform: translateX(-3cqmin) rotate(-8deg); }
+  16% { transform: translateX(3cqmin) rotate(8deg); }
+  24% { transform: translateX(-2.5cqmin) rotate(-6deg); }
+  32% { transform: translateX(2.5cqmin) rotate(6deg); }
   42% { transform: translateX(0) rotate(0); opacity: 1; }
-  100% { transform: translateY(3vmin) scale(0.8); opacity: 0.15; }
+  100% { transform: translateY(3cqmin) scale(0.8); opacity: 0.15; }
 }
 
 @keyframes wall-drop {
-  0% { opacity: 0; transform: translateY(-10vmin) scale(0.3); }
+  0% { opacity: 0; transform: translateY(-10cqmin) scale(0.3); }
   60% { opacity: 1; transform: translateY(0) scale(1.18); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes wall-card-in {
-  0% { opacity: 0; transform: translateY(14vmin) rotate(-6deg) scale(0.6); }
-  70% { opacity: 1; transform: translateY(-1.5vmin) rotate(1deg) scale(1.04); }
+  0% { opacity: 0; transform: translateY(14cqmin) rotate(-6deg) scale(0.6); }
+  70% { opacity: 1; transform: translateY(-1.5cqmin) rotate(1deg) scale(1.04); }
   100% { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
 }
 
 @keyframes wall-fall {
   from { transform: translateY(0) rotate(0); }
-  to { transform: translateY(112vh) rotate(calc(var(--turn) + 720deg)); }
+  to { transform: translateY(112cqh) rotate(calc(var(--turn) + 720deg)); }
 }
 
 @keyframes wall-burst {
@@ -778,20 +786,20 @@
 @keyframes wall-jump {
   0%, 100% { transform: translateY(0) scale(1, 1); }
   15% { transform: translateY(0) scale(1.12, 0.88); }
-  40% { transform: translateY(-12vmin) scale(0.94, 1.08) rotate(-6deg); }
+  40% { transform: translateY(-12cqmin) scale(0.94, 1.08) rotate(-6deg); }
   60% { transform: translateY(0) scale(1.08, 0.92); }
-  75% { transform: translateY(-3vmin) scale(1) rotate(4deg); }
+  75% { transform: translateY(-3cqmin) scale(1) rotate(4deg); }
 }
 
 @keyframes wall-dance {
   from { transform: translateY(0) rotate(-14deg); }
-  to { transform: translateY(-5vmin) rotate(14deg); }
+  to { transform: translateY(-5cqmin) rotate(14deg); }
 }
 
 @keyframes wall-note {
   0% { opacity: 0; transform: translateY(0) rotate(-10deg); }
   15% { opacity: 0.9; }
-  100% { opacity: 0; transform: translateY(-70vh) rotate(20deg); }
+  100% { opacity: 0; transform: translateY(-70cqh) rotate(20deg); }
 }
 
 @keyframes wall-ring {
@@ -817,7 +825,7 @@
 
 /* --fx / --fy (set from Wall.tsx) put the start at the middle of the stage. */
 @keyframes wall-sticker {
-  0% { opacity: 0; transform: translate(var(--fx, 0px), var(--fy, -40vh)) scale(4.5); }
+  0% { opacity: 0; transform: translate(var(--fx, 0px), var(--fy, -40cqh)) scale(4.5); }
   15% { opacity: 1; }
   80% { opacity: 1; transform: translate(0, 0) scale(0.9); }
   100% { opacity: 1; transform: translate(0, 0) scale(1); }

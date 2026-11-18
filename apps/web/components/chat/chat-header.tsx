@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { BOT_KEYS, BOTS, type BotKey } from "@/lib/types";
 import { BotAvatar, ParentAvatar } from "./avatar";
 import { CHAT_TITLE, toneOf } from "./ui";
@@ -27,7 +27,8 @@ function Busy({ working }: { working: BotKey[] }) {
   );
 }
 
-export function ChatHeader({ sender, working }: { sender: string | null; working: BotKey[] }) {
+/** `slot`: extra controls at the right end of the header (the stage's Mumma/Papa switch). */
+export function ChatHeader({ sender, working, slot }: { sender: string | null; working: BotKey[]; slot?: ReactNode }) {
   const reading = isReading(working);
   const writing = reading ? [] : replyOrder(working);
   const lead = writing[0] ?? null;
@@ -77,6 +78,7 @@ export function ChatHeader({ sender, working }: { sender: string | null; working
             </span>
           </p>
         </div>
+        {slot ? <div className="flex shrink-0 items-center gap-2">{slot}</div> : null}
       </div>
     </header>
   );

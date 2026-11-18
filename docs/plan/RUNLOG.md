@@ -43,3 +43,4 @@ Usage stop: 70% weekly (start + 6 points). REFINE's "15% weekly" cap was already
 | Time (IST) | Wave | Merged | Usage | Next |
 |---|---|---|---|---|
 | 01:28 | 0 | REFINE.md saved | 64% weekly | preflight, R8.1, contracts |
+| 02:20 | 0 | preflight fix; R8.1 counting rule; contracts: job lines (+tests), markers, bubbles, progress_days (migration applied), reset warm-up; stage seams (wall bus, contained wall, chat sender and header slot, keyterms); scout lookups | 64% weekly | advisor seams done; launch wave 1 |

@@ -82,7 +82,7 @@ export function IdleScene() {
         />
       ))}
       <span className="wall-aura" />
-      <Emoji className="wall-breathe" style={{ fontSize: "42vmin" }}>
+      <Emoji className="wall-breathe" style={{ fontSize: "42cqmin" }}>
         👵
       </Emoji>
       <p className="wall-caption wall-soft">{config.grandmaName} is here</p>
@@ -101,7 +101,7 @@ export function ThinkingScene() {
         </div>
         <span className="wall-puff wall-puff-1" />
         <span className="wall-puff wall-puff-2" />
-        <Emoji className="wall-tilt" style={{ fontSize: "40vmin" }}>
+        <Emoji className="wall-tilt" style={{ fontSize: "40cqmin" }}>
           👵
         </Emoji>
       </div>
@@ -113,7 +113,7 @@ export function ShowScene({ emoji, word }: { emoji: string; word: string }) {
   return (
     <div className="wall-scene">
       <div className="wall-pop">
-        <Emoji className="wall-floaty" style={{ fontSize: "46vmin" }}>
+        <Emoji className="wall-floaty" style={{ fontSize: "46cqmin" }}>
           {emoji}
         </Emoji>
       </div>
@@ -230,7 +230,7 @@ export function CountScene({ cue }: { cue: Extract<Cue, { type: "count" }> }) {
 
   const item = (n: number) => (
     <div key={n} className="wall-count-item" style={sumDelay(at[n - 1])}>
-      <Emoji style={{ fontSize: `${size}vmin` }}>{cue.emoji}</Emoji>
+      <Emoji style={{ fontSize: `${size}cqmin` }}>{cue.emoji}</Emoji>
       <span className="wall-count-num" style={{ color: PALETTE[(n - 1) % PALETTE.length], animationDelay: `${at[n - 1] + 0.12}s` }}>
         {n}
       </span>
@@ -309,14 +309,14 @@ export function CheerScene({ emoji }: { emoji: string }) {
                 animationDelay: `${c.delay * 0.8}s`,
                 animationDuration: `${c.dur}s`,
                 "--turn": `${c.turn}deg`,
-                width: i % 3 === 0 ? "1.4vmin" : "2.2vmin",
+                width: i % 3 === 0 ? "1.4cqmin" : "2.2cqmin",
               } as Vars
             }
           />
         ))}
       </div>
       <div className="wall-burst" />
-      <Emoji className="wall-jump" style={{ fontSize: "44vmin" }}>
+      <Emoji className="wall-jump" style={{ fontSize: "44cqmin" }}>
         {emoji}
       </Emoji>
     </div>
@@ -330,7 +330,7 @@ export function SongScene() {
     <div className="wall-scene">
       <div className="wall-dance-row">
         {DANCERS.map((e, i) => (
-          <Emoji key={i} className="wall-dance" style={{ fontSize: i % 2 ? "22vmin" : "15vmin", animationDelay: `${i * 0.18}s` }}>
+          <Emoji key={i} className="wall-dance" style={{ fontSize: i % 2 ? "22cqmin" : "15cqmin", animationDelay: `${i * 0.18}s` }}>
             {e}
           </Emoji>
         ))}
@@ -339,7 +339,7 @@ export function SongScene() {
         <Emoji
           key={i}
           className="wall-note"
-          style={{ left: `${s.left}%`, fontSize: "7vmin", animationDelay: `${s.delay * 1.2}s` }}
+          style={{ left: `${s.left}%`, fontSize: "7cqmin", animationDelay: `${s.delay * 1.2}s` }}
         >
           {i % 2 ? "🎶" : "🎵"}
         </Emoji>
@@ -355,7 +355,7 @@ export function CallScene({ who }: { who: "mumma" | "papa" }) {
       <div className="wall-phone">
         <span className="wall-ring" />
         <span className="wall-ring" style={{ animationDelay: "0.7s" }} />
-        <Emoji className="wall-wiggle" style={{ fontSize: "38vmin" }}>
+        <Emoji className="wall-wiggle" style={{ fontSize: "38cqmin" }}>
           📞
         </Emoji>
       </div>
@@ -371,7 +371,7 @@ export function SoundScene({ name }: { name: string }) {
       <div className="wall-phone">
         <span className="wall-ring wall-ring-soft" />
         <span className="wall-ring wall-ring-soft" style={{ animationDelay: "0.5s" }} />
-        <Emoji className="wall-roar" style={{ fontSize: "44vmin" }}>
+        <Emoji className="wall-roar" style={{ fontSize: "44cqmin" }}>
           {emoji}
         </Emoji>
       </div>

@@ -168,8 +168,11 @@ function Stage({ k, children }: { k: string; children: ReactNode }) {
   );
 }
 
-/** `bus`: on /stage, wall events come from the page's own toy core instead of the wall:<child> channel. */
-export default function Wall({ bus }: { bus?: WallBus } = {}) {
+/**
+ * `bus`: on /stage, wall events come from the page's own toy core instead of the wall:<child> channel.
+ * `contained`: fill the parent (position: relative) instead of the window, sized by container units.
+ */
+export default function Wall({ bus, contained = false }: { bus?: WallBus; contained?: boolean } = {}) {
   const [s, dispatch] = useReducer(reduce, initial);
   const [stickers, setStickers] = useState<string[]>([]);
   const [newest, setNewest] = useState(-1);
@@ -375,7 +378,7 @@ export default function Wall({ bus }: { bus?: WallBus } = {}) {
   const offset = stickers.length - shown.length;
 
   return (
-    <main className="wall-root" data-scene={sceneKey} ref={rootRef}>
+    <main className={`wall-root${contained ? " wall-contained" : ""}`} data-scene={sceneKey} ref={rootRef}>
       <div className="wall-stage">
         <Stage k={sceneKey}>{scene}</Stage>
       </div>
