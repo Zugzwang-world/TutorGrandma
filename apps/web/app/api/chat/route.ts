@@ -75,6 +75,7 @@ export async function POST(req: Request) {
       recent: last.filter((m) => m.id !== parentMsg.id).slice(-10),
       turns,
       now: clockParts(nowDate),
+      nowTime: `${clockParts(nowDate).hhmm}:${String(nowDate.getUTCSeconds()).padStart(2, "0")}`, // R4.2: to the second
       tomorrow: tomorrowLabel(nowDate),
     };
 
