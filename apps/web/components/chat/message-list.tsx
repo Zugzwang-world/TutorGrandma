@@ -4,6 +4,7 @@ import { BOTS, type BotInfo, type FileName, type Message } from "@/lib/types";
 import { BotAvatar, ParentAvatar } from "./avatar";
 import { CallBubble } from "./call-bubble";
 import { openProfile, ProfileHost } from "./profile";
+import { ProgressCard, ReportHost } from "@/components/report";
 import { SayButton } from "./say-button";
 import { botOf, dayKey, dayLabel, timeLabel, toneOf } from "./ui";
 import type { Pending, Row } from "./use-chat";
@@ -302,18 +303,23 @@ function MessageRow({
         nameClass={toneOf(bot).text}
         onProfile={() => openProfile(bot.key)}
         below={
-          canDiff ? (
-            <WhatChangedLink
-              bot={bot}
-              onOpen={() =>
-                onWhatChanged({
-                  file: m.file as FileName,
-                  toVersion: m.toVersion as number,
-                  changedLines: Array.isArray(m.changedLines) ? m.changedLines : undefined,
-                  removedLines: Array.isArray(m.removedLines) ? (m.removedLines as string[]) : undefined,
-                })
-              }
-            />
+          canDiff || m.progress ? (
+            <>
+              {canDiff ? (
+                <WhatChangedLink
+                  bot={bot}
+                  onOpen={() =>
+                    onWhatChanged({
+                      file: m.file as FileName,
+                      toVersion: m.toVersion as number,
+                      changedLines: Array.isArray(m.changedLines) ? m.changedLines : undefined,
+                      removedLines: Array.isArray(m.removedLines) ? (m.removedLines as string[]) : undefined,
+                    })
+                  }
+                />
+              ) : null}
+              {m.progress ? <ProgressCard view={m.progress.view} warm={!!row.fresh} /> : null}
+            </>
           ) : null
         }
       >
@@ -476,6 +482,7 @@ export function MessageList({
       {typing && <TypingRow key={`typing-${typing.n}`} slot={typing} first={typingFirst} />}
       {footer}
       <ProfileHost />
+      <ReportHost />
     </div>
   );
 }

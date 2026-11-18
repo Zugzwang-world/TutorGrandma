@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import { BOT_KEYS, BOTS, type BotKey } from "@/lib/types";
 import { BotAvatar, ParentAvatar } from "./avatar";
 import { openProfile } from "./profile";
+import { ProgressButton } from "@/components/report";
 import { CHAT_TITLE, toneOf } from "./ui";
 import { isReading, replyOrder } from "./use-typing";
 
@@ -82,6 +83,7 @@ export function ChatHeader({ sender, working, slot }: { sender: string | null; w
             </span>
           </p>
         </div>
+        <ProgressButton />
         {slot ? <div className="flex shrink-0 items-center gap-2">{slot}</div> : null}
       </div>
     </header>
