@@ -56,21 +56,6 @@ function spread(n: number, seed: number) {
   }));
 }
 
-// A word that appears one letter at a time (each letter pops in, transform and opacity only).
-function Letters({ text, delay = 0.35, className = "" }: { text: string; delay?: number; className?: string }) {
-  const chars = Array.from(text);
-  const step = chars.length > 9 ? 0.04 : 0.065;
-  return (
-    <p className={`wall-word ${className}`} aria-label={text}>
-      {chars.map((c, i) => (
-        <span key={i} className="wall-ch" aria-hidden style={{ animationDelay: `${delay + i * step}s` }}>
-          {c}
-        </span>
-      ))}
-    </p>
-  );
-}
-
 export function IdleScene() {
   return (
     <div className="wall-scene">
@@ -109,15 +94,50 @@ export function ThinkingScene() {
   );
 }
 
-export function ShowScene({ emoji, word }: { emoji: string; word: string }) {
+/**
+ * [[show 🌙 Moon | chand | ⭐]] (R6.4): a big emoji, the English word in letter tiles with its first letter lit,
+ * the Hindi word under it, and up to two small emojis drifting nearby. `[[show 🥭 Mango]]` has only the first two.
+ */
+export function ShowScene({ emoji, word, hindi, extras = [] }: { emoji: string; word: string; hindi?: string; extras?: string[] }) {
+  const chars = Array.from(word);
+  const lit = chars.findIndex((c) => /\p{L}|\p{N}/u.test(c));
+  const step = chars.length > 8 ? 0.05 : 0.08;
+  const wordEnd = 0.35 + chars.length * step;
   return (
-    <div className="wall-scene">
-      <div className="wall-pop">
-        <Emoji className="wall-floaty" style={{ fontSize: "46cqmin" }}>
-          {emoji}
-        </Emoji>
+    <div className="wall-scene wall-show">
+      <div className="wall-show-art">
+        {extras.slice(0, 2).map((e, i) => (
+          <Emoji key={i} className={`wall-extra wall-extra-${i}`}>
+            {e}
+          </Emoji>
+        ))}
+        <div className="wall-pop">
+          <Emoji className="wall-floaty" style={{ fontSize: hindi ? "36cqmin" : "40cqmin" }}>
+            {emoji}
+          </Emoji>
+        </div>
       </div>
-      <Letters text={word} />
+      <p className="wall-show-word" style={{ "--len": chars.length } as Vars} aria-label={word}>
+        {chars.map((c, i) =>
+          c.trim() === "" ? (
+            <span key={i} className="wall-show-space" aria-hidden />
+          ) : (
+            <span
+              key={i}
+              aria-hidden
+              className={`wall-show-tile ${i === lit ? "wall-show-lit" : ""}`}
+              style={{ animationDelay: `${0.35 + i * step}s`, "--glow-at": `${wordEnd + 0.1}s` } as Vars}
+            >
+              {c}
+            </span>
+          ),
+        )}
+      </p>
+      {hindi && (
+        <p className="wall-show-hindi" style={{ animationDelay: `${wordEnd + 0.05}s` }}>
+          {hindi}
+        </p>
+      )}
     </div>
   );
 }
@@ -204,7 +224,10 @@ export function CountScene({ cue }: { cue: Extract<Cue, { type: "count" }> }) {
   const total = a + (b ?? 0);
   const step = total <= 3 ? 0.4 : total <= 6 ? 0.3 : 0.2; // seconds between items
   const half = step * 0.6; // the "+" and "=" take a shorter beat
-  const size = total <= 3 ? 24 : total <= 5 ? 18 : total <= 8 ? 13 : 10;
+  const both = !!cue.both; // [[count 🥭 3 both]] (R6.5): names under every number make items taller, so emojis shrink
+  const size = both
+    ? total <= 3 ? 20 : total <= 5 ? 14 : total <= 8 ? 9.5 : 7.5
+    : total <= 3 ? 24 : total <= 5 ? 18 : total <= 8 ? 13 : 10;
 
   // One timeline for the whole scene: items, then "+", more items, then "=" and the answer.
   let t = 0;
@@ -227,6 +250,15 @@ export function CountScene({ cue }: { cue: Extract<Cue, { type: "count" }> }) {
   }
   const answerAt = t;
   const sumDelay = (x: number) => ({ animationDelay: `${x}s` });
+  // Every number also shows its Hindi and English names, "ek · one". Up to 4 items the names sit on one line;
+  // more items stack them so the row still fits.
+  const names = (n: number, at: number, cls = "") => (
+    <span className={`wall-count-names ${cls}`} style={{ animationDelay: `${at}s` }}>
+      <b>{HINDI_NUM[n] ?? n}</b>
+      <i aria-hidden>·</i>
+      <span>{ENGLISH_NUM[n] ?? n}</span>
+    </span>
+  );
 
   const item = (n: number) => (
     <div key={n} className="wall-count-item" style={sumDelay(at[n - 1])}>
@@ -234,10 +266,14 @@ export function CountScene({ cue }: { cue: Extract<Cue, { type: "count" }> }) {
       <span className="wall-count-num" style={{ color: PALETTE[(n - 1) % PALETTE.length], animationDelay: `${at[n - 1] + 0.12}s` }}>
         {n}
       </span>
+      {both && names(n, at[n - 1] + 0.18)}
     </div>
   );
   return (
-    <div className="wall-scene">
+    <div
+      className={`wall-scene ${both ? "wall-count-both" : ""} ${both && total > 4 ? "wall-count-many" : ""}`}
+      style={{ "--names": `${Math.max(2.6, size * 0.22)}cqmin` } as Vars}
+    >
       <div className="wall-count-row">
         {Array.from({ length: a }, (_, i) => item(i + 1))}
         {b !== undefined && (
@@ -274,9 +310,14 @@ export function CountScene({ cue }: { cue: Extract<Cue, { type: "count" }> }) {
           </span>
         )}
       </p>
+      {both && b !== undefined && names(total, answerAt + 0.1, "wall-sum-names")}
     </div>
   );
 }
+
+// Number names for count cards with "both" (sums reach 20).
+const HINDI_NUM = ["shunya", "ek", "do", "teen", "chaar", "paanch", "chhah", "saat", "aath", "nau", "das", "gyaarah", "baarah", "terah", "chaudah", "pandrah", "solah", "satrah", "athaarah", "unnees", "bees"];
+const ENGLISH_NUM = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
 
 export function ChoicesScene({ items }: { items: { emoji: string; label: string }[] }) {
   const list = items.slice(0, 4);
