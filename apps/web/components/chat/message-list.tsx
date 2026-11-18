@@ -3,6 +3,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { BOTS, type BotInfo, type FileName, type Message } from "@/lib/types";
 import { BotAvatar, ParentAvatar } from "./avatar";
 import { CallBubble } from "./call-bubble";
+import { openProfile, ProfileHost } from "./profile";
 import { SayButton } from "./say-button";
 import { botOf, dayKey, dayLabel, timeLabel, toneOf } from "./ui";
 import type { Pending, Row } from "./use-chat";
@@ -142,6 +143,7 @@ function LeftRow({
   below,
   fresh,
   morph,
+  onProfile,
 }: {
   first: boolean;
   avatar: ReactNode;
@@ -151,13 +153,30 @@ function LeftRow({
   below?: ReactNode;
   fresh?: boolean;
   morph?: boolean;
+  /** An agent's row: tapping its avatar or name opens that agent's profile. */
+  onProfile?: () => void;
 }) {
   return (
     <Grow on={!!fresh && !morph}>
       <div className={`flex items-start gap-2 ${first ? "pt-3" : "pt-1"} ${fresh && !morph ? "tg-enter tg-origin-left" : ""}`}>
-        <div className="w-8 shrink-0">{first ? avatar : null}</div>
+        <div className="w-8 shrink-0">
+          {first && onProfile ? (
+            <button type="button" onClick={onProfile} aria-label={`Open profile: ${name}`} className="tg-press block rounded-full">
+              {avatar}
+            </button>
+          ) : first ? (
+            avatar
+          ) : null}
+        </div>
         <div className="flex max-w-[82%] min-w-0 flex-col items-start">
-          {first && <span className={`mb-0.5 ml-1 text-[13px] font-extrabold ${nameClass}`}>{name}</span>}
+          {first &&
+            (onProfile ? (
+              <button type="button" onClick={onProfile} aria-label={`Open profile: ${name}`} className={`mb-0.5 ml-1 text-[13px] font-extrabold hover:underline ${nameClass}`}>
+                {name}
+              </button>
+            ) : (
+              <span className={`mb-0.5 ml-1 text-[13px] font-extrabold ${nameClass}`}>{name}</span>
+            ))}
           {morph ? <div className="tg-morph-in max-w-full">{children}</div> : children}
           {below && morph ? <div className="tg-morph-in tg-morph-late">{below}</div> : below}
         </div>
@@ -281,6 +300,7 @@ function MessageRow({
         avatar={<BotAvatar bot={bot} size={32} />}
         name={bot.name}
         nameClass={toneOf(bot).text}
+        onProfile={() => openProfile(bot.key)}
         below={
           canDiff ? (
             <WhatChangedLink
@@ -455,6 +475,7 @@ export function MessageList({
       })}
       {typing && <TypingRow key={`typing-${typing.n}`} slot={typing} first={typingFirst} />}
       {footer}
+      <ProfileHost />
     </div>
   );
 }

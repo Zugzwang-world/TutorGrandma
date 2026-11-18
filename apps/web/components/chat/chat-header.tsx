@@ -2,6 +2,7 @@
 import { useState, type ReactNode } from "react";
 import { BOT_KEYS, BOTS, type BotKey } from "@/lib/types";
 import { BotAvatar, ParentAvatar } from "./avatar";
+import { openProfile } from "./profile";
 import { CHAT_TITLE, toneOf } from "./ui";
 import { isReading, replyOrder } from "./use-typing";
 
@@ -48,9 +49,12 @@ export function ChatHeader({ sender, working, slot }: { sender: string | null; w
             const on = writing.includes(k);
             const t = toneOf(bot);
             return (
-              <span
+              <button
+                type="button"
                 key={k}
-                className={`tg-head-avatar relative ${t.text}`}
+                onClick={() => openProfile(k)}
+                aria-label={`Open profile: ${bot.name}`}
+                className={`tg-head-avatar relative cursor-pointer rounded-full ${t.text}`}
                 data-on={on}
                 data-lead={k === lead}
                 style={{ zIndex: 5 - i }}
@@ -63,7 +67,7 @@ export function ChatHeader({ sender, working, slot }: { sender: string | null; w
                   <span className={t.solid} />
                   <span className={t.solid} />
                 </span>
-              </span>
+              </button>
             );
           })}
         </div>

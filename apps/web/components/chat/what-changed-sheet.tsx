@@ -28,7 +28,7 @@ function summary(added: number, removed: number, version: number): string {
 }
 
 /** One line of an agent file: heading, bullet or text; marked new (highlighted) or removed (struck through). */
-function FileLine({ text, mark, i = 0 }: { text: string; mark: "new" | "removed" | null; i?: number }) {
+export function FileLine({ text, mark, i = 0 }: { text: string; mark: "new" | "removed" | null; i?: number }) {
   if (text.startsWith("#") && mark !== "removed") {
     const h1 = /^#\s/.test(text);
     return <p className={`px-2 font-extrabold ${h1 ? "pt-1 text-[18px]" : "pt-2 text-[15px] text-ink/80"}`}>{text.replace(/^#+\s*/, "")}</p>;
