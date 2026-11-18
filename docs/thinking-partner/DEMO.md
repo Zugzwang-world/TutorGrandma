@@ -1,65 +1,49 @@
-# Demo walkthrough · how to test the product
+# DEMO · the stage script
 
-## Links
-| What | Link | Open it on |
-|---|---|---|
-| Parents' group chat | https://tutor-grandma.vercel.app/ | Your phone (and a second phone if you have one) |
-| Toy stand-in | https://tutor-grandma.vercel.app/toy | Laptop, with the mic allowed |
-| Toy with a text box (no mic needed) | https://tutor-grandma.vercel.app/toy?type | Laptop |
-| Projector wall | https://tutor-grandma.vercel.app/home-base | Projector, or a second laptop window |
-| Wall demo loop (every animation) | https://tutor-grandma.vercel.app/home-base?demo=1 | Anywhere |
-| Presenter controls (hidden) | https://tutor-grandma.vercel.app/presenter | Laptop |
+One screen does the whole demo: **https://tutor-grandma.vercel.app/stage** (Chrome, full screen, 16:9). Left half: Nani's world (the wall, her face, the talk button, a caption, a text box). Right half: the parents' world (the file strip and jobs board on top, the group chat in the middle, idea bubbles on both sides).
 
-Use Chrome where you can.
+**Links**
+- Stage: https://tutor-grandma.vercel.app/stage (presenter drawer: Alt+P, or Option+P on a Mac, or the small handle in a corner)
+- Parents' chat on phones: https://tutor-grandma.vercel.app/ (pick Mumma or Papa)
+- Toy stand-in: https://tutor-grandma.vercel.app/toy (`?type` adds a text box)
+- Projector wall: https://tutor-grandma.vercel.app/home-base (`?demo=1` cycles the cues)
+- Presenter page: https://tutor-grandma.vercel.app/presenter
+- Tech pitch: https://tutor-grandma.vercel.app/pitch.html
+- Reset from a terminal: `curl -X POST https://tutor-grandma.vercel.app/api/reset`
 
-## Setup (2 minutes)
-1. **Presenter:** open it and press **Reset demo**.
-2. **Wall:** open `/home-base`, tap once for full screen. It shows "Nani is here".
-3. **Toy:** open `/toy`, tap **Tap to wake Nani**, and allow the microphone.
-4. **Phone:** open `/`. Nani asks "Who's this?", so pick **Mumma**. You'll see the earlier chat; tap **what changed** under the House rules message to see the file-change view.
+**Shortcuts on the stage** (only when no text box has focus): Alt+P drawer · Alt+2 +2 h · Alt+F fire next job · Alt+R reset · Space starts and sends like a tap.
 
-## 1. Talk to Nani (toy and wall)
-Hold the paw (or the space bar), speak, then release. A reaction plays at once, the wall shows Nani thinking, then she answers and the wall animates. Try these in order:
-- "Hello Nani!"
-- "M se mango!", then "Aam!"
-- When the wall shows **_ANGO** with tiles, say "M" (right), then "S" (wrong).
-- "Lion kaise roar karta hai?", then roar
-- "Mujhe gaana sunna hai"
-- "Tum robot ho?" (she should say she's an AI Nani)
-- "Mujhe dar lag raha hai" (she should comfort him and suggest telling Mumma)
+**Setup:** open https://tutor-grandma.vercel.app/stage in Chrome, full screen. Press Alt+P, then Reset, and wait for "Ready". Tap once to allow sound and the mic. Optional: phones on / as Mumma or Papa. You speak as Aarav: tap to start, tap to send.
 
-## 2. Guide Nani from the chat (the ★ part)
-Tap the **Try saying** chips on your phone:
-1. **"Remind him to drink water every 2 hours"**
-   - Routine replies, and **what changed** shows the new job line.
-   - On the presenter, press **Jump to 12:00**. The toy says the water reminder.
-   - On the toy, say "Pee liya abhi". Routine posts what Aarav said.
-2. **"When you count, count in Hindi and English both"**
-   - House rules replies.
-   - On the toy, say "Nani, ginti karein!". Nani counts "Ek, one! Do, two!", and House rules posts that it happened.
-3. **"I'm bringing mangoes for him tonight"**
-   - Lessons and Memory reply.
-   - On the toy, say "Nani, aaj kya khelenge?". Nani plays about mangoes but doesn't reveal the surprise.
-4. **"What did he learn today?"**
-   - Memory answers from what actually happened.
-5. **Two phones:** open `/` on a second phone and pick **Papa**. Both phones update live.
-6. **Voice note:** hold the mic in the chat and speak a request.
+| # | Who | Says or taps | What everyone sees and hears |
+|---|---|---|---|
+| 1 | Aarav | "Hello Nani!" | Nani greets him by name, remembers yesterday and starts today's letter, M |
+| 2 | Aarav | "Nani, raat ko Papa aayenge!" | Nani turns it into the game: "Raat ko aasmaan mein aur kaun aata hai?" |
+| 3 | Aarav | "Chand!" | "Chand ko English mein Moon kehte hain. M for Moon!" A moon, then the board _OON with three tiles |
+| 4 | Aarav | "M!" | The tile flies in and the wall cheers |
+| 5 | Aarav | "Lion kaise roar karta hai?", then a roar | The lion on the wall; Nani asks for his roar and cheers it |
+| 6 | Mumma bubble | "Remind him to drink water now, and then every 2 hours" | ⏰ Routine replies, the job appears with its countdown, and Nani reminds Aarav at once |
+| 7 | Aarav | "Pee liya abhi!" | Routine posts his answer 💧 |
+| 8 | Presenter | +2 h (Alt+2) | The clock jumps two hours and Nani reminds him again |
+| 9 | Mumma bubble | "When you count, count in Hindi and English both" | 🏠 House rules replies. Tap its avatar: its profile shows the new line and every version |
+| 10 | Aarav | "Nani, ginti karein!" | "Ek, one! Do, two! Teen, three!" The wall counts in both languages, and House rules reports it |
+| 11 | Papa bubble | "I'm bringing mangoes for him tonight" | 📚 Lessons and 📔 Memory reply, and today's plan changes |
+| 12 | Aarav | "Nani, ab kya khelenge?" | Nani moves to M se Mango and keeps the surprise |
+| 13 | Aarav | "Mumma ko roar sunana hai!", then "Haan!" | A call bubble appears in the chat: join as Mumma, roar, hear her reply, end the call |
+| 14 | Papa bubble | "Coming home soon. What should I talk to him about?" | 📔 Memory answers with today's real moments and three bedtime questions, plus a 📈 progress card |
+| 15 | Papa | Opens the progress card | The report: today, then this week and this month |
+| — | Anyone | Anything | Open floor: anyone taps Nani and asks, or taps any bubble |
 
-## 3. Call with Mumma
-1. On the toy, say "Mumma ko dikhana hai". Nani asks "Mumma ko dikhaoge?". Say "Haan!".
-2. A call bubble appears in the chat. Tap **Join**.
-3. Hold to talk on either side; clips play on the other side.
-4. Tap **End**.
+**Say at step 15:** the earlier weeks are sample history; today is filled in live from what you just saw.
 
-**Or by schedule:** in the chat send "Call him at 7, Papa wants to say hi", then press **Jump to 19:00** on the presenter. The call starts and the evening brief posts.
+**If something goes wrong:**
+- Nani says "Ek baar phir bolo": say the same line again.
+- The mic fails: type Aarav's line in the stage's text box.
+- A reminder didn't fire: Alt+F.
+- Start over: Alt+R. This resets the chat too.
 
-## 4. Presenter extras
-- **Trigger the evening brief:** Memory posts three lines about the day and three bedtime questions.
-- **Show timings on the wall:** each turn's timings appear in a corner of the wall.
-- **Turns table:** timings for the last 10 turns.
-- **Reset demo:** press it when you're done.
-
-## Good to know
-- **"Chalo, ek naya khel khelte hain!"** means Kimi was too slow on that turn (about 1 in 15). Just talk again.
-- **No mic or an iPhone problem:** use `/toy?type` and type what Aarav says.
-- **Not yet tried on real devices:** phone mic, iPhone audio, the projector browser. Please note anything odd.
+**How it behaves**
+- Tap to talk: one tap starts listening ("Listening… tap to send"), the next tap sends. It sends by itself after 15 s. A tap while Nani speaks stops her.
+- If Nani is slow (no first sentence after 2.5 s), soft music plays under the thinking scene and fades the moment she speaks. After 8 s she asks him to say it again.
+- Reminders run on the real clock: "now" fires within about 2 s of Routine's reply, and the jobs board counts down to the next one.
+- Tap any file chip (or an agent's name in the chat) for that agent's profile; tap 📈 for Aarav's progress report.
