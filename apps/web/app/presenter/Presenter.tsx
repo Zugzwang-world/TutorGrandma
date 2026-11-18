@@ -8,7 +8,7 @@ import { CHILD_ID } from "@/lib/config";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import type { Turn } from "@/lib/types";
 
-const JUMPS = ["12:00", "19:00", "20:30"];
+// R4.4: +30 min, +2 h and Real time only (the jumps to 12:00, 19:00 and 20:30 are gone: reminders run on the real clock).
 const MIN = 60_000;
 
 const btn =
@@ -141,11 +141,6 @@ export default function Presenter() {
         <div className="mt-4 flex flex-wrap gap-2">
           <button className={btn} disabled={!!busy} onClick={() => presenter("+30 min", { action: "clock", addMs: 30 * MIN }, "Clock moved +30 min")}>+30 min</button>
           <button className={btn} disabled={!!busy} onClick={() => presenter("+2 h", { action: "clock", addMs: 120 * MIN }, "Clock moved +2 h")}>+2 h</button>
-          {JUMPS.map((h) => (
-            <button key={h} className={btn} disabled={!!busy} onClick={() => presenter(`jump ${h}`, { action: "jump", hhmm: h }, `Clock jumped to ${h}`)}>
-              Jump to {h}
-            </button>
-          ))}
           <button className={btn} disabled={!!busy} onClick={() => presenter("real time", { action: "real" }, "Clock back to real time")}>Real time</button>
         </div>
       </Card>

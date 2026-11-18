@@ -16,6 +16,8 @@ import { useToyCore } from "./use-toy-core";
 
 /** A recording (talk or call) sends by itself after this long. */
 export const TAP_SEND_MS = 15_000;
+/** The wake guard clears by itself after this long, so a resume() that never settles can't block later taps. */
+const WAKE_GUARD_MS = 2000;
 
 /** A text box has focus: the space bar and the stage shortcuts leave the keys alone. */
 export function isTextBox(el: Element | EventTarget | null): boolean {
@@ -31,9 +33,13 @@ export function useToy(opts: { bus?: WallBus } = {}) {
   const t = useTalk(core, { onCall: (who) => call.start(who, true) });
   const talk = t.talk;
 
-  // G4: routine jobs (reminders, calls, brief, song) fire on the demo clock through the toy's speaker.
+  // G4, R4: routine jobs (reminders, calls, brief, song) fire on the demo clock through the toy's speaker. A due job
+  // waits until the page is awake and Nani is idle (not listening, thinking or speaking) with no call open.
+  const { talkStateRef } = t;
   const routine = useRoutine({
-    enabled: core.awake && core.mode === "talk",
+    enabled: core.awake,
+    isIdle: () => talkStateRef.current === "idle" && !call.active(),
+    talkState: `${t.talkState}:${core.mode}`,
     onCall: (who) => call.start(who, false), // the routine has already played line_call_<who>
     play: async (url) => {
       const pre = AUDIO.find((a) => a.file === url);
@@ -89,13 +95,26 @@ export function useToy(opts: { bus?: WallBus } = {}) {
   const waking = useRef(false);
   const { micRef } = core;
   /** Unlock sound and open the mic. Awake without a mic stream (prompt unanswered, or refused): asks for the mic again. */
+  /** Guard one wake at a time; it clears after WAKE_GUARD_MS even if AudioContext.resume() never settles, so a later tap can retry. */
+  const guardWake = useCallback((then?: () => void) => {
+    waking.current = true;
+    let done = false;
+    const clear = () => {
+      if (done) return;
+      done = true;
+      waking.current = false;
+    };
+    const id = setTimeout(clear, WAKE_GUARD_MS);
+    void core.wake().finally(() => {
+      clearTimeout(id);
+      clear();
+      then?.();
+    });
+  }, [core]);
   const wake = useCallback(() => {
     if (waking.current || (awakeRef.current && micRef.current)) return;
-    waking.current = true;
-    void core.wake().finally(() => {
-      waking.current = false;
-    });
-  }, [core, micRef]);
+    guardWake();
+  }, [guardWake, micRef]);
 
   const tapRef = useRef<() => void>(() => {});
   useEffect(() => {
@@ -131,16 +150,14 @@ export function useToy(opts: { bus?: WallBus } = {}) {
   const say = useCallback(
     (text: string) => {
       if (!text.trim() || call.active()) return;
+      // An open recording would send a second turn on the next tap (two brain requests, overlapping audio): drop it.
+      if (talk.recording()) talk.cancel();
       clearCap();
       if (awakeRef.current) return talk.say(text);
       // Typing first also wakes Nani (Enter is a user gesture), then says the line.
-      waking.current = true;
-      void core.wake().finally(() => {
-        waking.current = false;
-        talk.say(text);
-      });
+      guardWake(() => talk.say(text));
     },
-    [call, clearCap, core, talk],
+    [call, clearCap, guardWake, talk],
   );
 
   // The space bar taps (not while typing, not with a modifier: Alt+… are the stage's shortcuts). Both keydown and
