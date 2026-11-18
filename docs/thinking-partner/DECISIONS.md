@@ -46,3 +46,4 @@ One line each: date · decision · why.
 - 2026-11-19 · `wait_music` is made with sound effects v3 (`loop: true`) first · it is the only ElevenLabs model with a seamless-loop flag.
 - 2026-11-19 · "once at HH:MM" with no date gets today's date stamped by /api/chat · so a one-off never repeats daily (NOW.md issue 4).
 - 2026-11-19 · /stage feeds its wall through an in-page bus (lib/wall-bus.ts) · one page can't hold two channel objects for one topic, and never hears its own broadcasts.
+- 2026-11-19 · R9's self-test harness is written by Sonnet 5.5 (high) and R1 is reviewed after merge · usage: 3 points left of the 6-point budget at Wave 2; the Coordinator runs and reads the full suite.
