@@ -5,9 +5,13 @@ import type { ReportData } from "./types";
 const TZ = "Asia/Kolkata";
 const utc = (day: string) => new Date(`${day}T12:00:00Z`);
 
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 /** "Sat 14 Nov" */
 export function dayShort(day: string): string {
-  return utc(day).toLocaleDateString("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
+  const d = utc(day);
+  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
 }
 
 /** "14 November" (with the year dropped) */
@@ -27,10 +31,10 @@ export function periodLabel(r: Pick<ReportData, "view" | "from" | "to">): string
 
 /** "Thu 19 Nov at 5:42 pm" from an ISO time, India time. */
 export function whenSaid(iso: string): string {
-  const d = new Date(iso);
-  const date = d.toLocaleDateString("en-GB", { timeZone: TZ, weekday: "short", day: "numeric", month: "short" });
-  const time = d.toLocaleTimeString("en-GB", { timeZone: TZ, hour: "numeric", minute: "2-digit", hour12: true });
-  return `${date} at ${time.replace(" ", " ")}`;
+  const f = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true });
+  const p: Record<string, string> = {};
+  for (const x of f.formatToParts(new Date(iso))) p[x.type] = x.value;
+  return `${p.weekday} ${p.day} ${p.month} at ${p.hour}:${p.minute} ${(p.dayPeriod ?? "").toLowerCase()}`;
 }
 
 /** "5:42 pm" from "17:42". */

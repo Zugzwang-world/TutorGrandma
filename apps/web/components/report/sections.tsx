@@ -265,11 +265,13 @@ function placeMoments(r: ReportData): { m: ReportMoment; x: number; lane: number
     const b = Date.parse(`${r.to}T23:59:59Z`);
     pos = (m) => (Date.parse(`${m.day}T${m.time}:00Z`) - a) / (b - a);
   }
-  const lanes = [-1, -1, -1];
+  // Moments too close to share a lane stack upwards; the sky grows to fit them.
+  const gap = ms.length > 12 ? 5.5 : ms.length > 6 ? 7 : 9;
+  const lanes: number[] = [];
   return ms.map((m) => {
-    const x = 6 + Math.min(1, Math.max(0, pos(m))) * 88;
-    let lane = lanes.findIndex((end) => x - end > 9);
-    if (lane < 0) lane = lanes.indexOf(Math.min(...lanes));
+    const x = 5 + Math.min(1, Math.max(0, pos(m))) * 90;
+    let lane = lanes.findIndex((end) => x - end >= gap);
+    if (lane < 0) lane = lanes.length;
     lanes[lane] = x;
     return { m, x, lane };
   });
@@ -298,6 +300,9 @@ function skyTicks(r: ReportData): { x: number; label: string }[] {
 
 export function Feelings({ r }: { r: ReportData }) {
   const placed = placeMoments(r);
+  const size = r.moods.length > 12 ? 34 : r.moods.length > 6 ? 40 : 46;
+  const lanes = Math.max(1, ...placed.map((p) => p.lane + 1));
+  const skyH = Math.max(128, 20 + lanes * (size - 4) + 8);
   const fallback = [...r.moods].reverse().find((m) => m.helped) ?? r.moods[r.moods.length - 1] ?? null;
   const [picked, setPicked] = useState<number | null>(null);
   const selIdx = picked !== null && picked < r.moods.length ? picked : fallback ? r.moods.indexOf(fallback) : -1;
@@ -311,7 +316,7 @@ export function Feelings({ r }: { r: ReportData }) {
       <p className="rp-sub mt-1">
         {r.moods.length ? "Moments when his feelings showed. Tap one for what happened." : `No big feelings noted ${PERIOD_WORD[r.view]}.`}
       </p>
-      <div className="rp-sky mt-4" role="group" aria-label="Feelings across the period">
+      <div className="rp-sky mt-4" role="group" aria-label="Feelings across the period" style={{ height: skyH }}>
         {placed.map(({ m, x, lane }, i) => {
           const w = weatherOf(m.feeling);
           return (
@@ -319,7 +324,7 @@ export function Feelings({ r }: { r: ReportData }) {
               key={`${m.day}${m.time}${i}`}
               type="button"
               className="rp-moment rp-focus"
-              style={{ left: `${x}%`, top: 10 + lane * 36 }}
+              style={{ left: `${x}%`, bottom: 12 + lane * (size - 4), width: size, height: size, marginLeft: -size / 2, fontSize: size * 0.6 }}
               aria-pressed={selIdx === i}
               aria-label={`${w.label}, ${dayShort(m.day)} ${clock12(m.time)}: ${m.what}`}
               onClick={() => setPicked(i)}

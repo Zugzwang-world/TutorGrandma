@@ -430,8 +430,8 @@
 }
 @media (min-width: 1000px) {
   .rp-calvars {
-    --cell: 33px;
-    --gap: 6px;
+    --cell: 40px;
+    --gap: 7px;
   }
 }
 .rp-cal {
@@ -488,7 +488,7 @@
 /* ---------- 5. feelings ---------- */
 .rp-sky {
   position: relative;
-  height: 128px;
+  transition: height 360ms var(--rp-drawer);
   border-radius: 22px;
   background:
     radial-gradient(120% 90% at 10% 0%, #fff4dc 0%, transparent 60%),
@@ -509,7 +509,7 @@
   box-shadow: 0 2px 8px -3px rgba(43, 33, 24, 0.25);
   transition:
     left 520ms var(--rp-drawer),
-    top 520ms var(--rp-drawer),
+    bottom 520ms var(--rp-drawer),
     transform 200ms var(--rp-ease),
     box-shadow 200ms ease;
   -webkit-tap-highlight-color: transparent;

@@ -56,7 +56,10 @@ export function progressViewFor(text: string): "today" | "week" | null {
 /** When the brain is slow: today's lines and bedtime questions from the progress report's plain builder. */
 async function talkFallback(): Promise<string> {
   const t = await getToday({ quick: true });
-  const lines = (t.data.summary ?? []).slice(0, 2).join(" ");
+  const lines = (t.data.summary ?? [])
+    .slice(0, 2)
+    .map((l) => (/[.!?…"”]$/.test(l.trim()) ? l.trim() : `${l.trim()}.`))
+    .join(" ");
   const qs = t.data.starters.slice(0, 3).map((q, i) => `${i + 1}. ${q}`);
   if (!lines || qs.length < 3) throw new Error("memory talk fallback: nothing to say");
   return `${lines}\n\nAsk him at bedtime:\n${qs.join("\n")}`;

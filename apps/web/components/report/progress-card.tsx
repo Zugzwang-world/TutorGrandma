@@ -50,7 +50,7 @@ export function ProgressButton() {
       onPointerEnter={() => prefetchReport("today")}
       aria-label={`Open ${config.childName}'s progress`}
       title={`${config.childName}'s progress`}
-      className="emoji grid h-9 w-9 shrink-0 place-items-center rounded-full bg-marigold-soft text-[18px] shadow-[0_0_0_1.5px_#f6dcae] transition-transform duration-150 active:scale-95"
+      className="emoji grid h-8 w-8 shrink-0 place-items-center rounded-full bg-marigold-soft text-[16px] shadow-[0_0_0_1.5px_#f6dcae] transition-transform duration-150 active:scale-95"
     >
       📈
     </button>

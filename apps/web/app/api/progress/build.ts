@@ -20,7 +20,7 @@ import type { ReportData, ReportDay, ReportMoment, ReportView, ReportWord } from
 const CHILD = config.childName;
 const NANI = config.grandmaName;
 const TTL_MS = 60_000;
-const BRAIN_TIMEOUT_MS = 6_000;
+const BRAIN_TIMEOUT_MS = 6_500; // Kimi writes these lines in ~4 to 6 s; past this the plain lines stand
 const RETRY_AFTER_FAIL_MS = 30_000; // a stalled brain is not asked again on this instance for 30 s
 const AREAS: ProgressArea[] = ["language", "numbers", "feelings", "culture"];
 const FEELINGS: ProgressFeeling[] = ["happy", "excited", "calm", "tired", "upset", "scared", "sad"];
@@ -348,7 +348,7 @@ Reply with ONE JSON object only:
 {"summary":["…","…","…"],"moods":[{"time":"HH:MM","feeling":"happy","what":"…","helped":"…"}],"starters":["…","…","…"]}
 - summary: exactly 3 short lines about today, each under 12 words, taken only from today's turns and notes. Name real moments: a word, a letter, what he counted, his own words in quotes.
 - moods: 1 to 3 moments where his feeling clearly showed in the turns. time is that turn's time. feeling is one of: happy, excited, calm, tired, upset, scared, sad. what: under 12 words. helped: only for tired, upset, scared or sad, what helped him (under 14 words), if the turns show it; otherwise leave it out. Never guess a feeling the turns don't show.
-- starters: exactly 3 bedtime questions a parent can ask ${CHILD}, in simple words, each tied to a real moment from today.
+- starters: exactly 3 bedtime questions a parent can ask ${CHILD}, in simple English (a Hindi word he said is fine), each under 12 words and tied to a different real moment from today.
 - Plain English with a little Hindi flavour. No emoji in starters.`;
 
 async function brainLines(f: Facts, day: { brain: string }): Promise<Lines> {
@@ -515,10 +515,8 @@ export async function buildReport(view: ReportView, opts: { quick?: boolean; asO
     current = (r.data.letters?.working ?? []).find((l) => !learnt.has(l)) ?? null;
     if (current) break;
   }
-  if (!t.play && view !== "all") {
-    const w = t.data.letters.working.find((l) => !learnt.has(l));
-    if (w) current = w;
-  }
+  // A quiet day: the letter in today's plan is the one he's on.
+  if (!current) current = t.data.letters.working.find((l) => !learnt.has(l)) ?? null;
 
   const areas = Object.fromEntries(AREAS.map((a) => [a, 0])) as Record<ProgressArea, number>;
   const routine = { water: { asked: 0, done: 0 }, calls: 0, stories: 0 };
@@ -565,10 +563,11 @@ export async function buildReport(view: ReportView, opts: { quick?: boolean; asO
     starters = t.data.starters;
   } else {
     summary = periodLines(view, { words, fresh: [...fresh].sort(), current, highlights, counting, playDays });
+    // one starter from each of the latest play days first, then the rest; a month or all time leaves today's to the Today view
+    const src = view === "week" ? inP : inP.filter((r) => r.day !== today);
     const pool: string[] = [];
-    for (const r of [...inP].reverse()) for (const s of r.data.starters ?? []) if (!pool.includes(s)) pool.push(s);
-    // one starter from each of the latest play days first, then the rest
-    const firsts = [...inP].reverse().map((r) => r.data.starters?.[0]).filter((s): s is string => !!s);
+    for (const r of [...src].reverse()) for (const s of r.data.starters ?? []) if (!pool.includes(s)) pool.push(s);
+    const firsts = [...src].reverse().map((r) => r.data.starters?.[0]).filter((s): s is string => !!s);
     starters = [...new Set([...firsts, ...pool])].slice(0, 3);
     if (!starters.length) starters = t.data.starters;
   }
